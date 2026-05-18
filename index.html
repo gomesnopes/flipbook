@@ -11,7 +11,22 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
+        // Deklarasi lokasi folder pekerja pendukung (worker)
         var dFlipLocation = "https://cdn.jsdelivr.net/npm/@dearhive/dearflip-jquery-flipbook@1.7.3/dflip/";
+        
+        // Tangkap URL buku dari link sebelum library utama dimuat
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookUrl = urlParams.get('baca');
+        
+        // SYARAT MUTLAK DFLIP: Buat variabel global dengan format "option_" + "id_element"
+        if(bookUrl) {
+            var option_flipbook_container = {
+                source: bookUrl,
+                webgl: true,
+                height: '100vh',
+                direction: 1
+            };
+        }
     </script>
     
     <link href="https://cdn.jsdelivr.net/npm/@dearhive/dearflip-jquery-flipbook@1.7.3/dflip/css/dflip.min.css" rel="stylesheet">
@@ -22,14 +37,15 @@
     <script src="config.js"></script>
 
     <style>
-        /* Custom scrollbar & animations */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
         #viewer-section { display: none; width: 100vw; height: 100vh; background: #1e293b; position: fixed; top: 0; left: 0; z-index: 50; }
-        #flipbook-container { height: 100%; width: 100%; }
+        
+        /* Hilangkan margin bawaan dflip agar penuh 1 layar */
+        ._df_book { height: 100vh !important; margin: 0 !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased">
@@ -48,7 +64,6 @@
         <div class="max-w-6xl mx-auto px-6 py-10">
             <h2 class="text-3xl font-extrabold mb-2">Koleksi Buku Digital</h2>
             <p class="text-slate-500 mb-8">Pilih dan baca buku interaktif dengan efek membalik halaman 3D.</p>
-            
             <div id="bookList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <p class="text-slate-500 font-medium">Memuat koleksi buku...</p>
             </div>
@@ -62,7 +77,6 @@
             </button>
             <h3 class="text-2xl font-bold mb-1 text-slate-800">Upload Buku Baru</h3>
             <p class="text-slate-500 text-sm mb-6">File PDF akan diproses menjadi 3D Flipbook.</p>
-            
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Judul Buku</label>
@@ -78,11 +92,9 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">File PDF</label>
-                    <input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition cursor-pointer border border-slate-300 rounded-lg">
+                    <input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition border border-slate-300 rounded-lg">
                 </div>
-                
                 <div id="statusUpload" class="text-sm font-medium hidden p-3 rounded-lg"></div>
-                
                 <button onclick="uploadBuku()" id="btnUpload" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition mt-4 flex justify-center items-center gap-2">
                     <i class="fa-solid fa-paper-plane"></i> Simpan & Upload
                 </button>
@@ -94,7 +106,8 @@
         <a href="?" class="absolute top-4 left-4 z-[60] bg-white/90 backdrop-blur hover:bg-white text-slate-800 px-4 py-2 rounded-lg font-bold shadow-lg transition flex items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> Kembali ke Galeri
         </a>
-        <div id="flipbook-container"></div>
+        
+        <div class="_df_book" id="flipbook_container"></div>
     </div>
 
     <script>
@@ -103,28 +116,12 @@
         try {
             if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
             supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const bookUrl = urlParams.get('baca');
 
+            // Cek apakah di URL ada ?baca=
             if (bookUrl) {
-                // Sembunyikan UI Utama, Tampilkan Viewer
                 document.getElementById('main-ui').style.display = 'none';
                 document.getElementById('viewer-section').style.display = 'block';
-                
-                $(document).ready(function () {
-                    // Pengecekan Aman: Pastikan Flipbook Plugin Ada
-                    if (typeof $.fn.flipBook !== 'function') {
-                        alert("Library 3D gagal termuat oleh browser. Coba matikan AdBlock atau ganti browser sementara.");
-                        return;
-                    }
-
-                    $("#flipbook-container").flipBook(bookUrl, {
-                        webgl: true,
-                        height: '100%',
-                        direction: 1
-                    });
-                });
+                // Tidak perlu memanggil jQuery $(...).flipBook() lagi, DearFlip akan merender otomatis!
             } else {
                 fetchBooks();
             }
@@ -199,7 +196,7 @@
 
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Memproses...`;
             status.className = 'bg-blue-50 text-blue-700 p-3 rounded-lg text-sm font-medium mt-4 block';
-            status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengunggah...`;
+            status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengunggah file PDF...`;
 
             try {
                 const { error: storageError } = await supabaseClient.storage.from('pdf-buku').upload(fileName, file);
@@ -207,7 +204,7 @@
 
                 const { data: publicUrlData } = supabaseClient.storage.from('pdf-buku').getPublicUrl(fileName);
                 
-                status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan...`;
+                status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan ke database...`;
                 const { error: dbError } = await supabaseClient.from('buku').insert([{ judul, kategori, file_url: publicUrlData.publicUrl }]);
                 if (dbError) throw new Error(dbError.message);
 
