@@ -6,14 +6,11 @@
     <title>FlipStory - Digital Library</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/dflip.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/themify-icons.min.css" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script src="config.js"></script>
 
     <style>
@@ -45,6 +42,7 @@
             <p class="text-slate-500 mb-8">Pilih dan baca buku interaktif dengan efek membalik halaman 3D.</p>
             
             <div id="bookList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Skeleton Loading -->
                 <div class="animate-pulse flex space-x-4">
                     <div class="flex-1 space-y-4 py-1">
                         <div class="h-40 bg-slate-200 rounded-xl"></div>
@@ -56,6 +54,7 @@
         </div>
     </div>
 
+    <!-- Modal Upload -->
     <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 modal-enter relative">
             <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition">
@@ -92,6 +91,7 @@
         </div>
     </div>
 
+    <!-- Viewer Section -->
     <div id="viewer-section">
         <a href="?" class="absolute top-4 left-4 z-[60] bg-white/90 backdrop-blur hover:bg-white text-slate-800 px-4 py-2 rounded-lg font-bold shadow-lg transition flex items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> Kembali ke Galeri
@@ -103,62 +103,10 @@
     <script src="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/js/dflip.min.js"></script>
 
     <script>
-      // --- 1. INISIALISASI & ROUTING ---
+        // --- 1. INISIALISASI SUPABASE & ROUTING (Cukup sekali saja) ---
         let supabase;
+        
         try {
-            if (typeof CONFIG === 'undefined') {
-                throw new Error("File config.js belum terbaca oleh browser.");
-            }
-            supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-        } catch (err) {
-            console.error("Supabase Init Error:", err);
-            alert("Sistem belum siap: " + err.message + "\n\nCoba lakukan Hard Refresh (Ctrl+Shift+R / Cmd+Shift+R).");
-        }
-
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const urlParams = new URLSearchParams(window.location.search);
-        const bookUrl = urlParams.get('baca');
-
-        if (bookUrl) {
-            // JIKA ADA PARAMETER '?baca=', BUKA MODE VIEWER
-            document.getElementById('main-ui').style.display = 'none';
-            document.getElementById('viewer-section').style.display = 'block';
-            
-            $(document).ready(function () {
-                $("#flipbook-container").flipBook(bookUrl, {
-                    webgl: true,
-                    height: '100%',
-                    direction: 1
-                });
-            });
-        } else {
-            // JIKA TIDAK ADA, BUKA MODE GALERI
-            fetchBooks();
-        }
-
-        // --- 2. LOGIKA UI (MODAL) ---
-       // --- 1. DEKLARASI FUNGSI UI DULUAN (Agar selalu terbaca browser) ---
-        function openModal() {
-            document.getElementById('uploadModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('uploadModal').classList.add('hidden');
-            document.getElementById('judulBuku').value = '';
-            document.getElementById('filePdf').value = '';
-            document.getElementById('statusUpload').classList.add('hidden');
-        }
-
-        function copyLink(link) {
-            navigator.clipboard.writeText(link).then(() => {
-                alert("Link flipbook berhasil disalin!");
-            });
-        }
-
-        // --- 2. INISIALISASI SUPABASE DENGAN PENGAMAN ---
-        let supabase;
-        try {
-            // Cek apakah config.js berhasil dimuat
             if (typeof CONFIG === 'undefined') {
                 throw new Error("File config.js tidak terbaca! Pastikan nama file dan letaknya benar di GitHub.");
             }
@@ -166,7 +114,7 @@
             // Inisialisasi Supabase
             supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
             
-            // --- 3. JALANKAN ROUTING JIKA SUPABASE AMAN ---
+            // Cek parameter URL
             const urlParams = new URLSearchParams(window.location.search);
             const bookUrl = urlParams.get('baca');
 
@@ -186,17 +134,33 @@
                 // Mode Galeri
                 fetchBooks();
             }
-
         } catch (err) {
             console.error("CRITICAL ERROR:", err);
-            // Tampilkan error langsung di layar agar ketahuan masalahnya
             document.getElementById('bookList').innerHTML = `
                 <div class="col-span-full bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
                     <strong>Sistem Gagal Berjalan:</strong> ${err.message}
                 </div>`;
         }
 
-        // --- 4. FUNGSI DATABASE (FETCH & UPLOAD) ---
+        // --- 2. FUNGSI UI (MODAL) ---
+        function openModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+            document.getElementById('judulBuku').value = '';
+            document.getElementById('filePdf').value = '';
+            document.getElementById('statusUpload').classList.add('hidden');
+        }
+
+        function copyLink(link) {
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Link flipbook berhasil disalin!");
+            });
+        }
+
+        // --- 3. FUNGSI DATABASE (FETCH & UPLOAD) ---
         async function fetchBooks() {
             try {
                 const { data, error } = await supabase
