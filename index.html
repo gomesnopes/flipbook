@@ -7,7 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/dflip.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/dflip.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/themify-icons.min.css" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -99,14 +99,16 @@
         <div id="flipbook-container"></div>
     </div>
 
-<!-- 1. Wajib panggil jQuery terlebih dahulu -->
+<!-- 1. Panggil jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     
-    <!-- 2. Wajib deklarasikan lokasi base folder DearFlip (jangan sampai kurang garis miring di belakang) -->
-    <script>var dFlipLocation = "https://cdn.jsdelivr.net/npm/dearflip@1.7.3/dflip/";</script>
+    <!-- 2. Deklarasikan lokasi folder (menggunakan versi webgl) -->
+    <script>
+        var dFlipLocation = "https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/";
+    </script>
     
-    <!-- 3. Baru panggil file eksekusi utamanya -->
-    <script src="https://cdn.jsdelivr.net/npm/dearflip@1.7.3/dflip/js/dflip.min.js"></script>
+    <!-- 3. Panggil script utama dflip -->
+    <script src="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/js/dflip.min.js"></script>
 
    <script>
         // --- 1. INISIALISASI SUPABASE & ROUTING ---
@@ -134,7 +136,7 @@
                     $("#flipbook-container").flipBook(bookUrl, {
                         webgl: true,
                         height: '100%',
-                        direction: 1
+                        direction: 1 // 1 untuk buka dari kiri ke kanan (standar), 2 untuk kanan ke kiri (Arab/Manga)
                     });
                 });
             } else {
