@@ -3,52 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Library & Flipbook (Supabase)</title>
+    <title>FlipStory - Digital Library</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/dflip.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/themify-icons.min.css" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="config.js"></script>
+
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; }
-        .container { max-width: 1000px; margin: auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .admin-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .admin-panel input, .admin-panel select, .admin-panel button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-        .admin-panel button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
-        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .book-card { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn-read { display: inline-block; background: #28a745; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; margin-top: 10px; }
-        .btn-share { display: inline-block; background: #17a2b8; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; margin-top: 10px; cursor: pointer; border: none; }
-        #viewer-section { display: none; width: 100vw; height: 100vh; background: #2c3e50; }
-        #flipbook-container { height: 100%; }
-        .btn-back { position: absolute; top: 10px; left: 10px; z-index: 999; background: white; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; color: #333; }
+        /* Custom scrollbar & animations */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        #viewer-section { display: none; width: 100vw; height: 100vh; background: #1e293b; position: fixed; top: 0; left: 0; z-index: 50; }
+        #flipbook-container { height: 100%; width: 100%; }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <div id="gallery-section" class="container">
-        <div class="header">
-            <h2>Perpustakaan Digital (Supabase Powered)</h2>
+    <div id="main-ui">
+        <nav class="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-book-open-reader text-blue-600 text-2xl"></i>
+                <h1 class="text-xl font-bold text-slate-800">FlipStory <span class="text-blue-600">Pro</span></h1>
+            </div>
+            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Buku
+            </button>
+        </nav>
+
+        <div class="max-w-6xl mx-auto px-6 py-10">
+            <h2 class="text-3xl font-extrabold mb-2">Koleksi Buku Digital</h2>
+            <p class="text-slate-500 mb-8">Pilih dan baca buku interaktif dengan efek membalik halaman 3D.</p>
+            
+            <div id="bookList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="animate-pulse flex space-x-4">
+                    <div class="flex-1 space-y-4 py-1">
+                        <div class="h-40 bg-slate-200 rounded-xl"></div>
+                        <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-slate-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div class="admin-panel">
-            <h3>Upload Buku Baru (Admin)</h3>
-            <input type="text" id="judulBuku" placeholder="Judul Buku" required>
-            <select id="kategoriBuku">
-                <option value="Storytelling">Storytelling / Dongeng</option>
-                <option value="Edukasi">Edukasi / Modul</option>
-            </select>
-            <input type="file" id="filePdf" accept="application/pdf" required>
-            <button onclick="uploadBuku()" id="btnUpload">Upload ke Supabase</button>
-            <p id="statusUpload" style="font-weight: bold; margin-top:10px;"></p>
-        </div>
-
-        <div class="book-grid" id="bookList">
-            <p>Memuat daftar buku...</p>
+    <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 modal-enter relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <h3 class="text-2xl font-bold mb-1 text-slate-800">Upload Buku Baru</h3>
+            <p class="text-slate-500 text-sm mb-6">File PDF akan diproses menjadi 3D Flipbook.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Judul Buku</label>
+                    <input type="text" id="judulBuku" placeholder="Contoh: Kancil dan Buaya" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Kategori</label>
+                    <select id="kategoriBuku" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
+                        <option value="Storytelling">Storytelling / Dongeng</option>
+                        <option value="Edukasi">Edukasi / Modul</option>
+                        <option value="Laporan">Laporan / Majalah</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">File PDF</label>
+                    <input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition cursor-pointer border border-slate-300 rounded-lg">
+                </div>
+                
+                <div id="statusUpload" class="text-sm font-medium hidden p-3 rounded-lg"></div>
+                
+                <button onclick="uploadBuku()" id="btnUpload" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition mt-4 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Simpan & Upload
+                </button>
+            </div>
         </div>
     </div>
 
     <div id="viewer-section">
-        <a href="?" class="btn-back">&larr; Kembali ke Galeri</a>
+        <a href="?" class="absolute top-4 left-4 z-[60] bg-white/90 backdrop-blur hover:bg-white text-slate-800 px-4 py-2 rounded-lg font-bold shadow-lg transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Kembali ke Galeri
+        </a>
         <div id="flipbook-container"></div>
     </div>
 
@@ -56,76 +103,106 @@
     <script src="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/js/dflip.min.js"></script>
 
     <script>
-        // === KONFIGURASI SUPABASE (GANTI DENGAN KUNCI ANDA DARI PROJECT SETTINGS) ===
-        const SUPABASE_URL = 'https://zqjgimorpkzynytrhyde.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxamdpbW9ycGt6eW55dHJoeWRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzkyOTUsImV4cCI6MjA5NDYxNTI5NX0.LAbAMRLiu9XxiAxFvoSX9FhraFgXoCp0GkEZUlUhHow';
+        // --- 1. INISIALISASI & ROUTING ---
+        if (typeof CONFIG === 'undefined') {
+            alert("Error: File config.js tidak ditemukan atau formatnya salah!");
+        }
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Routing Berdasarkan URL (Apakah ada parameter ?baca=URL_PDF)
+        const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
         const urlParams = new URLSearchParams(window.location.search);
         const bookUrl = urlParams.get('baca');
 
         if (bookUrl) {
-            // MODE BACA (VIEWER)
-            document.getElementById('gallery-section').style.display = 'none';
+            // JIKA ADA PARAMETER '?baca=', BUKA MODE VIEWER
+            document.getElementById('main-ui').style.display = 'none';
             document.getElementById('viewer-section').style.display = 'block';
             
             $(document).ready(function () {
-                // Supabase Storage secara native sudah support CORS sepenuhnya!
                 $("#flipbook-container").flipBook(bookUrl, {
-                    webgl: true, // Animasi 3D akan mulus karena tidak ada blokir
+                    webgl: true,
                     height: '100%',
                     direction: 1
                 });
             });
         } else {
-            // MODE GALERI
+            // JIKA TIDAK ADA, BUKA MODE GALERI
             fetchBooks();
         }
 
-        // --- FUNGSI: Mengambil Daftar Buku dari Database Supabase ---
+        // --- 2. LOGIKA UI (MODAL) ---
+        function openModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+            // Reset form
+            document.getElementById('judulBuku').value = '';
+            document.getElementById('filePdf').value = '';
+            document.getElementById('statusUpload').classList.add('hidden');
+        }
+
+        // --- 3. FUNGSI FETCH (BACA DATABASE) ---
         async function fetchBooks() {
-            const { data, error } = await supabase
-                .from('buku')
-                .select('*')
-                .order('created_at', { ascending: false });
+            try {
+                const { data, error } = await supabase
+                    .from('buku')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            const bookList = document.getElementById('bookList');
-            bookList.innerHTML = ''; 
+                const bookList = document.getElementById('bookList');
+                bookList.innerHTML = ''; 
 
-            if (error) {
-                bookList.innerHTML = '<p style="color:red;">Gagal memuat database.</p>';
-                return;
+                if (error) throw error;
+
+                if (data.length === 0) {
+                    bookList.innerHTML = `
+                        <div class="col-span-full text-center py-12 bg-white rounded-xl border border-slate-200">
+                            <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
+                            <p class="text-slate-500 font-medium">Belum ada buku di perpustakaan.</p>
+                        </div>`;
+                    return;
+                }
+
+                data.forEach(book => {
+                    const shareLink = window.location.href.split('?')[0] + '?baca=' + encodeURIComponent(book.file_url);
+                    
+                    const card = `
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full">
+                            <div class="bg-slate-100 h-40 flex items-center justify-center border-b border-slate-200 relative group">
+                                <i class="fa-regular fa-file-pdf text-5xl text-red-400 group-hover:scale-110 transition-transform"></i>
+                                <span class="absolute top-3 right-3 bg-white/80 backdrop-blur px-2 py-1 rounded text-xs font-bold text-slate-600 shadow-sm">${book.kategori}</span>
+                            </div>
+                            <div class="p-5 flex flex-col flex-grow">
+                                <h3 class="font-bold text-lg text-slate-800 leading-tight mb-4 flex-grow">${book.judul}</h3>
+                                <div class="grid grid-cols-2 gap-2 mt-auto">
+                                    <a href="?baca=${encodeURIComponent(book.file_url)}" class="bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-lg text-sm font-medium transition">
+                                        <i class="fa-solid fa-book-open mr-1"></i> Baca
+                                    </a>
+                                    <button onclick="copyLink('${shareLink}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-center py-2 rounded-lg text-sm font-medium transition">
+                                        <i class="fa-solid fa-link mr-1"></i> Share
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    bookList.innerHTML += card;
+                });
+            } catch (err) {
+                document.getElementById('bookList').innerHTML = `
+                    <div class="col-span-full bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
+                        <strong>Koneksi Database Gagal:</strong> ${err.message}. Pastikan URL/Key Supabase benar dan tabel 'buku' sudah dibuat.
+                    </div>`;
             }
-
-            if(data.length === 0) {
-                bookList.innerHTML = '<p>Belum ada buku yang diupload.</p>';
-                return;
-            }
-
-            data.forEach(book => {
-                const shareLink = window.location.href.split('?')[0] + '?baca=' + encodeURIComponent(book.file_url);
-                
-                const card = `
-                    <div class="book-card">
-                        <h3>${book.judul}</h3>
-                        <p style="font-size: 12px; color: gray;">Kategori: ${book.kategori}</p>
-                        <a href="?baca=${encodeURIComponent(book.file_url)}" class="btn-read">Buka Buku (Flip)</a>
-                        <button class="btn-share" onclick="copyLink('${shareLink}')">Copy Link Share</button>
-                    </div>
-                `;
-                bookList.innerHTML += card;
-            });
         }
 
         function copyLink(link) {
             navigator.clipboard.writeText(link).then(() => {
-                alert("Link buku berhasil disalin! Silakan bagikan.");
+                alert("Link flipbook berhasil disalin!");
             });
         }
 
-        // --- FUNGSI: Upload File PDF ke Storage Supabase lalu Simpan ke Database ---
+        // --- 4. FUNGSI UPLOAD ---
         async function uploadBuku() {
             const judul = document.getElementById('judulBuku').value;
             const kategori = document.getElementById('kategoriBuku').value;
@@ -134,53 +211,65 @@
             const status = document.getElementById('statusUpload');
 
             if (!judul || fileInput.files.length === 0) {
-                alert("Harap isi judul dan pilih file PDF.");
+                alert("Judul dan File PDF wajib diisi!");
                 return;
             }
 
             const file = fileInput.files[0];
             const fileExt = file.name.split('.').pop();
-            const fileName = Date.now() + "_" + Math.random().toString(36).substring(7) + "." + fileExt; // Nama file unik
+            const fileName = Date.now() + "_" + Math.random().toString(36).substring(7) + "." + fileExt;
 
+            // Reset UI
             btn.disabled = true;
-            status.style.color = "#007bff";
-            status.innerText = "Mengupload PDF ke Server Supabase (Tahap 1/2)...";
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Memproses...`;
+            status.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            status.classList.add('bg-blue-50', 'text-blue-700');
+            status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengunggah file PDF (Max 50MB)...`;
 
-            // 1. Upload File ke Supabase Storage (Bucket: pdf-buku)
-            const { data: storageData, error: storageError } = await supabase.storage
-                .from('pdf-buku')
-                .upload(fileName, file);
+            try {
+                // 1. Upload ke Storage
+                const { data: storageData, error: storageError } = await supabase.storage
+                    .from('pdf-buku')
+                    .upload(fileName, file);
 
-            if (storageError) {
-                status.style.color = "red";
-                status.innerText = "Gagal upload file: " + storageError.message;
+                if (storageError) throw new Error("Gagal upload file: " + storageError.message);
+
+                // 2. Dapatkan Public URL
+                const { data: publicUrlData } = supabase.storage
+                    .from('pdf-buku')
+                    .getPublicUrl(fileName);
+                const publicUrl = publicUrlData.publicUrl;
+
+                status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan data ke database...`;
+
+                // 3. Simpan ke Database
+                const { error: dbError } = await supabase
+                    .from('buku')
+                    .insert([{ judul: judul, kategori: kategori, file_url: publicUrl }]);
+
+                if (dbError) throw new Error("Gagal simpan ke database: " + dbError.message);
+
+                // Sukses
+                status.classList.replace('bg-blue-50', 'bg-green-100');
+                status.classList.replace('text-blue-700', 'text-green-700');
+                status.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Buku berhasil diupload!`;
+                
+                setTimeout(() => {
+                    closeModal();
+                    fetchBooks(); // Refresh grid tanpa reload halaman
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Simpan & Upload`;
+                }, 1500);
+
+            } catch (error) {
+                // Gagal
+                status.classList.replace('bg-blue-50', 'bg-red-100');
+                status.classList.replace('text-blue-700', 'text-red-700');
+                status.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> ${error.message}`;
+                
                 btn.disabled = false;
-                return;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Coba Lagi`;
             }
-
-            // 2. Dapatkan Public URL dari file yang baru diupload
-            const { data: publicUrlData } = supabase.storage
-                .from('pdf-buku')
-                .getPublicUrl(fileName);
-            const publicUrl = publicUrlData.publicUrl;
-
-            status.innerText = "Menyimpan info buku ke Database (Tahap 2/2)...";
-
-            // 3. Simpan data (Judul & URL File) ke Database SQL (Tabel: buku)
-            const { error: dbError } = await supabase
-                .from('buku')
-                .insert([{ judul: judul, kategori: kategori, file_url: publicUrl }]);
-
-            if (dbError) {
-                status.style.color = "red";
-                status.innerText = "Gagal menyimpan ke database: " + dbError.message;
-                btn.disabled = false;
-                return;
-            }
-
-            status.style.color = "green";
-            status.innerText = "Berhasil! Halaman akan dimuat ulang.";
-            setTimeout(() => { location.reload(); }, 1500);
         }
     </script>
 </body>
