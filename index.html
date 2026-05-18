@@ -7,12 +7,8 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         var dFlipLocation = "https://cdn.jsdelivr.net/npm/@dearhive/dearflip-jquery-flipbook@1.7.3/dflip/";
@@ -20,13 +16,17 @@
         const bookUrl = urlParams.get('baca');
         
         if(bookUrl) {
+            // JIKA SEDANG MEMBACA: Atur DearFlip ke Mode Ringan (webgl: false)
             var option_flipbook_container = {
                 source: bookUrl,
-                webgl: false, // MATIKAN WEBGL AGAR 10x LEBIH RINGAN (Semi-Offline feel)
+                webgl: false, // Jauh lebih ringan, anti-lag
                 height: '100vh',
-                direction: 1,
-                enableDownload: true // Munculkan tombol download agar bisa dibaca offline seutuhnya
+                direction: 1
             };
+        } else {
+            // JIKA DI GALERI: Baru panggil pembuat sampul otomatis (mencegah bentrok)
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"><\/script>');
+            document.write('<script>if(typeof pdfjsLib !== "undefined") { pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js"; }<\/script>');
         }
     </script>
     
@@ -153,7 +153,6 @@
                 data.forEach(book => {
                     const shareLink = window.location.href.split('?')[0] + '?baca=' + encodeURIComponent(book.file_url);
                     
-                    // Cek apakah buku punya cover, kalau tidak pakai icon PDF
                     const coverElement = book.cover_url 
                         ? `<img src="${book.cover_url}" alt="${book.judul}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">`
                         : `<i class="fa-regular fa-file-pdf text-5xl text-red-400 group-hover:scale-110 transition-transform"></i>`;
@@ -202,12 +201,11 @@
             status.className = 'bg-blue-50 text-blue-700 p-3 rounded-lg text-sm font-medium mt-4 block';
             
             try {
-                // 1. BUAT THUMBNAIL DARI HALAMAN 1
                 status.innerHTML = `<i class="fa-solid fa-camera fa-spin mr-2"></i> Membuat sampul otomatis...`;
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 const page = await pdf.getPage(1);
-                const viewport = page.getViewport({ scale: 1.0 }); // Skala gambar
+                const viewport = page.getViewport({ scale: 1.0 }); 
                 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -217,7 +215,6 @@
                 
                 const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
 
-                // 2. UPLOAD FILE PDF & COVER
                 status.innerHTML = `<i class="fa-solid fa-cloud-arrow-up fa-bounce mr-2"></i> Mengunggah file ke server...`;
                 
                 const { error: pdfError } = await supabaseClient.storage.from('pdf-buku').upload(pdfFileName, file);
@@ -226,17 +223,15 @@
                 const { error: coverError } = await supabaseClient.storage.from('pdf-buku').upload(coverFileName, coverBlob);
                 if (coverError) throw new Error("Gagal upload Cover: " + coverError.message);
 
-                // 3. AMBIL URL PUBLIK
                 const pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(pdfFileName).data.publicUrl;
                 const coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(coverFileName).data.publicUrl;
                 
-                // 4. SIMPAN KE DATABASE
                 status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Merapikan rak digital...`;
                 const { error: dbError } = await supabaseClient.from('buku').insert([{ 
                     judul: judul, 
                     kategori: kategori, 
                     file_url: pdfUrl,
-                    cover_url: coverUrl // Disimpan ke kolom baru
+                    cover_url: coverUrl 
                 }]);
                 
                 if (dbError) throw new Error(dbError.message);
