@@ -137,19 +137,66 @@
         }
 
         // --- 2. LOGIKA UI (MODAL) ---
+       // --- 1. DEKLARASI FUNGSI UI DULUAN (Agar selalu terbaca browser) ---
         function openModal() {
             document.getElementById('uploadModal').classList.remove('hidden');
         }
 
         function closeModal() {
             document.getElementById('uploadModal').classList.add('hidden');
-            // Reset form
             document.getElementById('judulBuku').value = '';
             document.getElementById('filePdf').value = '';
             document.getElementById('statusUpload').classList.add('hidden');
         }
 
-        // --- 3. FUNGSI FETCH (BACA DATABASE) ---
+        function copyLink(link) {
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Link flipbook berhasil disalin!");
+            });
+        }
+
+        // --- 2. INISIALISASI SUPABASE DENGAN PENGAMAN ---
+        let supabase;
+        try {
+            // Cek apakah config.js berhasil dimuat
+            if (typeof CONFIG === 'undefined') {
+                throw new Error("File config.js tidak terbaca! Pastikan nama file dan letaknya benar di GitHub.");
+            }
+            
+            // Inisialisasi Supabase
+            supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+            
+            // --- 3. JALANKAN ROUTING JIKA SUPABASE AMAN ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookUrl = urlParams.get('baca');
+
+            if (bookUrl) {
+                // Mode Viewer
+                document.getElementById('main-ui').style.display = 'none';
+                document.getElementById('viewer-section').style.display = 'block';
+                
+                $(document).ready(function () {
+                    $("#flipbook-container").flipBook(bookUrl, {
+                        webgl: true,
+                        height: '100%',
+                        direction: 1
+                    });
+                });
+            } else {
+                // Mode Galeri
+                fetchBooks();
+            }
+
+        } catch (err) {
+            console.error("CRITICAL ERROR:", err);
+            // Tampilkan error langsung di layar agar ketahuan masalahnya
+            document.getElementById('bookList').innerHTML = `
+                <div class="col-span-full bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
+                    <strong>Sistem Gagal Berjalan:</strong> ${err.message}
+                </div>`;
+        }
+
+        // --- 4. FUNGSI DATABASE (FETCH & UPLOAD) ---
         async function fetchBooks() {
             try {
                 const { data, error } = await supabase
@@ -173,7 +220,6 @@
 
                 data.forEach(book => {
                     const shareLink = window.location.href.split('?')[0] + '?baca=' + encodeURIComponent(book.file_url);
-                    
                     const card = `
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full">
                             <div class="bg-slate-100 h-40 flex items-center justify-center border-b border-slate-200 relative group">
@@ -198,18 +244,11 @@
             } catch (err) {
                 document.getElementById('bookList').innerHTML = `
                     <div class="col-span-full bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
-                        <strong>Koneksi Database Gagal:</strong> ${err.message}. Pastikan URL/Key Supabase benar dan tabel 'buku' sudah dibuat.
+                        <strong>Koneksi Database Gagal:</strong> ${err.message}
                     </div>`;
             }
         }
 
-        function copyLink(link) {
-            navigator.clipboard.writeText(link).then(() => {
-                alert("Link flipbook berhasil disalin!");
-            });
-        }
-
-        // --- 4. FUNGSI UPLOAD ---
         async function uploadBuku() {
             const judul = document.getElementById('judulBuku').value;
             const kategori = document.getElementById('kategoriBuku').value;
@@ -226,12 +265,11 @@
             const fileExt = file.name.split('.').pop();
             const fileName = Date.now() + "_" + Math.random().toString(36).substring(7) + "." + fileExt;
 
-            // Reset UI
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Memproses...`;
             status.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
-            status.classList.add('bg-blue-50', 'text-blue-700');
-            status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengunggah file PDF (Max 50MB)...`;
+            status.classList.add('bg-blue-50', 'text-blue-700', 'p-3', 'rounded-lg', 'text-sm', 'font-medium', 'mt-4');
+            status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengunggah file PDF...`;
 
             try {
                 // 1. Upload ke Storage
@@ -241,13 +279,13 @@
 
                 if (storageError) throw new Error("Gagal upload file: " + storageError.message);
 
-                // 2. Dapatkan Public URL
+                // 2. Dapatkan URL File
                 const { data: publicUrlData } = supabase.storage
                     .from('pdf-buku')
                     .getPublicUrl(fileName);
                 const publicUrl = publicUrlData.publicUrl;
 
-                status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan data ke database...`;
+                status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan ke database...`;
 
                 // 3. Simpan ke Database
                 const { error: dbError } = await supabase
@@ -256,20 +294,18 @@
 
                 if (dbError) throw new Error("Gagal simpan ke database: " + dbError.message);
 
-                // Sukses
                 status.classList.replace('bg-blue-50', 'bg-green-100');
                 status.classList.replace('text-blue-700', 'text-green-700');
-                status.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Buku berhasil diupload!`;
+                status.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Berhasil diupload!`;
                 
                 setTimeout(() => {
                     closeModal();
-                    fetchBooks(); // Refresh grid tanpa reload halaman
+                    fetchBooks();
                     btn.disabled = false;
                     btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Simpan & Upload`;
                 }, 1500);
 
             } catch (error) {
-                // Gagal
                 status.classList.replace('bg-blue-50', 'bg-red-100');
                 status.classList.replace('text-blue-700', 'text-red-700');
                 status.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> ${error.message}`;
