@@ -102,17 +102,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/js/dflip.min.js"></script>
 
-    <script>
-        // --- 1. INISIALISASI SUPABASE & ROUTING (Cukup sekali saja) ---
-        let supabase;
+   <script>
+        // --- 1. INISIALISASI SUPABASE & ROUTING ---
+        // Ganti nama variabel agar tidak bentrok dengan bawaan CDN Supabase
+        let supabaseClient; 
         
         try {
             if (typeof CONFIG === 'undefined') {
                 throw new Error("File config.js tidak terbaca! Pastikan nama file dan letaknya benar di GitHub.");
             }
             
-            // Inisialisasi Supabase
-            supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+            // Inisialisasi menggunakan window.supabase bawaan library
+            supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
             
             // Cek parameter URL
             const urlParams = new URLSearchParams(window.location.search);
@@ -163,7 +164,8 @@
         // --- 3. FUNGSI DATABASE (FETCH & UPLOAD) ---
         async function fetchBooks() {
             try {
-                const { data, error } = await supabase
+                // Gunakan supabaseClient
+                const { data, error } = await supabaseClient
                     .from('buku')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -236,15 +238,15 @@
             status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengunggah file PDF...`;
 
             try {
-                // 1. Upload ke Storage
-                const { data: storageData, error: storageError } = await supabase.storage
+                // 1. Upload ke Storage (Gunakan supabaseClient)
+                const { data: storageData, error: storageError } = await supabaseClient.storage
                     .from('pdf-buku')
                     .upload(fileName, file);
 
                 if (storageError) throw new Error("Gagal upload file: " + storageError.message);
 
                 // 2. Dapatkan URL File
-                const { data: publicUrlData } = supabase.storage
+                const { data: publicUrlData } = supabaseClient.storage
                     .from('pdf-buku')
                     .getPublicUrl(fileName);
                 const publicUrl = publicUrlData.publicUrl;
@@ -252,7 +254,7 @@
                 status.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan ke database...`;
 
                 // 3. Simpan ke Database
-                const { error: dbError } = await supabase
+                const { error: dbError } = await supabaseClient
                     .from('buku')
                     .insert([{ judul: judul, kategori: kategori, file_url: publicUrl }]);
 
