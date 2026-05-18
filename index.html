@@ -115,7 +115,7 @@
             alert("Sistem belum siap: " + err.message + "\n\nCoba lakukan Hard Refresh (Ctrl+Shift+R / Cmd+Shift+R).");
         }
 
-        const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const urlParams = new URLSearchParams(window.location.search);
         const bookUrl = urlParams.get('baca');
 
