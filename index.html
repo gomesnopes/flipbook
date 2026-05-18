@@ -3,26 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Library & Flipbook</title>
+    <title>Digital Library & Flipbook (Supabase)</title>
     <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/dflip.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/css/themify-icons.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; }
         .container { max-width: 1000px; margin: auto; padding: 20px; }
         .header { text-align: center; margin-bottom: 30px; }
-        
-        /* Form Admin */
         .admin-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
         .admin-panel input, .admin-panel select, .admin-panel button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         .admin-panel button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
-        
-        /* Grid Galeri Buku */
         .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .book-card { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn-read { display: inline-block; background: #28a745; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; margin-top: 10px; }
         .btn-share { display: inline-block; background: #17a2b8; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; margin-top: 10px; cursor: pointer; border: none; }
-        
-        /* Viewer Fullscreen */
         #viewer-section { display: none; width: 100vw; height: 100vh; background: #2c3e50; }
         #flipbook-container { height: 100%; }
         .btn-back { position: absolute; top: 10px; left: 10px; z-index: 999; background: white; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; color: #333; }
@@ -32,7 +27,7 @@
 
     <div id="gallery-section" class="container">
         <div class="header">
-            <h2>Perpustakaan Digital</h2>
+            <h2>Perpustakaan Digital (Supabase Powered)</h2>
         </div>
 
         <div class="admin-panel">
@@ -43,8 +38,8 @@
                 <option value="Edukasi">Edukasi / Modul</option>
             </select>
             <input type="file" id="filePdf" accept="application/pdf" required>
-            <button onclick="uploadBuku()" id="btnUpload">Upload ke Server</button>
-            <p id="statusUpload" style="color: #007bff; font-weight: bold;"></p>
+            <button onclick="uploadBuku()" id="btnUpload">Upload ke Supabase</button>
+            <p id="statusUpload" style="font-weight: bold; margin-top:10px;"></p>
         </div>
 
         <div class="book-grid" id="bookList">
@@ -61,75 +56,77 @@
     <script src="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.7.3/js/dflip.min.js"></script>
 
     <script>
-        // === GANTI DENGAN URL WEB APP GAS ANDA ===
-        const GAS_URL = "https://script.google.com/macros/s/AKfycby40ikQ4dZdlW8e9dvlD8ujo6fOmzSMeW496WUeiOcLDyq6DdKjzlOzKIw0luUzAb7WpA/exec";
+        // === KONFIGURASI SUPABASE (GANTI DENGAN KUNCI ANDA DARI PROJECT SETTINGS) ===
+        const SUPABASE_URL = 'https://zqjgimorpkzynytrhyde.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxamdpbW9ycGt6eW55dHJoeWRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzkyOTUsImV4cCI6MjA5NDYxNTI5NX0.LAbAMRLiu9XxiAxFvoSX9FhraFgXoCp0GkEZUlUhHow';
 
-        // Cek apakah URL sedang membuka buku tertentu
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Routing Berdasarkan URL (Apakah ada parameter ?baca=URL_PDF)
         const urlParams = new URLSearchParams(window.location.search);
-        const fileId = urlParams.get('baca');
+        const bookUrl = urlParams.get('baca');
 
-        if (fileId) {
-            // Mode Membaca: Tampilkan viewer, sembunyikan galeri
+        if (bookUrl) {
+            // MODE BACA (VIEWER)
             document.getElementById('gallery-section').style.display = 'none';
             document.getElementById('viewer-section').style.display = 'block';
             
-            // Format URL PDF Bypass Drive Google agar bisa dibaca library
-            const pdfUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
-            
             $(document).ready(function () {
-                $("#flipbook-container").flipBook(pdfUrl, {
-                    webgl: true,
+                // Supabase Storage secara native sudah support CORS sepenuhnya!
+                $("#flipbook-container").flipBook(bookUrl, {
+                    webgl: true, // Animasi 3D akan mulus karena tidak ada blokir
                     height: '100%',
                     direction: 1
                 });
             });
         } else {
-            // Mode Galeri: Ambil data dari Google Sheets (GAS)
+            // MODE GALERI
             fetchBooks();
         }
 
-        // FUNGSI: Mengambil daftar buku dari GAS
-        function fetchBooks() {
-            fetch(GAS_URL)
-                .then(response => response.json())
-                .then(result => {
-                    const bookList = document.getElementById('bookList');
-                    bookList.innerHTML = ''; 
-                    
-                    if(result.data.length === 0) {
-                        bookList.innerHTML = '<p>Belum ada buku yang diupload.</p>';
-                        return;
-                    }
+        // --- FUNGSI: Mengambil Daftar Buku dari Database Supabase ---
+        async function fetchBooks() {
+            const { data, error } = await supabase
+                .from('buku')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-                    result.data.forEach(book => {
-                        // Membuat link share untuk website ini
-                        const shareLink = window.location.href.split('?')[0] + '?baca=' + book.fileId;
-                        
-                        const card = `
-                            <div class="book-card">
-                                <h3>${book.judul}</h3>
-                                <p style="font-size: 12px; color: gray;">Kategori: ${book.kategori}</p>
-                                <a href="?baca=${book.fileId}" class="btn-read">Buka Buku (Flip)</a>
-                                <button class="btn-share" onclick="copyLink('${shareLink}')">Copy Link Share</button>
-                            </div>
-                        `;
-                        bookList.innerHTML += card;
-                    });
-                })
-                .catch(err => {
-                    document.getElementById('bookList').innerHTML = '<p style="color:red;">Gagal memuat data.</p>';
-                });
+            const bookList = document.getElementById('bookList');
+            bookList.innerHTML = ''; 
+
+            if (error) {
+                bookList.innerHTML = '<p style="color:red;">Gagal memuat database.</p>';
+                return;
+            }
+
+            if(data.length === 0) {
+                bookList.innerHTML = '<p>Belum ada buku yang diupload.</p>';
+                return;
+            }
+
+            data.forEach(book => {
+                const shareLink = window.location.href.split('?')[0] + '?baca=' + encodeURIComponent(book.file_url);
+                
+                const card = `
+                    <div class="book-card">
+                        <h3>${book.judul}</h3>
+                        <p style="font-size: 12px; color: gray;">Kategori: ${book.kategori}</p>
+                        <a href="?baca=${encodeURIComponent(book.file_url)}" class="btn-read">Buka Buku (Flip)</a>
+                        <button class="btn-share" onclick="copyLink('${shareLink}')">Copy Link Share</button>
+                    </div>
+                `;
+                bookList.innerHTML += card;
+            });
         }
 
-        // FUNGSI: Copy Link Share
         function copyLink(link) {
             navigator.clipboard.writeText(link).then(() => {
                 alert("Link buku berhasil disalin! Silakan bagikan.");
             });
         }
 
-        // FUNGSI: Upload File ke GAS
-        function uploadBuku() {
+        // --- FUNGSI: Upload File PDF ke Storage Supabase lalu Simpan ke Database ---
+        async function uploadBuku() {
             const judul = document.getElementById('judulBuku').value;
             const kategori = document.getElementById('kategoriBuku').value;
             const fileInput = document.getElementById('filePdf');
@@ -142,46 +139,48 @@
             }
 
             const file = fileInput.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = Date.now() + "_" + Math.random().toString(36).substring(7) + "." + fileExt; // Nama file unik
+
             btn.disabled = true;
-            btn.innerText = "Proses Upload... Jangan tutup halaman";
-            status.innerText = "Mengubah PDF ke format sistem...";
+            status.style.color = "#007bff";
+            status.innerText = "Mengupload PDF ke Server Supabase (Tahap 1/2)...";
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Data = e.target.result;
-                
-                const payload = {
-                    judul: judul,
-                    kategori: kategori,
-                    base64: base64Data
-                };
+            // 1. Upload File ke Supabase Storage (Bucket: pdf-buku)
+            const { data: storageData, error: storageError } = await supabase.storage
+                .from('pdf-buku')
+                .upload(fileName, file);
 
-                status.innerText = "Mengirim ke Google Drive & Sheets...";
+            if (storageError) {
+                status.style.color = "red";
+                status.innerText = "Gagal upload file: " + storageError.message;
+                btn.disabled = false;
+                return;
+            }
 
-                fetch(GAS_URL, {
-                    method: 'POST',
-                    // Gunakan text/plain untuk menghindari pemblokiran CORS Preflight di browser
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-                    body: JSON.stringify(payload)
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === "success") {
-                        status.style.color = "green";
-                        status.innerText = "Berhasil! Buku ditambahkan.";
-                        setTimeout(() => { location.reload(); }, 1500); // Reload halaman untuk melihat buku baru
-                    } else {
-                        throw new Error(result.message);
-                    }
-                })
-                .catch(error => {
-                    status.style.color = "red";
-                    status.innerText = "Upload Gagal: " + error.message;
-                    btn.disabled = false;
-                    btn.innerText = "Upload ke Server";
-                });
-            };
-            reader.readAsDataURL(file);
+            // 2. Dapatkan Public URL dari file yang baru diupload
+            const { data: publicUrlData } = supabase.storage
+                .from('pdf-buku')
+                .getPublicUrl(fileName);
+            const publicUrl = publicUrlData.publicUrl;
+
+            status.innerText = "Menyimpan info buku ke Database (Tahap 2/2)...";
+
+            // 3. Simpan data (Judul & URL File) ke Database SQL (Tabel: buku)
+            const { error: dbError } = await supabase
+                .from('buku')
+                .insert([{ judul: judul, kategori: kategori, file_url: publicUrl }]);
+
+            if (dbError) {
+                status.style.color = "red";
+                status.innerText = "Gagal menyimpan ke database: " + dbError.message;
+                btn.disabled = false;
+                return;
+            }
+
+            status.style.color = "green";
+            status.innerText = "Berhasil! Halaman akan dimuat ulang.";
+            setTimeout(() => { location.reload(); }, 1500);
         }
     </script>
 </body>
