@@ -224,9 +224,10 @@
                             <option value="D">Opsi D</option>
                         </select>
                     </div>
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition h-[42px] flex items-center gap-2">
+                                        <button onclick="simpanKuis(this)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition h-[42px] flex items-center gap-2">
                         <i class="fa-solid fa-save"></i> Simpan Pertanyaan
                     </button>
+
                 </div>
             </div>
             
@@ -293,6 +294,18 @@
 
         // --- 3. AMBIL DAFTAR BUKU (Untuk Tabel Modul & Dropdown Kuis) ---
         async function fetchDaftarBukuAdmin() {
+
+                    try {
+            if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
+            supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+            
+            // Langsung ambil daftar buku dan kuis saat admin dibuka
+            fetchDaftarBukuAdmin();
+            fetchDaftarKuis(); // <--- Tambahkan baris ini
+        } catch (err) {
+            console.error("Supabase Error:", err);
+        }
+
             try {
                 const { data, error } = await supabaseClient.from('buku').select('id, judul, kategori, cover_url').order('created_at', { ascending: false });
                 if (error) throw error;
@@ -397,6 +410,123 @@
                 kunciSelect.innerHTML = `<option value="Benar">Benar</option><option value="Salah">Salah</option>`;
             }
         }
+
+                // --- 5. LOGIKA MANAJEMEN KUIS (CRUD) ---
+
+        // Fungsi A: Menyimpan Kuis Baru ke Database
+        async function simpanKuis(btn) {
+            const idBuku = document.getElementById('pilihBukuKuis').value;
+            const jenis = document.getElementById('jenisKuis').value;
+            const pertanyaan = document.getElementById('teksPertanyaan').value;
+            const kunci = document.getElementById('kunciJawaban').value;
+            let opsiJawaban = null;
+
+            if (!idBuku || !pertanyaan) return alert("Pilih Modul Buku dan tulis pertanyaannya!");
+
+            // Jika pilihan ganda, rangkai opsi A, B, C, D menjadi JSON
+            if (jenis === 'Pilihan Ganda') {
+                const a = document.getElementById('opsiA').value;
+                const b = document.getElementById('opsiB').value;
+                const c = document.getElementById('opsiC').value;
+                const d = document.getElementById('opsiD').value;
+                
+                if (!a || !b || !c || !d) return alert("Harap isi semua opsi jawaban (A, B, C, D)!");
+                opsiJawaban = { A: a, B: b, C: c, D: d };
+            }
+
+            // Animasi tombol loading
+            const teksAsli = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
+
+            try {
+                const { error } = await supabaseClient.from('kuis').insert([{
+                    id_buku: idBuku,
+                    jenis_kuis: jenis,
+                    pertanyaan: pertanyaan,
+                    opsi_jawaban: opsiJawaban,
+                    jawaban_benar: kunci
+                }]);
+
+                if (error) throw error;
+
+                alert("Berhasil! Pertanyaan kuis telah disimpan.");
+                
+                // Bersihkan form setelah sukses
+                document.getElementById('teksPertanyaan').value = '';
+                if(jenis === 'Pilihan Ganda') {
+                    document.getElementById('opsiA').value = '';
+                    document.getElementById('opsiB').value = '';
+                    document.getElementById('opsiC').value = '';
+                    document.getElementById('opsiD').value = '';
+                }
+                
+                fetchDaftarKuis(); // Refresh tabel di bawah form
+            } catch (err) {
+                alert("Gagal menyimpan kuis: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = teksAsli;
+            }
+        }
+
+        // Fungsi B: Mengambil dan Menampilkan Daftar Kuis
+        async function fetchDaftarKuis() {
+            try {
+                // Tarik data kuis dan gabungkan dengan tabel buku untuk mengambil judulnya
+                const { data, error } = await supabaseClient
+                    .from('kuis')
+                    .select('id, pertanyaan, jenis_kuis, jawaban_benar, buku (judul)')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const tbody = document.getElementById('tabelKuis');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="py-6 text-center text-slate-400">Belum ada pertanyaan kuis.</td></tr>';
+                    return;
+                }
+
+                data.forEach(q => {
+                    const judulModul = q.buku ? q.buku.judul : 'Modul Terhapus';
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 border-b border-slate-100">
+                            <td class="py-3 px-6 font-medium text-slate-700">
+                                <div class="line-clamp-1">${judulModul}</div>
+                                <div class="text-xs text-slate-400 font-normal">${q.jenis_kuis}</div>
+                            </td>
+                            <td class="py-3 px-6">
+                                <div class="text-slate-800 line-clamp-2">${q.pertanyaan}</div>
+                                <div class="text-xs text-emerald-600 font-bold mt-1">Kunci Jawaban: ${q.jawaban_benar}</div>
+                            </td>
+                            <td class="py-3 px-6 text-center">
+                                <button onclick="hapusKuis(${q.id})" class="text-red-500 hover:bg-red-50 p-2 rounded transition" title="Hapus Pertanyaan">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error("Gagal load kuis:", err);
+            }
+        }
+
+        // Fungsi C: Menghapus Pertanyaan Kuis
+        async function hapusKuis(idKuis) {
+            if(!confirm("Yakin ingin menghapus pertanyaan ini secara permanen?")) return;
+            
+            try {
+                const { error } = await supabaseClient.from('kuis').delete().eq('id', idKuis);
+                if (error) throw error;
+                fetchDaftarKuis(); // Refresh tabel
+            } catch (err) {
+                alert("Gagal menghapus data: " + err.message);
+            }
+        }
+
 
                // --- 6. RENDER GRAFIK ANALITIK TERPADU ---
         window.onload = function() {
