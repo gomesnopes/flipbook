@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - FlipStory E-Learning</title>
+    
+    <!-- Tailwind & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js untuk Dasbor Analitik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all">
+        <div class="h-16 flex items-center px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800">
+            <i class="fa-solid fa-graduation-cap text-blue-500 mr-2"></i> AdminPro
+        </div>
+        
+        <nav class="flex-1 px-4 py-6 space-y-2">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white font-medium transition-colors">
+                <i class="fa-solid fa-chart-pie w-5"></i> Dasbor Analitik
+            </button>
+            <button onclick="switchTab('kuis')" id="nav-kuis" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors">
+                <i class="fa-solid fa-list-check w-5"></i> Manajemen Kuis
+            </button>
+            <button onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors">
+                <i class="fa-solid fa-sliders w-5"></i> Pengaturan Data
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-800">
+            <a href="index.html" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Kembali ke Galeri
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 h-full overflow-y-auto bg-slate-50 p-8">
+        
+        <!-- 1. TAB DASBOR ANALITIK -->
+        <section id="dashboard" class="tab-content active">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Peserta</h2>
+            
+            <!-- Kartu Ringkasan -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-users"></i></div>
+                    <div><p class="text-sm font-medium text-slate-500">Total Pengguna</p><h3 class="text-2xl font-bold text-slate-800" id="stat-users">0</h3></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-book-open"></i></div>
+                    <div><p class="text-sm font-medium text-slate-500">Total Modul</p><h3 class="text-2xl font-bold text-slate-800" id="stat-books">0</h3></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-star"></i></div>
+                    <div><p class="text-sm font-medium text-slate-500">Kuis Diselesaikan</p><h3 class="text-2xl font-bold text-slate-800" id="stat-kuis">0</h3></div>
+                </div>
+            </div>
+
+            <!-- Grafik Demografi -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-700 mb-4">Distribusi Rentang Usia</h3>
+                    <canvas id="chartUsia" height="250"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-700 mb-4">Komposisi Jenis Kelamin</h3>
+                    <div class="w-2/3 mx-auto">
+                        <canvas id="chartGender"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. TAB MANAJEMEN KUIS -->
+        <section id="kuis" class="tab-content">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Manajemen Kuis (CRUD)</h2>
+            
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-8">
+                <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Buat Pertanyaan Baru</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Pilih Modul Buku</label>
+                        <select id="pilihBuku" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none">
+                            <option value="">Memuat buku...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Kuis</label>
+                        <select id="jenisKuis" onchange="toggleTipeKuis()" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none">
+                            <option value="Pilihan Ganda">Pilihan Ganda (A/B/C/D)</option>
+                            <option value="Benar Salah">Benar / Salah</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Pertanyaan</label>
+                    <textarea id="teksPertanyaan" rows="3" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Tuliskan pertanyaan kuis di sini..."></textarea>
+                </div>
+
+                <!-- Form Dinamis: Pilihan Ganda -->
+                <div id="formPilihanGanda" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Opsi A</label>
+                        <input type="text" id="opsiA" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Opsi B</label>
+                        <input type="text" id="opsiB" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Opsi C</label>
+                        <input type="text" id="opsiC" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Opsi D</label>
+                        <input type="text" id="opsiD" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:border-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Form Kunci Jawaban -->
+                <div class="mb-6 flex gap-4 items-end">
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold text-emerald-600 mb-1">Kunci Jawaban Benar</label>
+                        <select id="kunciJawaban" class="w-full px-4 py-2 border border-emerald-300 bg-emerald-50 text-emerald-700 rounded-lg focus:ring-emerald-500 outline-none font-bold">
+                            <!-- Opsi ini akan diubah otomatis oleh JavaScript berdasarkan jenis kuis -->
+                            <option value="A">Opsi A</option>
+                            <option value="B">Opsi B</option>
+                            <option value="C">Opsi C</option>
+                            <option value="D">Opsi D</option>
+                        </select>
+                    </div>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition h-[42px] flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Simpan Pertanyaan
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tabel Daftar Kuis -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                            <th class="py-3 px-6 font-bold">Modul / Buku</th>
+                            <th class="py-3 px-6 font-bold">Pertanyaan</th>
+                            <th class="py-3 px-6 font-bold">Jenis</th>
+                            <th class="py-3 px-6 font-bold text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelKuis" class="text-sm text-slate-700">
+                        <tr>
+                            <td colspan="4" class="py-8 text-center text-slate-400">Belum ada pertanyaan kuis.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. TAB PENGATURAN & TESTING -->
+        <section id="pengaturan" class="tab-content">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
+            
+            <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6 max-w-2xl">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">Hapus Semua Data Peserta & Kuis</h3>
+                        <p class="text-slate-500 text-sm mb-4">Fitur ini digunakan khusus untuk tahap uji coba (testing) guna mengosongkan tabel profil dan riwayat kuis agar kamu bisa melakukan simulasi input data peserta baru dalam jumlah besar tanpa tumpang tindih.</p>
+                        <button onclick="hapusSemuaData()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-trash-can"></i> Jalankan Reset Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- 1. INISIALISASI SUPABASE ---
+        let supabaseClient;
+        try {
+            if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
+            supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        } catch (err) {
+            alert("Error Supabase: " + err.message);
+        }
+
+        // --- 2. LOGIKA NAVIGASI SIDEBAR ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white');
+                el.classList.add('hover:bg-slate-800', 'hover:text-white', 'text-slate-300');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById('nav-' + tabId);
+            activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300');
+            activeBtn.classList.add('bg-blue-600', 'text-white');
+        }
+
+        // --- 3. LOGIKA FORM DINAMIS (JENIS KUIS) ---
+        function toggleTipeKuis() {
+            const jenis = document.getElementById('jenisKuis').value;
+            const formPG = document.getElementById('formPilihanGanda');
+            const kunciSelect = document.getElementById('kunciJawaban');
+            
+            kunciSelect.innerHTML = ''; // Kosongkan opsi sebelumnya
+
+            if (jenis === 'Pilihan Ganda') {
+                formPG.style.display = 'grid'; // Tampilkan input A, B, C, D
+                kunciSelect.innerHTML = `
+                    <option value="A">Opsi A</option>
+                    <option value="B">Opsi B</option>
+                    <option value="C">Opsi C</option>
+                    <option value="D">Opsi D</option>
+                `;
+            } else {
+                formPG.style.display = 'none'; // Sembunyikan input A, B, C, D
+                kunciSelect.innerHTML = `
+                    <option value="Benar">Benar</option>
+                    <option value="Salah">Salah</option>
+                `;
+            }
+        }
+
+        // --- 4. RENDER GRAFIK ANALITIK (DUMMY DATA SEMENTARA) ---
+        // Nanti ini akan kita hubungkan dengan logika Fetch dari tabel profiles
+        window.onload = function() {
+            // Grafik Usia
+            const ctxUsia = document.getElementById('chartUsia').getContext('2d');
+            new Chart(ctxUsia, {
+                type: 'bar',
+                data: {
+                    labels: ['12-15 Tahun', '16-18 Tahun', '19-25 Tahun', '> 25 Tahun'],
+                    datasets: [{
+                        label: 'Jumlah Peserta',
+                        data: [15, 30, 20, 5],
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Grafik Jenis Kelamin
+            const ctxGender = document.getElementById('chartGender').getContext('2d');
+            new Chart(ctxGender, {
+                type: 'pie',
+                data: {
+                    labels: ['Laki-laki', 'Perempuan'],
+                    datasets: [{
+                        data: [45, 55],
+                        backgroundColor: ['#3b82f6', '#ec4899']
+                    }]
+                }
+            });
+        };
+
+        // --- 5. FUNGSI TESTING HAPUS DATA ---
+        async function hapusSemuaData() {
+            const konfirmasi = confirm("YAKIN INGIN MERESET? Semua data profil peserta dan daftar kuis akan terhapus permanen.");
+            if (konfirmasi) {
+                // Nantinya logika eksekusi Supabase .delete() akan dimasukkan ke sini
+                alert("Simulasi Reset Data berhasil dijalankan (Kode penghapusan belum disambungkan).");
+            }
+        }
+    </script>
+</body>
+</html>
