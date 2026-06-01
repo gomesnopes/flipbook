@@ -9,40 +9,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- SCRIPT DEARFLIP & PARAMETER ROUTING (SOLUSI ABSOLUT LOCK ANTI-STUCK) -->
-        <script>
+      <!-- SCRIPT DEARFLIP & PARAMETER ROUTING (VERSI STABIL POLL) -->
+    <script>
         var dFlipLocation = "https://cdn.jsdelivr.net/npm/@dearhive/dearflip-jquery-flipbook@1.7.3/dflip/";
         const urlParams = new URLSearchParams(window.location.search);
         const bookUrl = urlParams.get('baca');
         
-        // Kunci konfigurasi DearFlip di tingkat global window
         window.DFLIP = window.DFLIP || {};
         window.DFLIP.defaults = {
             webgl: false, 
             webglRetina: false,
             soundEnable: true,
-            height: '100vh',
-            
-            // FIX KUIS: Detektor halaman internal bawaan DearFlip
-            onPageChange: function(flipbook, page) {
-                // Jika halaman yang dibuka sama dengan total halaman buku
-                if (page === flipbook.totalPages) {
-                    // Beri jeda sebentar agar efek balik halaman selesai
-                    setTimeout(() => {
-                        // Paksa keluar dari mode Fullscreen jika sedang aktif
-                        if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
-                            if (document.exitFullscreen) { document.exitFullscreen(); }
-                            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-                            else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
-                        }
-                        
-                        // Panggil fungsi pop-up kuis (pastikan fungsi global siap)
-                        if (typeof window.bukaTantanganKuis === "function") {
-                            window.bukaTantanganKuis();
-                        }
-                    }, 1000);
-                }
-            }
+            height: '100vh'
         };
 
         if (bookUrl) {
@@ -52,6 +30,7 @@
             };
         }
     </script>
+
 
     
     <link href="https://cdn.jsdelivr.net/npm/@dearhive/dearflip-jquery-flipbook@1.7.3/dflip/css/dflip.min.css" rel="stylesheet">
@@ -219,7 +198,7 @@
             validasiAksesHalaman();
         } catch (err) { console.error(err); }
 
-        // --- 1. VALIDASI LOGIN & PROTEKSI ---
+                // --- 1. VALIDASI LOGIN & PROTEKSI + DETEKTOR AKTIF KUIS ---
         async function validasiAksesHalaman() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             
@@ -244,7 +223,33 @@
                     if (bookUrl) {
                         document.getElementById('main-ui').style.display = 'none';
                         document.getElementById('viewer-section').style.display = 'block';
-                        // DI SINI PERUBAHANNYA: Deklarasi ganda ditiadakan karena sudah dikunci absolut oleh window.DFLIP di atas.
+                        
+                        // JURUS AMAN: Jalankan pengawas halaman aktif (Polling) setiap 1 detik
+                        let kuisSudahTerpiku = false;
+                        const pengawasBuku = setInterval(() => {
+                            // Cek apakah objek DearFlip sudah tercipta di layar
+                            if (window.DFLIP && window.DFLIP.books && window.DFLIP.books.flipbook_container) {
+                                const flipbook = window.DFLIP.books.flipbook_container;
+                                
+                                // Jika halaman saat ini adalah halaman terakhir dan kuis belum pernah keluar
+                                if (flipbook.currentPage === flipbook.totalPages && !kuisSudahTerpiku) {
+                                    kuisSudahTerpiku = true; 
+                                    clearInterval(pengawasBuku); // Matikan pengawas agar tidak memicu berulang kali
+                                    
+                                    // Paksa keluar dari mode Fullscreen browser jika aktif
+                                    if (document.fullscreenElement || document.webkitFullscreenElement) {
+                                        if (document.exitFullscreen) document.exitFullscreen();
+                                        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                                    }
+                                    
+                                    // Munculkan kuis
+                                    setTimeout(() => {
+                                        window.bukaTantanganKuis();
+                                    }, 800);
+                                }
+                            }
+                        }, 1000);
+
                     } else {
                         fetchBooks();
                     }
@@ -264,6 +269,7 @@
                 fetchBooks();
             }
         }
+
 
         // --- 2. LOGIKA TOMBOL BACA CONTROLLER ---
         function arahkanMembaca(urlFile) {
