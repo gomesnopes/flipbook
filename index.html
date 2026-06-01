@@ -9,18 +9,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-        <!-- SCRIPT DEARFLIP & PARAMETER ROUTING (VERSI ANTI-LAG & FIXED) -->
+    <!-- SCRIPT DEARFLIP & PARAMETER ROUTING (SOLUSI ABSOLUT LOCK ANTI-STUCK) -->
     <script>
         var dFlipLocation = "https://cdn.jsdelivr.net/npm/@dearhive/dearflip-jquery-flipbook@1.7.3/dflip/";
         const urlParams = new URLSearchParams(window.location.search);
         const bookUrl = urlParams.get('baca');
         
-        // JIKA BUKU DIBUKA: Langsung paksa matikan WebGL di awal agar 10x lebih ringan & bebas loading macet
+        // Kunci konfigurasi DearFlip di tingkat global window agar dipaksa memakai mode CSS 3D yang ringan
+        window.DFLIP = window.DFLIP || {};
+        window.DFLIP.defaults = {
+            webgl: false, // MATIKAN WEBGL SECARA TOTAL (Kunci penyelesaian loading macet)
+            webglRetina: false,
+            soundEnable: true,
+            height: '100vh'
+        };
+
+        // Deklarasi kontainer flipbook jika URL terdeteksi
         if (bookUrl) {
-          
+            var option_flipbook_container = {
+                source: bookUrl,
+                direction: 1
+            };
         }
     </script>
-
     
     <link href="https://cdn.jsdelivr.net/npm/@dearhive/dearflip-jquery-flipbook@1.7.3/dflip/css/dflip.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@dearhive/dearflip-jquery-flipbook@1.7.3/dflip/css/themify-icons.min.css" rel="stylesheet">
@@ -43,6 +54,7 @@
 <body class="bg-slate-50 text-slate-800 font-sans antialiased">
 
     <div id="main-ui">
+        <!-- NAVBAR -->
         <nav class="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-book-open-reader text-blue-600 text-2xl"></i>
@@ -55,6 +67,7 @@
             </div>
         </nav>
 
+        <!-- HERO BANNER CTA (PENASARAN MODE TAMU) -->
         <div id="guest-hero" class="hidden bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-12 text-center relative overflow-hidden shadow-inner">
             <div class="max-w-3xl mx-auto relative z-10">
                 <span class="bg-blue-500/30 text-blue-200 text-xs uppercase tracking-wider font-extrabold px-3 py-1 rounded-full border border-blue-400/30">🚀 Platform E-Learning Interaktif</span>
@@ -68,6 +81,7 @@
             <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl"></div>
         </div>
 
+        <!-- DAFTAR BUKU -->
         <div class="max-w-6xl mx-auto px-6 py-10">
             <h3 class="text-2xl font-black text-slate-800 mb-2">Koleksi Rak Buku Digital</h3>
             <p class="text-slate-500 mb-8 text-sm">Pilih salah satu materi di bawah ini untuk memulai pembelajaran.</p>
@@ -78,6 +92,7 @@
         </div>
     </div>
 
+    <!-- MODAL AUTH -->
     <div id="authModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter relative my-8">
             <button onclick="tutupModalAuth()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition">
@@ -101,6 +116,7 @@
                     <button onclick="gantiTabAuth('daftar')" id="tab-daftar" class="flex-1 pb-3 text-center transition auth-tab-inactive">Daftar Baru</button>
                 </div>
 
+                <!-- Form Login -->
                 <div id="form-login" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
@@ -113,6 +129,7 @@
                     <button onclick="prosesLogin()" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition mt-2 shadow-sm">Masuk</button>
                 </div>
 
+                <!-- Form Daftar -->
                 <div id="form-daftar" class="hidden space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
@@ -150,6 +167,7 @@
                     <button onclick="prosesDaftar()" id="btn-daftar" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg transition mt-2 shadow-sm">Buat Akun Sekarang</button>
                 </div>
 
+                <!-- Google Auth -->
                 <div class="mt-6">
                     <div class="relative"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div><div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-slate-500">ATAU</span></div></div>
                     <button onclick="loginDenganGoogle()" class="mt-4 w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm">
@@ -160,6 +178,7 @@
         </div>
     </div>
 
+    <!-- VIEWER SECTION -->
     <div id="viewer-section">
         <a href="?" class="absolute top-4 left-4 z-[60] bg-white/90 backdrop-blur hover:bg-white text-slate-800 px-4 py-2 rounded-lg font-bold shadow-lg transition flex items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> Kembali ke Galeri
@@ -167,6 +186,7 @@
         <div class="_df_book" id="flipbook_container"></div>
     </div>
 
+    <!-- SCRIPT UTAMA -->
     <script>
         let supabaseClient; 
         let loggedInUser = null; 
@@ -175,11 +195,10 @@
             if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
             supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
-            // Jalankan validasi login terlebih dahulu
             validasiAksesHalaman();
         } catch (err) { console.error(err); }
 
-        // --- 1. VALIDASI LOGIN & PROTEKSI AKSES ---
+        // --- 1. VALIDASI LOGIN & PROTEKSI ---
         async function validasiAksesHalaman() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             
@@ -188,7 +207,6 @@
                 const { data: profil } = await supabaseClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
                 
                 if (profil) {
-                    // Update menu di Navbar menjadi info Akun & XP
                     document.getElementById('user-menu-container').innerHTML = `
                         <div class="flex items-center gap-4">
                             <div class="text-right hidden sm:block">
@@ -200,16 +218,12 @@
                         </div>
                     `;
                     
-                    // Sembunyikan Spanduk/Hero Banner Tamu
                     document.getElementById('guest-hero').classList.add('hidden');
 
-                    // Jika user berhasil terverifikasi, izinkan render flipbook jika parameter ?baca= ada
                     if (bookUrl) {
                         document.getElementById('main-ui').style.display = 'none';
                         document.getElementById('viewer-section').style.display = 'block';
-                        
-                        // Konfigurasi opsi DearFlip secara dinamis setelah login terkonfirmasi
-                        var option_flipbook_container = { source: bookUrl, webgl: false, height: '100vh', direction: 1 };
+                        // DI SINI PERUBAHANNYA: Deklarasi ganda ditiadakan karena sudah dikunci absolut oleh window.DFLIP di atas.
                     } else {
                         fetchBooks();
                     }
@@ -217,27 +231,24 @@
                 }
             }
 
-            // JIKA STATUSNYA TAMU (BELUM LOGIN):
-            document.getElementById('guest-hero').classList.remove('hidden'); // Munculkan Headline Banner CTA
+            // JIKA STATUS TAMU
+            document.getElementById('guest-hero').classList.remove('hidden'); 
             
             if (bookUrl) {
-                // JIKA TAMU MENCOBA TEMBAK LINK LANGSUNG: Tendang kembali ke halaman depan dan paksa login
-                window.history.replaceState({}, document.title, window.location.pathname); // Hapus query ?baca dari address bar
+                window.history.replaceState({}, document.title, window.location.pathname); 
                 bukaModalAuth();
-                document.getElementById('auth-notice').classList.remove('hidden'); // Tampilkan warning
+                document.getElementById('auth-notice').classList.remove('hidden'); 
                 fetchBooks();
             } else {
                 fetchBooks();
             }
         }
 
-        // --- 2. LOGIKA KLIK TOMBOL BACA ---
+        // --- 2. LOGIKA TOMBOL BACA CONTROLLER ---
         function arahkanMembaca(urlFile) {
             if (loggedInUser) {
-                // Jika sudah login, izinkan membuka halaman baca buku
                 window.location.href = `?baca=${encodeURIComponent(urlFile)}`;
             } else {
-                // Jika masih tamu, kunci akses, buka modal login, dan tampilkan pesan pemberitahuan
                 bukaModalAuth();
                 document.getElementById('auth-notice').classList.remove('hidden');
             }
@@ -263,7 +274,7 @@
             }
         }
 
-        // --- 4. ENGINE AUTENTIKASI (CRUD AUTH) ---
+        // --- 4. ENGINE AUTH ---
         async function prosesDaftar() {
             const email = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
@@ -326,7 +337,7 @@
             window.location.reload();
         }
 
-        // --- 5. DATA RENDERER ---
+        // --- 5. PRELOAD & FETCH DATA ---
         function preloadPDF(url) {
             if (!document.querySelector(`link[href="${url}"]`)) {
                 const prefetchLink = document.createElement('link');
