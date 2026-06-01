@@ -374,6 +374,156 @@
                 });
             } catch (err) { console.error(err); }
         }
+                // --- 6. ENGINE KUIS & GAMIFIKASI (FRONTEND) ---
+        let currentQuizData = []; // Menyimpan soal-soal untuk buku ini
+
+        // Mengintip aktivitas DearFlip secara real-time
+        $(document).on("df.pagechange", function(event, type, page, flipbook) {
+            // Cek apakah user sudah membaca sampai halaman terakhir
+            if (page === flipbook.totalPages) {
+                // Beri jeda 1.5 detik setelah halaman terbuka sempurna, baru munculkan kuis
+                setTimeout(() => {
+                    bukaTantanganKuis();
+                }, 1500);
+            }
+        });
+
+        async function bukaTantanganKuis() {
+            // Cek ulang apakah user sudah login, jika belum jangan munculkan kuis
+            if (!loggedInUser) return;
+
+            // Cari ID Buku berdasarkan URL File PDF yang sedang dibuka
+            try {
+                const { data: buku } = await supabaseClient.from('buku').select('id').eq('file_url', bookUrl).single();
+                if (!buku) return;
+
+                // Ambil semua soal kuis yang terhubung dengan ID buku ini
+                const { data: listKuis, error } = await supabaseClient.from('kuis').select('*').eq('id_buku', buku.id);
+                
+                if (error || !listKuis || listKuis.length === 0) {
+                    console.log("Tidak ada kuis untuk modul ini.");
+                    return; 
+                }
+
+                currentQuizData = listKuis;
+                renderSoalKuis();
+                document.getElementById('quizModal').classList.remove('hidden');
+            } catch (err) { console.error(err); }
+        }
+
+        function renderSoalKuis() {
+            const container = document.getElementById('quiz-content');
+            container.innerHTML = '';
+
+            currentQuizData.forEach((soal, index) => {
+                let htmlOpsi = '';
+
+                if (soal.jenis_kuis === 'Pilihan Ganda' && soal.opsi_jawaban) {
+                    // Render Opsi A, B, C, D
+                    const opsi = soal.opsi_jawaban;
+                    htmlOpsi = `
+                        <div class="grid grid-cols-1 gap-2 mt-3">
+                            ${['A', 'B', 'C', 'D'].map(letter => `
+                                <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                                    <input type="radio" name="soal_${soal.id}" value="${letter}" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                                    <span class="text-sm text-slate-700"><strong>${letter}.</strong> ${opsi[letter]}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    // Render Opsi Benar / Salah
+                    htmlOpsi = `
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                            ${['Benar', 'Salah'].map(val => `
+                                <label class="flex items-center justify-center gap-2 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                                    <input type="radio" name="soal_${soal.id}" value="${val}" class="w-4 h-4 text-blue-600 border-slate-300">
+                                    <span class="text-sm font-bold text-slate-700">${val}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <p class="font-bold text-slate-800 text-sm">${index + 1}. ${soal.pertanyaan}</p>
+                        ${htmlOpsi}
+                    </div>
+                `;
+            });
+        }
+
+        async function jawabKuis() {
+            let totalPoinDapat = 0;
+            let semuaTerjawab = true;
+
+            // Validasi dan hitung nilai
+            currentQuizData.forEach(soal => {
+                const terpilih = document.querySelector(`input[name="soal_${soal.id}"]:checked`);
+                if (!terpilih) {
+                    semuaTerjawab = false;
+                    return;
+                }
+
+                if (terpilih.value === soal.jawaban_benar) {
+                    totalPoinDapat += soal.poin_reward || 10; // Tambah poin jika benar
+                }
+            });
+
+            if (!semuaTerjawab) return alert("Harap jawab semua pertanyaan terlebih dahulu!");
+
+            const btn = document.getElementById('btn-submit-kuis');
+            btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Memproses Poin...";
+
+            try {
+                // Ambil poin user saat ini dari DB
+                const { data: profil } = await supabaseClient.from('profiles').select('total_poin').eq('id', loggedInUser.id).single();
+                const poinBaru = (profil.total_poin || 0) + totalPoinDapat;
+
+                // Update total poin baru di Supabase
+                await supabaseClient.from('profiles').update({ total_poin: poinBaru }).eq('id', loggedInUser.id);
+
+                alert(`Selamat! Kamu mendapatkan tambahan +${totalPoinDapat} XP! Poin kamu sekarang menjadi ${poinBaru} XP.`);
+                tutupKuis();
+                window.location.href = "?"; // Tendang kembali ke galeri agar navbar ter-update poinnya
+            } catch (err) {
+                alert("Gagal memperbarui poin.");
+            } finally {
+                btn.disabled = false; btn.innerHTML = "Kirim Jawaban";
+            }
+        }
+
+        function tutupKuis() {
+            document.getElementById('quizModal').classList.add('hidden');
+        }
+
     </script>
+        <!-- MODAL POP-UP KUIS INTERAKTIF -->
+    <div id="quizModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter p-6 max-h-[90vh] overflow-y-auto">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-800">Tantangan Kuis!</h3>
+                <p class="text-slate-500 text-sm mt-1">Selesaikan kuis ini untuk mendapatkan poin XP.</p>
+            </div>
+
+            <!-- Tempat Pertanyaan Kuis Diberikan (Dinamis via JS) -->
+            <div id="quiz-content" class="space-y-6">
+                <p class="text-center text-slate-400">Memuat pertanyaan...</p>
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div class="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center">
+                <button onclick="tutupKuis()" class="text-slate-400 hover:text-slate-600 font-medium text-sm">Nanti Saja</button>
+                <button onclick="jawabKuis()" id="btn-submit-kuis" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-sm text-sm transition">
+                    Kirim Jawaban
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
