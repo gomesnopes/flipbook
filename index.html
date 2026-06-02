@@ -61,12 +61,20 @@
                 if (profil) {
                     menuContainer.innerHTML = `
                         <div class="flex items-center gap-4">
-                            <div class="text-right hidden sm:block">
-                                <p class="text-sm font-bold text-slate-800 leading-tight">${profil.nama_lengkap}</p>
-                                <p class="text-xs font-bold text-emerald-600"><i class="fa-solid fa-star text-amber-400"></i> ${profil.total_poin} XP</p>
-                            </div>
-                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg uppercase shadow-sm border border-blue-200">${profil.nama_lengkap.charAt(0)}</div>
-                            <button onclick="prosesLogout()" class="text-slate-400 hover:text-red-500 ml-1"><i class="fa-solid fa-right-from-bracket"></i></button>
+                            <!-- BAGIAN INI DIBUAT BISA DIKLIK MENUJU PROFIL -->
+                            <a href="profil.html" class="flex items-center gap-3 group cursor-pointer">
+                                <div class="text-right hidden sm:block group-hover:opacity-80 transition">
+                                    <p class="text-sm font-bold text-slate-800 leading-tight">${profil.nama_lengkap}</p>
+                                    <p class="text-xs font-bold text-emerald-600"><i class="fa-solid fa-star text-amber-400"></i> ${profil.total_poin} XP</p>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg uppercase shadow-sm border border-blue-200 group-hover:scale-105 transition transform">
+                                    ${profil.nama_lengkap.charAt(0)}
+                                </div>
+                            </a>
+                            <!-- Tombol Logout -->
+                            <button onclick="prosesLogout()" class="text-slate-400 hover:text-red-500 ml-1 transition" title="Keluar">
+                                <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                            </button>
                         </div>
                     `;
                     menuContainer.classList.remove('opacity-0');
