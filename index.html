@@ -24,7 +24,7 @@
         </div>
     </nav>
 
-    <div id="guest-hero" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-12 text-center relative overflow-hidden shadow-inner">
+    <div id="guest-hero" class="hidden bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-12 text-center relative overflow-hidden shadow-inner">
         <div class="max-w-3xl mx-auto relative z-10">
             <span class="bg-blue-500/30 text-blue-200 text-xs uppercase tracking-wider font-extrabold px-3 py-1 rounded-full border border-blue-400/30">🚀 Platform E-Learning Interaktif</span>
             <h2 class="text-3xl md:text-4xl font-black mt-4 mb-3 leading-tight">Buka Kunci Ilmu Pengetahuan & Raih Skor XP</h2>
@@ -61,9 +61,6 @@
                 const { data: profil } = await supabaseClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
                 
                 if (profil) {
-                    // Sembunyikan banner promosi
-                    document.getElementById('guest-hero').classList.add('hidden');
-                    
                     // Ubah navbar menjadi Profil User
                     document.getElementById('user-menu-container').innerHTML = `
                         <div class="flex items-center gap-4">
@@ -75,10 +72,13 @@
                             <button onclick="prosesLogout()" class="text-slate-400 hover:text-red-500 ml-1" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
                         </div>
                     `;
+                    return; // Stop di sini, spanduk tetap tersembunyi (hidden)
                 }
             }
+            
+            // JIKA TIDAK LOGIN: Baru munculkan spanduk banner tamu
+            document.getElementById('guest-hero').classList.remove('hidden');
         }
-
         async function prosesLogout() {
             await supabaseClient.auth.signOut();
             window.location.reload();
