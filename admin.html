@@ -32,8 +32,8 @@
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
 
-    <!-- SIDEBAR -->
-    <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0">
+    <!-- SIDEBAR (Dibuat Hidden by Default: w-64 md:w-0) -->
+    <aside id="sidebar" class="w-64 md:w-0 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0 transition-all duration-300 shadow-xl md:shadow-none">
         <div class="h-16 flex items-center justify-between px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800 min-w-[256px]">
             <div><i class="fa-solid fa-graduation-cap text-blue-500 mr-2"></i> AdminPro</div>
             <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -255,7 +255,7 @@
                 <input type="hidden" id="edit-modul-id">
                 <div><label class="block text-sm font-medium mb-1">Judul Buku</label><input type="text" id="edit-modul-judul" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></div>
                 <div><label class="block text-sm font-medium mb-1">Kategori</label><select id="edit-modul-kategori" class="w-full p-2 border rounded-lg outline-none"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi</option></select></div>
-                <div class="pt-4 flex gap-3"><button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanEditModul(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-check"></i> Simpan</button></div>
+                <div class="pt-4 flex gap-3"><button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button><button onclick="simpanEditModul(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-blue-700"><i class="fa-solid fa-check"></i> Simpan</button></div>
             </div>
         </div>
     </div>
@@ -272,7 +272,6 @@
             <div class="p-6 overflow-y-auto flex-1">
                 <input type="hidden" id="edit-user-id">
                 
-                <!-- Bagian Analitik -->
                 <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
                     <p class="text-xs font-bold text-blue-500 uppercase mb-3">Statistik Pembelajaran</p>
                     <div class="grid grid-cols-2 gap-4">
@@ -287,7 +286,6 @@
                     </div>
                 </div>
 
-                <!-- Form Edit Data -->
                 <div class="space-y-3">
                     <div><label class="block text-xs font-medium text-slate-500 mb-1">Nama Lengkap</label><input type="text" id="edit-user-nama" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></div>
                     <div class="grid grid-cols-2 gap-3">
@@ -298,8 +296,8 @@
                 </div>
             </div>
             <div class="p-6 bg-slate-50 border-t flex gap-3 shrink-0">
-                <button onclick="tutupModal('modalDetailUser')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button>
-                <button onclick="simpanEditUser(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-save"></i> Perbarui</button>
+                <button onclick="tutupModal('modalDetailUser')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
+                <button onclick="simpanEditUser(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-blue-700"><i class="fa-solid fa-save"></i> Perbarui</button>
             </div>
         </div>
     </div>
@@ -332,8 +330,8 @@
                 </div>
             </div>
             <div class="p-6 bg-slate-50 border-t flex gap-3 shrink-0">
-                <button onclick="tutupModal('modalEditKuis')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button>
-                <button onclick="simpanEditKuis(this)" class="w-1/2 bg-emerald-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-check"></i> Perbarui Kuis</button>
+                <button onclick="tutupModal('modalEditKuis')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
+                <button onclick="simpanEditKuis(this)" class="w-1/2 bg-emerald-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-emerald-700"><i class="fa-solid fa-check"></i> Perbarui Kuis</button>
             </div>
         </div>
     </div>
@@ -357,19 +355,26 @@
             } catch (err) { console.error("Gagal inisialisasi Supabase:", err); }
         });
 
+        // Event Listener Global untuk menutup modal jika klik di luar kotak putih
+        window.addEventListener('click', function(event) {
+            ['modalEditModul', 'modalDetailUser', 'modalEditKuis'].forEach(id => {
+                const modal = document.getElementById(id);
+                if (event.target === modal) {
+                    tutupModal(id);
+                }
+            });
+        });
+
         // ==========================================
         // 2. UI KONTROL & SIDEBAR
         // ==========================================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            // Jika di mobile, gunakan translateX. Jika di desktop, ubah width ke 0.
             if (window.innerWidth < 768) {
                 sidebar.classList.toggle('-translate-x-full');
             } else {
-                sidebar.classList.toggle('w-64');
-                sidebar.classList.toggle('w-0');
-                
-                // Memicu Chart.js untuk meresize ketika lebar container berubah
+                sidebar.classList.toggle('md:w-0');
+                sidebar.classList.toggle('md:w-64');
                 setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 350);
             }
         }
@@ -385,12 +390,16 @@
             activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300');
             activeBtn.classList.add('bg-blue-600', 'text-white');
             
-            // Otomatis tutup sidebar di mobile jika tab diklik
-            if(window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) {
-                toggleSidebar();
+            // Auto close sidebar saat tab ditekan
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 768 && !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full'); // Mobile hide
+            } else if (window.innerWidth >= 768 && sidebar.classList.contains('md:w-64')) {
+                sidebar.classList.remove('md:w-64'); // Desktop hide
+                sidebar.classList.add('md:w-0');
+                setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 350);
             }
             
-            // Pemicu resize grafik jika pindah ke tab dashboard
             if(tabId === 'dashboard') { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100); }
         }
 
@@ -412,11 +421,15 @@
 
                 data.forEach(user => {
                     const avatar = `<div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs mr-3 shrink-0">${user.nama_lengkap.charAt(0)}</div>`;
-                    // Kita oper data user sebagai JSON string agar bisa langsung diparse di modal
                     const userString = encodeURIComponent(JSON.stringify(user));
+                    
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-3 px-6"><div class="flex items-center">${avatar} <span class="font-medium truncate max-w-[200px]">${user.nama_lengkap}</span></div></td>
+                            <td class="py-3 px-6 cursor-pointer group" onclick="bukaModalDetailUser('${userString}')">
+                                <div class="flex items-center">
+                                    ${avatar} <span class="font-medium truncate max-w-[200px] text-slate-800 group-hover:text-blue-600 transition">${user.nama_lengkap}</span>
+                                </div>
+                            </td>
                             <td class="py-3 px-6"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-bold text-slate-600">${user.kategori}</span></td>
                             <td class="py-3 px-6 text-slate-500">${user.jenis_kelamin}</td>
                             <td class="py-3 px-6"><span class="text-emerald-600 font-bold"><i class="fa-solid fa-star text-amber-400 mr-1"></i>${user.total_poin}</span></td>
@@ -443,7 +456,6 @@
             
             document.getElementById('modalDetailUser').classList.remove('hidden');
 
-            // Tarik data riwayat khusus user ini untuk metrik analitik
             try {
                 const { data: riwayat } = await supabaseClient.from('riwayat_kuis').select('durasi_baca_detik').eq('id_user', user.id);
                 if(riwayat && riwayat.length > 0) {
@@ -480,7 +492,7 @@
         }
 
         // ==========================================
-        // 4. MANAJEMEN MODUL (DITAMBAH EDIT)
+        // 4. MANAJEMEN MODUL
         // ==========================================
         async function fetchDaftarBukuAdmin() {
             try {
@@ -536,7 +548,7 @@
         }
 
         // ==========================================
-        // 5. MANAJEMEN KUIS (DITAMBAH EDIT)
+        // 5. MANAJEMEN KUIS
         // ==========================================
         function toggleTipeKuis() {
             const jenis = document.getElementById('jenisKuis').value;
@@ -620,15 +632,13 @@
         async function hapusKuis(id) { if(confirm("Hapus pertanyaan ini?")) { await supabaseClient.from('kuis').delete().eq('id', id); fetchDaftarKuis(); } }
 
         // ==========================================
-        // 6. DASBOR ANALITIK & DURASI BACA
+        // 6. DASBOR ANALITIK
         // ==========================================
         async function muatDataDasbor() {
             try {
-                // 1. Ambil data profil
                 const { data: profil } = await supabaseClient.from('profiles').select('*').order('total_poin', { ascending: false });
                 if (!profil || profil.length === 0) return;
                 
-                // 2. Ambil data riwayat durasi
                 const { data: riwayat } = await supabaseClient.from('riwayat_kuis').select('durasi_baca_detik');
                 let avgDurasi = 0;
                 if(riwayat && riwayat.length > 0) {
