@@ -257,9 +257,9 @@
                     <div>
                         <h3 class="text-lg font-bold text-slate-800 mb-1">Hapus Semua Data Peserta & Kuis</h3>
                         <p class="text-slate-500 text-sm mb-4">Fitur ini menghapus seluruh entri profil dan nilai kuis untuk keperluan simulasi input data peserta baru dalam jumlah besar.</p>
-                        <button onclick="alert('Fungsi hapus data sedang disiapkan!')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-sm flex items-center gap-2">
-                            <i class="fa-solid fa-trash-can"></i> Hapus Semua Data
-                        </button>
+                        <button onclick="hapusSemuaDataPeserta()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-sm flex items-center gap-2">
+    <i class="fa-solid fa-trash-can"></i> Hapus Semua Data
+</button>
                     </div>
                 </div>
             </div>
@@ -579,7 +579,26 @@
             });
         };
 
-
+async function hapusSemuaDataPeserta() {
+    if(!confirm("PERINGATAN: Yakin ingin menghapus semua data peserta dan riwayat kuis? Tombol ini akan mereset sistem untuk keperluan uji coba massal.")) return;
+    
+    try {
+        // Menghapus data riwayat kuis (jika tabel riwayat_kuis sudah dibuat)
+        await supabaseClient.from('riwayat_kuis').delete().neq('id', 0);
+        
+        // Menghapus data profil peserta (mengandalkan RLS Supabase yang mengizinkan update/delete)
+        const { error } = await supabaseClient.from('profiles').delete().neq('total_poin', -1);
+        
+        if (error) throw error;
+        
+        alert("Berhasil! Seluruh data peserta telah dikosongkan. Sistem siap digunakan untuk simulasi input baru.");
+        
+        // Refresh halaman agar dashboard kembali ke angka nol
+        window.location.reload();
+    } catch (err) {
+        alert("Gagal menghapus data: " + err.message);
+    }
+}
     </script>
 </body>
 </html>
