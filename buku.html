@@ -111,13 +111,17 @@
     </div>
 
     <script>
-        let supabaseClient;
+       let supabaseClient;
         let bookId = null;
         let kuisSudahDipicu = false;
         
         // Variabel untuk Kuis
         let loggedInUser = null;
         let currentQuizData = [];
+        let sudahPernahSelesai = false; 
+
+        // TANGKAP WAKTU MULAI (STOPWATCH)
+        let waktuMulaiMembaca = Date.now();
 
         try {
             if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
@@ -270,7 +274,25 @@
             let totalPoinDapat = 0; 
             let jumlahBenar = 0;
             let semuaTerjawab = true;
+            // Hitung berapa detik pengguna menghabiskan waktu dari buka buku sampai selesai kuis
+        let waktuSelesai = Date.now();
+        let durasiDetik = Math.floor((waktuSelesai - waktuMulaiMembaca) / 1000);
+
+        // HANYA proses poin ke database jika USER BELUM PERNAH mengerjakan kuis ini
+        if (!sudahPernahSelesai && totalPoinDapat > 0) {
             
+            const { data: profil } = await supabaseClient.from('profiles').select('total_poin').eq('id', loggedInUser.id).single();
+            const poinBaru = (profil.total_poin || 0) + totalPoinDapat;
+            await supabaseClient.from('profiles').update({ total_poin: poinBaru }).eq('id', loggedInUser.id);
+            
+            // Catat ke riwayat beserta durasi belajarnya
+            await supabaseClient.from('riwayat_kuis').insert({
+                id_user: loggedInUser.id,
+                id_buku: bookId,
+                poin_didapat: totalPoinDapat,
+                durasi_baca_detik: durasiDetik // <--- Data durasi masuk ke sini
+            });
+        }
             currentQuizData.forEach(soal => {
                 const terpilih = document.querySelector(`input[name="soal_${soal.id}"]:checked`);
                 if (!terpilih) { semuaTerjawab = false; return; }
