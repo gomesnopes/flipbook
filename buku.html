@@ -41,7 +41,7 @@
             <i class="fa-solid fa-arrow-left"></i> Kembali
         </button>
         
-        <button onclick="tampilkanKonfirmasi()" class="pointer-events-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition flex items-center gap-2 text-sm border border-emerald-500">
+       <button id="btn-selesai" onclick="tampilkanKonfirmasi()" class="hidden pointer-events-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition items-center gap-2 text-sm border border-emerald-500">
             <i class="fa-solid fa-check"></i> Selesai
         </button>
     </div>
@@ -108,16 +108,36 @@
                 window.DFLIP.parseBooks();
             }
 
-            // 6. Jalankan Scanner (Pasti sukses karena ID-nya kita yang tentukan)
+            // 6. Jalankan Scanner (Dipercepat menjadi 500ms agar lebih responsif)
             setInterval(() => {
                 if(window.DFLIP && window.DFLIP.books && window.DFLIP.books['flipbook_aktif']) {
                     let buku = window.DFLIP.books['flipbook_aktif'];
-                    if(buku.currentPage === buku.totalPages && !kuisSudahDipicu) {
-                        kuisSudahDipicu = true;
-                        tampilkanKonfirmasi();
+                    let tombolSelesai = document.getElementById('btn-selesai');
+
+                    // Jika pembaca tiba di halaman terakhir
+                    if(buku.currentPage === buku.totalPages) {
+                        
+                        // 1. Munculkan tombol Selesai
+                        tombolSelesai.classList.remove('hidden');
+                        tombolSelesai.classList.add('flex');
+
+                        // 2. Munculkan pop-up modal secara otomatis (hanya 1 kali)
+                        if(!kuisSudahDipicu) {
+                            kuisSudahDipicu = true;
+                            setTimeout(() => {
+                                tampilkanKonfirmasi();
+                            }, 800); // Beri jeda 0.8 detik agar tidak mengagetkan
+                        }
+                        
+                    } else {
+                        // Jika pembaca membalik kembali ke halaman sebelumnya
+                        // Sembunyikan lagi tombolnya dan reset pemicu kuis
+                        tombolSelesai.classList.add('hidden');
+                        tombolSelesai.classList.remove('flex');
+                        kuisSudahDipicu = false; 
                     }
                 }
-            }, 1000);
+            }, 500);
         }
 
         function tampilkanKonfirmasi() {
