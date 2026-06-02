@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Saya - FlipStory Pro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+
+    <style>
+        .modal-enter { animation: zoomIn 0.3s ease-out forwards; }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+        <a href="index.html" class="flex items-center gap-2 hover:opacity-80 transition">
+            <i class="fa-solid fa-arrow-left text-slate-400 text-lg"></i>
+            <h1 class="text-xl font-bold text-slate-800 ml-2">Profil <span class="text-blue-600">Saya</span></h1>
+        </a>
+        <button onclick="prosesLogout()" class="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </button>
+    </nav>
+
+    <!-- Konten Utama -->
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8">
+        
+        <!-- Kartu Identitas Profil -->
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 mb-8 relative overflow-hidden">
+            <!-- Dekorasi Latar -->
+            <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-600 to-indigo-700"></div>
+            
+            <div class="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 mt-12">
+                <div id="avatar-huruf" class="w-32 h-32 rounded-full bg-white border-4 border-slate-50 text-blue-600 flex items-center justify-center font-black text-6xl shadow-md shrink-0">
+                    -
+                </div>
+                <div class="text-center md:text-left flex-1">
+                    <h2 id="teks-nama" class="text-3xl font-black text-slate-800 mb-1">Memuat...</h2>
+                    <p id="teks-email" class="text-slate-500 font-medium mb-3">memuat@email.com</p>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-2">
+                        <span id="badge-kategori" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase">-</span>
+                        <span id="badge-gender" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold uppercase">-</span>
+                    </div>
+                </div>
+                <button onclick="bukaModalEdit()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2.5 px-5 rounded-xl shadow-sm transition flex items-center gap-2 w-full md:w-auto justify-center mt-4 md:mt-0">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit Profil
+                </button>
+            </div>
+        </div>
+
+        <!-- Kartu Statistik -->
+        <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-chart-simple text-blue-500 mr-2"></i> Statistik Belajarmu</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-2xl"><i class="fa-solid fa-star"></i></div>
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Total XP</p><h3 id="stat-xp" class="text-2xl font-black text-slate-800">0</h3></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-book-open-reader"></i></div>
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Modul Selesai</p><h3 id="stat-modul" class="text-2xl font-black text-slate-800">0</h3></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-stopwatch"></i></div>
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Avg. Waktu Baca</p><h3 id="stat-waktu" class="text-2xl font-black text-slate-800">0s</h3></div>
+            </div>
+        </div>
+
+        <!-- Riwayat Belajar -->
+        <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-clock-rotate-left text-blue-500 mr-2"></i> Riwayat Modul Terakhir</h3>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[600px] overflow-x-auto block md:table">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
+                        <th class="py-4 px-6 font-bold">Tanggal</th>
+                        <th class="py-4 px-6 font-bold w-1/2">Modul yang Diselesaikan</th>
+                        <th class="py-4 px-6 font-bold">Durasi</th>
+                        <th class="py-4 px-6 font-bold text-right">XP Didapat</th>
+                    </tr>
+                </thead>
+                <tbody id="tabel-riwayat" class="text-sm text-slate-700 divide-y divide-slate-100">
+                    <tr><td colspan="4" class="py-8 text-center text-slate-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat riwayat...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Modal Edit Profil -->
+    <div id="modalEdit" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm modal-enter overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-6 py-5 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800">Edit Data Diri</h3>
+                <button onclick="tutupModalEdit()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-slate-700">Nama Lengkap</label>
+                    <input type="text" id="edit-nama" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-slate-700">Gender</label>
+                        <select id="edit-gender" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-slate-700">Kategori</label>
+                        <select id="edit-kategori" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <option value="Pelajar">Pelajar</option>
+                            <option value="Mahasiswa">Mahasiswa</option>
+                            <option value="Umum">Umum</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 mt-2">*Email dan kata sandi tidak dapat diubah dari halaman ini.</p>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3">
+                <button onclick="tutupModalEdit()" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition hover:bg-slate-300">Batal</button>
+                <button onclick="simpanProfil(this)" class="w-1/2 bg-blue-600 text-white font-bold py-3 rounded-xl transition hover:bg-blue-700"><i class="fa-solid fa-save mr-1"></i> Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let supabaseClient;
+        let loggedInUser = null;
+        let profilUser = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
+                supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+                
+                await autentikasiUser();
+                await muatDataProfil();
+                await muatRiwayat();
+            } catch (err) { console.error(err); }
+        });
+
+        // 1. Cek Sesi Login
+        async function autentikasiUser() {
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+            if (error || !session) {
+                window.location.href = 'login.html?pesan=wajib_login';
+                return;
+            }
+            loggedInUser = session.user;
+            document.getElementById('teks-email').innerText = loggedInUser.email;
+        }
+
+        // 2. Tarik Data Profil
+        async function muatDataProfil() {
+            const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
+            if (error) return console.error(error);
+            
+            profilUser = data;
+            document.getElementById('teks-nama').innerText = data.nama_lengkap;
+            document.getElementById('avatar-huruf').innerText = data.nama_lengkap.charAt(0).toUpperCase();
+            document.getElementById('badge-kategori').innerText = data.kategori;
+            document.getElementById('badge-gender').innerText = data.jenis_kelamin;
+            document.getElementById('stat-xp').innerText = data.total_poin.toLocaleString('id-ID');
+        }
+
+        // 3. Tarik Riwayat Belajar dari riwayat_kuis
+        async function muatRiwayat() {
+            const { data: riwayat, error } = await supabaseClient
+                .from('riwayat_kuis')
+                .select('*, buku(judul)')
+                .eq('id_user', loggedInUser.id)
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('tabel-riwayat');
+            tbody.innerHTML = '';
+
+            if (error || !riwayat || riwayat.length === 0) {
+                document.getElementById('stat-modul').innerText = "0";
+                document.getElementById('stat-waktu').innerText = "0s";
+                tbody.innerHTML = '<tr><td colspan="4" class="py-12 text-center text-slate-400"><div class="text-4xl mb-3">📭</div>Belum ada modul yang diselesaikan. <br>Ayo mulai baca di galeri!</td></tr>';
+                return;
+            }
+
+            // Kalkulasi Statistik
+            let totalDurasi = 0;
+            document.getElementById('stat-modul').innerText = riwayat.length;
+
+            riwayat.forEach(r => {
+                totalDurasi += (r.durasi_baca_detik || 0);
+                
+                const tgl = new Date(r.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                const judul = r.buku ? r.buku.judul : '<span class="text-red-400 italic">Modul telah dihapus admin</span>';
+                
+                // Format durasi (contoh: 120s -> 2m 0s)
+                let teksDurasi = r.durasi_baca_detik + 's';
+                if(r.durasi_baca_detik > 60) {
+                    const m = Math.floor(r.durasi_baca_detik / 60);
+                    const s = r.durasi_baca_detik % 60;
+                    teksDurasi = `${m}m ${s}s`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-4 px-6 text-slate-500">${tgl}</td>
+                        <td class="py-4 px-6 font-bold text-slate-700 whitespace-normal min-w-[200px]">${judul}</td>
+                        <td class="py-4 px-6 text-slate-500"><i class="fa-regular fa-clock mr-1"></i> ${teksDurasi}</td>
+                        <td class="py-4 px-6 text-right font-black text-emerald-600">+${r.poin_didapat} XP</td>
+                    </tr>
+                `;
+            });
+
+            // Rata-rata durasi
+            const avgDurasi = Math.round(totalDurasi / riwayat.length);
+            document.getElementById('stat-waktu').innerText = avgDurasi + 's';
+        }
+
+        // 4. Logika Modal Edit
+        function bukaModalEdit() {
+            if(!profilUser) return;
+            document.getElementById('edit-nama').value = profilUser.nama_lengkap;
+            document.getElementById('edit-gender').value = profilUser.jenis_kelamin;
+            document.getElementById('edit-kategori').value = profilUser.kategori;
+            document.getElementById('modalEdit').classList.remove('hidden');
+        }
+
+        function tutupModalEdit() {
+            document.getElementById('modalEdit').classList.add('hidden');
+        }
+
+        async function simpanProfil(btn) {
+            const nama = document.getElementById('edit-nama').value;
+            const gender = document.getElementById('edit-gender').value;
+            const kategori = document.getElementById('edit-kategori').value;
+
+            if(!nama) return alert("Nama tidak boleh kosong!");
+
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+            
+            try {
+                const { error } = await supabaseClient.from('profiles').update({ 
+                    nama_lengkap: nama, jenis_kelamin: gender, kategori: kategori 
+                }).eq('id', loggedInUser.id);
+                
+                if (error) throw error;
+                
+                tutupModalEdit();
+                await muatDataProfil(); // Refresh data di layar
+            } catch (err) {
+                alert("Gagal memperbarui profil.");
+            } finally {
+                btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save mr-1"></i> Simpan`;
+            }
+        }
+
+        // 5. Logout
+        async function prosesLogout() {
+            if(confirm("Yakin ingin keluar dari akun?")) {
+                await supabaseClient.auth.signOut();
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Tutup modal jika klik di luar
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('modalEdit');
+            if (e.target === modal) tutupModalEdit();
+        });
+    </script>
+</body>
+</html>
