@@ -31,6 +31,7 @@
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
 
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-64 md:w-0 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0 transition-all duration-300 shadow-xl md:shadow-none">
         <div class="h-16 flex items-center justify-between px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800 min-w-[256px]">
             <div><i class="fa-solid fa-graduation-cap text-blue-500 mr-2"></i> AdminPro</div>
@@ -56,6 +57,7 @@
         </nav>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col h-full overflow-hidden relative">
         <header class="bg-white h-16 border-b border-slate-200 flex items-center px-6 shrink-0 z-10 shadow-sm">
             <button onclick="toggleSidebar()" class="text-slate-500 hover:text-blue-600 transition p-2 bg-slate-100 rounded-lg">
@@ -64,183 +66,193 @@
             <h1 class="ml-4 font-bold text-slate-700 hidden sm:block">Sistem Kelola Pembelajaran (LMS)</h1>
         </header>
 
+        <!-- Tambahkan max-w-[1400px] dan mx-auto di sini agar tidak melebar berlebihan di layar monitor -->
         <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
-            
-            <section id="dashboard" class="tab-content active">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Terpadu</h2>
+            <div class="max-w-[1400px] mx-auto">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-users"></i></div>
-                        <div><p class="text-[10px] font-bold text-slate-400 uppercase">Peserta Aktif</p><h3 id="stat-peserta" class="text-xl font-black text-slate-800">0</h3></div>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-solid fa-star"></i></div>
-                        <div><p class="text-[10px] font-bold text-slate-400 uppercase">Total XP</p><h3 id="stat-poin" class="text-xl font-black text-slate-800">0</h3></div>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center text-lg"><i class="fa-solid fa-trophy"></i></div>
-                        <div><p class="text-[10px] font-bold text-slate-400 uppercase">Avg Poin/User</p><h3 id="stat-rata" class="text-xl font-black text-slate-800">0</h3></div>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-lg"><i class="fa-solid fa-bullseye"></i></div>
-                        <div><p class="text-[10px] font-bold text-slate-400 uppercase">Akurasi Partisipasi</p><h3 id="stat-akurasi" class="text-xl font-black text-slate-800">0%</h3></div>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-lg"><i class="fa-solid fa-clock"></i></div>
-                        <div><p class="text-[10px] font-bold text-slate-400 uppercase">Rata-rata Waktu Baca</p><h3 id="stat-waktu" class="text-xl font-black text-slate-800">0s</h3></div>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 flex flex-col">
-                    <h4 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-2"></i> Tren Aktivitas Belajar (7 Hari Terakhir)</h4>
-                    <p class="text-xs text-slate-500 mb-4">Melihat konsistensi perolehan poin XP dan partisipasi kuis dari waktu ke waktu.</p>
-                    <div class="relative h-64 w-full flex-grow"><canvas id="chartTrend"></canvas></div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                        <h4 class="font-bold text-slate-700 mb-1">Distribusi Rentang Usia</h4>
-                        <div class="relative h-64 w-full flex-grow"><canvas id="chartUsia"></canvas></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
-                        <div class="w-full text-left"><h4 class="font-bold text-slate-700 mb-1">Komposisi Jenis Kelamin</h4></div>
-                        <div class="relative h-64 w-full flex justify-center flex-grow"><canvas id="chartGender"></canvas></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                        <h4 class="font-bold text-slate-700 mb-1">Perbandingan Poin per Kategori</h4>
-                        <div class="relative h-64 w-full flex-grow"><canvas id="chartKategori"></canvas></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                        <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-medal text-amber-500 mr-2"></i> Papan Peringkat Tertinggi (Top 5)</h4>
-                        <div id="papan-peringkat" class="space-y-3 flex-grow overflow-y-auto pr-2">
-                            <p class="text-sm text-slate-400 text-center py-4"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat papan peringkat...</p>
+                <!-- 1. TAB DASHBOARD -->
+                <section id="dashboard" class="tab-content active">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Terpadu</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-users"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Peserta Aktif</p><h3 id="stat-peserta" class="text-xl font-black text-slate-800">0</h3></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-solid fa-star"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Total XP</p><h3 id="stat-poin" class="text-xl font-black text-slate-800">0</h3></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center text-lg"><i class="fa-solid fa-trophy"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Avg Poin/User</p><h3 id="stat-rata" class="text-xl font-black text-slate-800">0</h3></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-lg"><i class="fa-solid fa-bullseye"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Akurasi Partisipasi</p><h3 id="stat-akurasi" class="text-xl font-black text-slate-800">0%</h3></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-lg"><i class="fa-solid fa-clock"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Rata-rata Waktu Baca</p><h3 id="stat-waktu" class="text-xl font-black text-slate-800">0s</h3></div>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <section id="pengguna" class="tab-content">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800">Manajemen Pengguna</h2>
-                    <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold" id="badgeTotalUser">Total: 0</span>
-                </div>
-                
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto w-full">
+                    <!-- GRAFIK TREN -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 flex flex-col">
+                        <h4 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-2"></i> Tren Aktivitas Belajar (7 Hari Terakhir)</h4>
+                        <p class="text-xs text-slate-500 mb-4">Melihat konsistensi perolehan poin XP dan partisipasi kuis dari waktu ke waktu.</p>
+                        <div class="relative h-64 w-full flex-grow"><canvas id="chartTrend"></canvas></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-1">Distribusi Rentang Usia</h4>
+                            <div class="relative h-64 w-full flex-grow"><canvas id="chartUsia"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                            <div class="w-full text-left"><h4 class="font-bold text-slate-700 mb-1">Komposisi Jenis Kelamin</h4></div>
+                            <div class="relative h-64 w-full flex justify-center flex-grow"><canvas id="chartGender"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-1">Perbandingan Poin per Kategori</h4>
+                            <div class="relative h-64 w-full flex-grow"><canvas id="chartKategori"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-medal text-amber-500 mr-2"></i> Papan Peringkat Tertinggi (Top 5)</h4>
+                            <div id="papan-peringkat" class="space-y-3 flex-grow overflow-y-auto pr-2">
+                                <p class="text-sm text-slate-400 text-center py-4"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat papan peringkat...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. TAB MANAJEMEN USER -->
+                <section id="pengguna" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Manajemen Pengguna</h2>
+                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold" id="badgeTotalUser">Total: 0</span>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                                        <th class="py-4 px-6 font-bold">Nama Lengkap</th>
+                                        <th class="py-4 px-6 font-bold">Kategori</th>
+                                        <th class="py-4 px-6 font-bold">Gender</th>
+                                        <th class="py-4 px-6 font-bold">Total XP</th>
+                                        <th class="py-4 px-6 font-bold text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelPengguna" class="text-sm text-slate-700 divide-y divide-slate-100">
+                                    <tr><td colspan="5" class="py-6 text-center text-slate-400">Memuat data pengguna...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. TAB MANAJEMEN MODUL -->
+                <section id="modul" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Manajemen Modul Buku</h2>
+                        <button onclick="document.getElementById('modalTambahModul').classList.remove('hidden')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Upload Modul Baru
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[600px]">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                                    <th class="py-3 px-6 font-bold w-16">Cover</th>
+                                    <th class="py-3 px-6 font-bold min-w-[200px]">Judul Modul</th>
+                                    <th class="py-3 px-6 font-bold">Kategori</th>
+                                    <th class="py-3 px-6 font-bold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelModul" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 4. TAB MANAJEMEN KUIS -->
+                <section id="kuis" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Manajemen Kuis</h2>
+                        <button onclick="document.getElementById('modalTambahKuis').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Tambah Pertanyaan
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
                         <table class="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
-                                    <th class="py-4 px-6 font-bold">Nama Lengkap</th>
-                                    <th class="py-4 px-6 font-bold">Kategori</th>
-                                    <th class="py-4 px-6 font-bold">Gender</th>
-                                    <th class="py-4 px-6 font-bold">Total XP</th>
-                                    <th class="py-4 px-6 font-bold text-center">Aksi</th>
+                                    <th class="py-3 px-6 font-bold w-1/4">Modul</th>
+                                    <th class="py-3 px-6 font-bold w-1/2">Pertanyaan</th>
+                                    <th class="py-3 px-6 font-bold text-center w-1/4">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabelPengguna" class="text-sm text-slate-700 divide-y divide-slate-100">
-                                <tr><td colspan="5" class="py-6 text-center text-slate-400">Memuat data pengguna...</td></tr>
-                            </tbody>
+                            <tbody id="tabelKuis" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section id="modul" class="tab-content">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800">Manajemen Modul Buku</h2>
-                    <button onclick="document.getElementById('formUploadModul').classList.toggle('hidden')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Upload Modul Baru
-                    </button>
-                </div>
-
-                <div id="formUploadModul" class="hidden bg-white p-6 rounded-xl border border-emerald-200 shadow-sm mb-8">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Form Upload Modul Flipbook</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Judul Buku</label><input type="text" id="judulBuku" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none"></div>
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Kategori</label>
-                            <select id="kategoriBuku" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none">
-                                <option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi</option>
-                            </select>
+                <!-- 5. TAB PENGATURAN -->
+                <section id="pengaturan" class="tab-content">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
+                    <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6 max-w-2xl">
+                        <div class="flex flex-col sm:flex-row items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 mb-1">Hapus Semua Data Peserta</h3>
+                                <p class="text-slate-500 text-sm mb-4">Fitur ini menghapus seluruh entri profil dan riwayat untuk keperluan simulasi.</p>
+                                <button onclick="hapusSemuaDataPeserta()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"><i class="fa-solid fa-trash-can"></i> Hapus Semua Data</button>
+                            </div>
                         </div>
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">File PDF</label><input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 border border-slate-300 rounded-lg"></div>
                     </div>
-                    <div id="statusUpload" class="hidden p-3 rounded-lg text-sm font-medium mb-4"></div>
-                    <button onclick="uploadModul()" id="btnUpload" class="bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg transition"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
-                </div>
-
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
-                    <table class="w-full text-left border-collapse whitespace-nowrap min-w-[600px]">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
-                                <th class="py-3 px-6 font-bold w-16">Cover</th>
-                                <th class="py-3 px-6 font-bold min-w-[200px]">Judul Modul</th>
-                                <th class="py-3 px-6 font-bold">Kategori</th>
-                                <th class="py-3 px-6 font-bold text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelModul" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="kuis" class="tab-content">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Manajemen Kuis</h2>
+                </section>
                 
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-8">
-                    <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Buat Pertanyaan Baru</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div><label class="block text-sm font-medium mb-1">Modul</label><select id="pilihBukuKuis" class="w-full p-2 border rounded-lg bg-blue-50"></select></div>
-                        <div><label class="block text-sm font-medium mb-1">Jenis</label><select id="jenisKuis" onchange="toggleTipeKuis()" class="w-full p-2 border rounded-lg"><option value="Pilihan Ganda">Pilihan Ganda</option><option value="Benar Salah">Benar / Salah</option></select></div>
-                    </div>
-                    <div class="mb-4"><label class="block text-sm font-medium mb-1">Pertanyaan</label><textarea id="teksPertanyaan" rows="2" class="w-full p-2 border rounded-lg"></textarea></div>
-                    <div id="formPilihanGanda" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-slate-50 p-4 rounded-lg">
-                        <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi A</label><input type="text" id="opsiA" class="w-full p-2 border rounded-md"></div>
-                        <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi B</label><input type="text" id="opsiB" class="w-full p-2 border rounded-md"></div>
-                        <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi C</label><input type="text" id="opsiC" class="w-full p-2 border rounded-md"></div>
-                        <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi D</label><input type="text" id="opsiD" class="w-full p-2 border rounded-md"></div>
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-4 items-end">
-                        <div class="w-full sm:w-1/3"><label class="block text-sm font-bold text-emerald-600 mb-1">Kunci Jawaban</label>
-                            <select id="kunciJawaban" class="w-full p-2 border border-emerald-300 bg-emerald-50 rounded-lg"><option value="A">Opsi A</option><option value="B">Opsi B</option><option value="C">Opsi C</option><option value="D">Opsi D</option></select>
-                        </div>
-                        <button onclick="simpanKuis(this)" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg w-full sm:w-auto"><i class="fa-solid fa-save"></i> Simpan</button>
-                    </div>
-                </div>
-                
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
-                    <table class="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
-                                <th class="py-3 px-6 font-bold w-1/4">Modul</th>
-                                <th class="py-3 px-6 font-bold w-1/2">Pertanyaan</th>
-                                <th class="py-3 px-6 font-bold text-center w-1/4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelKuis" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="pengaturan" class="tab-content">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
-                <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6 max-w-2xl">
-                    <div class="flex flex-col sm:flex-row items-start gap-4">
-                        <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-800 mb-1">Hapus Semua Data Peserta</h3>
-                            <p class="text-slate-500 text-sm mb-4">Fitur ini menghapus seluruh entri profil dan riwayat untuk keperluan simulasi.</p>
-                            <button onclick="hapusSemuaDataPeserta()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"><i class="fa-solid fa-trash-can"></i> Hapus Semua Data</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            </div> <!-- End of Max-W Wrapper -->
         </main>
     </div>
 
+    <!-- ============================================== -->
+    <!-- MODALS SECTION -->
+    <!-- ============================================== -->
+
+    <!-- MODAL TAMBAH MODUL BARU -->
+    <div id="modalTambahModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-book text-emerald-500 mr-2"></i> Upload Modul Baru</h3>
+                <button onclick="tutupModal('modalTambahModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">Judul Buku</label><input type="text" id="judulBuku" class="w-full p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">Kategori</label>
+                    <select id="kategoriBuku" class="w-full p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi</option>
+                    </select>
+                </div>
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">File PDF</label>
+                    <input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 border border-slate-300 rounded-lg">
+                </div>
+                <div id="statusUpload" class="hidden p-3 rounded-lg text-sm font-medium"></div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3">
+                <button onclick="tutupModal('modalTambahModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
+                <button onclick="uploadModul()" id="btnUpload" class="w-1/2 bg-emerald-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-emerald-700"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT MODUL -->
     <div id="modalEditModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
@@ -251,11 +263,75 @@
                 <input type="hidden" id="edit-modul-id">
                 <div><label class="block text-sm font-medium mb-1">Judul Buku</label><input type="text" id="edit-modul-judul" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></div>
                 <div><label class="block text-sm font-medium mb-1">Kategori</label><select id="edit-modul-kategori" class="w-full p-2 border rounded-lg outline-none"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi</option></select></div>
-                <div class="pt-4 flex gap-3"><button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button><button onclick="simpanEditModul(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-blue-700"><i class="fa-solid fa-check"></i> Simpan</button></div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3">
+                <button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
+                <button onclick="simpanEditModul(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-blue-700"><i class="fa-solid fa-check"></i> Simpan</button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL TAMBAH KUIS BARU -->
+    <div id="modalTambahKuis" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl modal-enter overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-plus text-blue-500 mr-2"></i> Buat Pertanyaan Baru</h3>
+                <button onclick="tutupModal('modalTambahKuis')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium mb-1">Modul</label><select id="pilihBukuKuis" class="w-full p-2 border rounded-lg bg-blue-50"></select></div>
+                    <div><label class="block text-sm font-medium mb-1">Jenis</label><select id="jenisKuis" onchange="toggleTipeKuis()" class="w-full p-2 border rounded-lg"><option value="Pilihan Ganda">Pilihan Ganda</option><option value="Benar Salah">Benar / Salah</option></select></div>
+                </div>
+                <div><label class="block text-sm font-medium mb-1">Pertanyaan</label><textarea id="teksPertanyaan" rows="3" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>
+                <div id="formPilihanGanda" class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-lg">
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi A</label><input type="text" id="opsiA" class="w-full p-2 border rounded-md"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi B</label><input type="text" id="opsiB" class="w-full p-2 border rounded-md"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi C</label><input type="text" id="opsiC" class="w-full p-2 border rounded-md"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi D</label><input type="text" id="opsiD" class="w-full p-2 border rounded-md"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-emerald-600 mb-1">Kunci Jawaban</label>
+                    <select id="kunciJawaban" class="w-full p-2 border border-emerald-300 bg-emerald-50 rounded-lg outline-none"><option value="A">Opsi A</option><option value="B">Opsi B</option><option value="C">Opsi C</option><option value="D">Opsi D</option></select>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3 shrink-0">
+                <button onclick="tutupModal('modalTambahKuis')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
+                <button onclick="simpanKuis(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-blue-700"><i class="fa-solid fa-save"></i> Simpan Pertanyaan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT KUIS -->
+    <div id="modalEditKuis" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl modal-enter overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-pen-to-square text-emerald-500 mr-2"></i> Edit Pertanyaan Kuis</h3>
+                <button onclick="tutupModal('modalEditKuis')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                <input type="hidden" id="edit-kuis-id">
+                <input type="hidden" id="edit-kuis-jenis">
+                <div><label class="block text-sm font-medium mb-1">Pertanyaan</label><textarea id="edit-kuis-pertanyaan" rows="3" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea></div>
+                <div id="edit-form-pg" class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-lg hidden">
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi A</label><input type="text" id="edit-opsiA" class="w-full p-2 border rounded-md"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi B</label><input type="text" id="edit-opsiB" class="w-full p-2 border rounded-md"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi C</label><input type="text" id="edit-opsiC" class="w-full p-2 border rounded-md"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi D</label><input type="text" id="edit-opsiD" class="w-full p-2 border rounded-md"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-emerald-600 mb-1">Kunci Jawaban Baru</label>
+                    <select id="edit-kuis-kunci" class="w-full p-2 border border-emerald-300 bg-emerald-50 rounded-lg outline-none"></select>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3 shrink-0">
+                <button onclick="tutupModal('modalEditKuis')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
+                <button onclick="simpanEditKuis(this)" class="w-1/2 bg-emerald-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-emerald-700"><i class="fa-solid fa-check"></i> Perbarui</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL & EDIT USER -->
     <div id="modalDetailUser" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col max-h-[90vh]">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
@@ -287,33 +363,6 @@
         </div>
     </div>
 
-    <div id="modalEditKuis" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl modal-enter overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-pen-to-square text-emerald-500 mr-2"></i> Edit Pertanyaan Kuis</h3>
-                <button onclick="tutupModal('modalEditKuis')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1 space-y-4">
-                <input type="hidden" id="edit-kuis-id">
-                <input type="hidden" id="edit-kuis-jenis">
-                <div><label class="block text-sm font-medium mb-1">Pertanyaan</label><textarea id="edit-kuis-pertanyaan" rows="3" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea></div>
-                <div id="edit-form-pg" class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-lg hidden">
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi A</label><input type="text" id="edit-opsiA" class="w-full p-2 border rounded-md"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi B</label><input type="text" id="edit-opsiB" class="w-full p-2 border rounded-md"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi C</label><input type="text" id="edit-opsiC" class="w-full p-2 border rounded-md"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Opsi D</label><input type="text" id="edit-opsiD" class="w-full p-2 border rounded-md"></div>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-emerald-600 mb-1">Kunci Jawaban Baru</label>
-                    <select id="edit-kuis-kunci" class="w-full p-2 border border-emerald-300 bg-emerald-50 rounded-lg outline-none"></select>
-                </div>
-            </div>
-            <div class="p-6 bg-slate-50 border-t flex gap-3 shrink-0">
-                <button onclick="tutupModal('modalEditKuis')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
-                <button onclick="simpanEditKuis(this)" class="w-1/2 bg-emerald-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-emerald-700"><i class="fa-solid fa-check"></i> Perbarui</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         let supabaseClient;
@@ -330,15 +379,16 @@
             } catch (err) { console.error("Gagal inisialisasi Supabase:", err); }
         });
 
-        // 1. KLIK DI LUAR MODAL UNTUK MENUTUP
+        // Event Listener Global untuk menutup semua modal jika klik di luar kotak
         window.addEventListener('click', function(event) {
-            ['modalEditModul', 'modalDetailUser', 'modalEditKuis'].forEach(id => {
+            const listModals = ['modalTambahModul', 'modalEditModul', 'modalDetailUser', 'modalTambahKuis', 'modalEditKuis'];
+            listModals.forEach(id => {
                 const modal = document.getElementById(id);
                 if (event.target === modal) tutupModal(id);
             });
         });
 
-        // 2. KONTROL SIDEBAR & TAB
+        // KONTROL SIDEBAR & TAB
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             if (window.innerWidth < 768) {
@@ -374,7 +424,7 @@
 
         function tutupModal(idModal) { document.getElementById(idModal).classList.add('hidden'); }
 
-        // 3. MANAJEMEN USER
+        // MANAJEMEN USER
         async function fetchPengguna() {
             try {
                 const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
@@ -426,7 +476,7 @@
 
         async function hapusUser(userId) { if(confirm("Yakin hapus akun ini?")) { await supabaseClient.from('profiles').delete().eq('id', userId); fetchPengguna(); muatDataDasbor(); } }
 
-        // 4. MANAJEMEN MODUL (UPLOAD, EDIT, DELETE)
+        // MANAJEMEN MODUL (UPLOAD & EDIT)
         async function fetchDaftarBukuAdmin() {
             try {
                 const { data } = await supabaseClient.from('buku').select('*').order('created_at', { ascending: false });
@@ -464,11 +514,16 @@
                 await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", file); await supabaseClient.storage.from('pdf-buku').upload(baseFileName + "_cover.jpg", coverBlob);
                 const pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; const coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
                 await supabaseClient.from('buku').insert([{ judul, kategori, file_url: pdfUrl, cover_url: coverUrl }]);
-                status.className = 'bg-green-100 text-green-700 p-3 rounded-lg block mt-4'; status.innerHTML = `Sukses!`; setTimeout(() => { document.getElementById('judulBuku').value = ''; fileInput.value = ''; status.classList.add('hidden'); fetchDaftarBukuAdmin(); btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Upload`; }, 1500);
+                status.className = 'bg-green-100 text-green-700 p-3 rounded-lg block mt-4'; status.innerHTML = `Sukses!`; 
+                setTimeout(() => { 
+                    document.getElementById('judulBuku').value = ''; fileInput.value = ''; status.classList.add('hidden'); 
+                    tutupModal('modalTambahModul'); fetchDaftarBukuAdmin(); 
+                    btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Upload`; 
+                }, 1000);
             } catch (error) { status.className = 'bg-red-100 text-red-700 p-3 rounded-lg block mt-4'; status.innerHTML = error.message; btn.disabled = false; btn.innerHTML = `Coba Lagi`; }
         }
 
-        // 5. MANAJEMEN KUIS
+        // MANAJEMEN KUIS (TAMBAH & EDIT)
         function toggleTipeKuis() {
             const jenis = document.getElementById('jenisKuis').value;
             document.getElementById('formPilihanGanda').style.display = (jenis === 'Pilihan Ganda') ? 'grid' : 'none';
@@ -479,7 +534,11 @@
             const idBuku = document.getElementById('pilihBukuKuis').value; const jenis = document.getElementById('jenisKuis').value; const pertanyaan = document.getElementById('teksPertanyaan').value; const kunci = document.getElementById('kunciJawaban').value; let opsiJawaban = null;
             if (!idBuku || !pertanyaan) return;
             if (jenis === 'Pilihan Ganda') { opsiJawaban = { A: document.getElementById('opsiA').value, B: document.getElementById('opsiB').value, C: document.getElementById('opsiC').value, D: document.getElementById('opsiD').value }; }
-            btn.disabled = true; try { await supabaseClient.from('kuis').insert([{ id_buku: idBuku, jenis_kuis: jenis, pertanyaan, opsi_jawaban: opsiJawaban, jawaban_benar: kunci }]); document.getElementById('teksPertanyaan').value = ''; fetchDaftarKuis(); } catch (err) {} finally { btn.disabled = false; }
+            btn.disabled = true; try { 
+                await supabaseClient.from('kuis').insert([{ id_buku: idBuku, jenis_kuis: jenis, pertanyaan, opsi_jawaban: opsiJawaban, jawaban_benar: kunci }]); 
+                document.getElementById('teksPertanyaan').value = ''; 
+                tutupModal('modalTambahKuis'); fetchDaftarKuis(); 
+            } catch (err) {} finally { btn.disabled = false; }
         }
 
         async function fetchDaftarKuis() {
@@ -515,7 +574,7 @@
         }
         async function hapusKuis(id) { if(confirm("Hapus?")) { await supabaseClient.from('kuis').delete().eq('id', id); fetchDaftarKuis(); } }
 
-        // 6. DASBOR ANALITIK TERPADU & TREN GRAFIK
+        // DASBOR ANALITIK & TREND
         async function muatDataDasbor() {
             try {
                 const { data: profil } = await supabaseClient.from('profiles').select('*').order('total_poin', { ascending: false });
@@ -559,7 +618,6 @@
                     if(wadah.innerHTML==='') wadah.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Belum ada skor.</p>';
                 }
 
-                // Kalkulasi Data Trend Harian (7 Hari Terakhir)
                 const trendData = { labels: [], dataXP: [], dataKuis: [] };
                 const hariIni = new Date();
                 for(let i=6; i>=0; i--) {
@@ -589,8 +647,6 @@
                     chartInstances.usia = new Chart(document.getElementById('chartUsia').getContext('2d'), { type: 'bar', data: { labels: Object.keys(umurRents), datasets: [{ data: Object.values(umurRents), backgroundColor: '#3b82f6', borderRadius: 4 }] }, options: ops });
                     chartInstances.gender = new Chart(document.getElementById('chartGender').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(genderCount), datasets: [{ data: Object.values(genderCount), backgroundColor: ['#3b82f6', '#ec4899'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' } });
                     chartInstances.kategori = new Chart(document.getElementById('chartKategori').getContext('2d'), { type: 'bar', data: { labels: ['Pelajar', 'Mahasiswa', 'Umum'], datasets: [{ data: rataKat, backgroundColor: ['#10b981', '#f59e0b', '#6366f1'], borderRadius: 6 }] }, options: ops });
-                    
-                    // Render Line Chart Trend
                     chartInstances.trend = new Chart(document.getElementById('chartTrend').getContext('2d'), {
                         type: 'line',
                         data: {
