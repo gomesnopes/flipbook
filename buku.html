@@ -28,10 +28,20 @@
 
     <style>
         body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #0f172a; }
+        
+        /* Animasi Modal */
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        /* Pastikan DearFlip memakan tinggi penuh */
+        
+        .quiz-enter { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* DearFlip Fullscreen */
         ._df_book { height: 100vh !important; width: 100vw !important; margin: 0 !important; }
+
+        /* Kustomisasi Radio Button Kuis */
+        input[type="radio"]:checked + span { color: #2563eb; font-weight: bold; }
+        .radio-card:has(input[type="radio"]:checked) { border-color: #3b82f6; background-color: #eff6ff; }
     </style>
 </head>
 <body>
@@ -41,7 +51,7 @@
             <i class="fa-solid fa-arrow-left"></i> Kembali
         </button>
         
-       <button id="btn-selesai" onclick="tampilkanKonfirmasi()" class="hidden pointer-events-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition items-center gap-2 text-sm border border-emerald-500">
+       <button id="btn-selesai" onclick="tampilkanKonfirmasiSelesai()" class="hidden pointer-events-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition items-center gap-2 text-sm border border-emerald-500">
             <i class="fa-solid fa-check"></i> Selesai
         </button>
     </div>
@@ -60,17 +70,54 @@
                 <button onclick="lanjutKuis()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-md transition">
                     Mulai Tantangan Kuis
                 </button>
-                <button onclick="tutupModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-xl transition">
+                <button onclick="tutupModalSelesai()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-xl transition">
                     Kembali Membaca
                 </button>
             </div>
         </div>
     </div>
 
-   <script>
+    <div id="modalQuiz" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-2xl quiz-enter relative overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="h-3 w-full bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+            
+            <div class="p-6 md:p-8 flex-1 overflow-y-auto relative">
+                <button onclick="tutupQuiz()" id="btn-tutup-kuis" class="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition" title="Batal & Kembali Membaca">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+
+                <div id="quiz-header" class="text-center mb-8 border-b border-slate-100 pb-6">
+                    <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 rotate-3">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-black text-slate-800">Uji Kemampuanmu</h2>
+                    <p class="text-slate-500 text-sm mt-2">Jawab dengan tepat untuk mendapatkan poin XP maksimal.</p>
+                </div>
+
+                <div id="quiz-content" class="space-y-6">
+                    <div class="text-center py-10">
+                        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
+                        <p class="text-slate-500">Memuat soal evaluasi...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="quiz-footer" class="p-6 bg-slate-50 border-t border-slate-200 hidden">
+                <button onclick="kirimJawaban()" id="btn-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-3 text-lg">
+                    <i class="fa-solid fa-paper-plane"></i> Kirim Jawaban
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
         let supabaseClient;
         let bookId = null;
         let kuisSudahDipicu = false;
+        
+        // Variabel untuk Kuis
+        let loggedInUser = null;
+        let currentQuizData = [];
 
         try {
             if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
@@ -79,76 +126,205 @@
         } catch (err) { console.error(err); }
 
         async function jalankanBuku() {
-            // 1. Cek Login
+            // Cek Login & Ambil Sesi User
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
                 window.location.href = 'login.html?pesan=wajib_login';
                 return;
             }
+            loggedInUser = session.user;
 
-            // 2. Ambil ID dan File
+            // Ambil ID dan File dari URL
             const urlParams = new URLSearchParams(window.location.search);
             bookId = urlParams.get('id');
             const fileUrl = urlParams.get('file');
 
             if (!bookId || !fileUrl) {
-                alert("Gagal memuat buku. Pastikan membuka dari galeri utama.");
+                alert("Gagal memuat buku.");
                 window.location.href = 'index.html';
                 return;
             }
 
-            // 3. Render Buku
+            // Render Buku
             const pdfBersih = decodeURIComponent(fileUrl);
             const wadah = document.getElementById('wadah-buku');
             wadah.innerHTML = `<div class="_df_book" source="${pdfBersih}"></div>`;
 
-            // ====================================================
-            // SOLUSI: Menggunakan Event Listener API DearFlip
-            // ====================================================
+            // Event Listener Deteksi Halaman Akhir (Solusi sebelumnya)
             window.DFLIP.defaults.onFlip = function(flipbook) {
-                // Ambil data halaman dari properti internal DearFlip
                 let halamanSaatIni = flipbook.target._activePage || flipbook.target.page;
                 let totalHalaman = flipbook.target.pageCount || flipbook.options.pageCount;
-                
                 let tombolSelesai = document.getElementById('btn-selesai');
 
-                // Cek apakah halaman saat ini adalah halaman terakhir
                 if (halamanSaatIni && totalHalaman && halamanSaatIni >= totalHalaman) {
                     tombolSelesai.classList.remove('hidden');
                     tombolSelesai.classList.add('flex');
 
                     if (!kuisSudahDipicu) {
                         kuisSudahDipicu = true;
-                        setTimeout(() => {
-                            tampilkanKonfirmasi();
-                        }, 800); // Jeda 0.8 detik agar animasi balik halaman selesai
+                        setTimeout(() => { tampilkanKonfirmasiSelesai(); }, 800); 
                     }
                 } else {
-                    // Jika user mundur ke halaman sebelumnya, sembunyikan lagi
                     tombolSelesai.classList.add('hidden');
                     tombolSelesai.classList.remove('flex');
                     kuisSudahDipicu = false; 
                 }
             };
 
-            // Render buku SETELAH event listener terpasang
             if(window.DFLIP && window.DFLIP.parseBooks) {
                 window.DFLIP.parseBooks();
             }
         }
 
-        // --- KONTROL MODAL ---
-        function tampilkanKonfirmasi() {
+        // --- NAVIGASI MODAL ---
+        function tampilkanKonfirmasiSelesai() {
             document.getElementById('modalSelesai').classList.remove('hidden');
         }
 
-        function tutupModal() {
+        function tutupModalSelesai() {
             document.getElementById('modalSelesai').classList.add('hidden');
-            kuisSudahDipicu = false; // Reset agar bisa dipicu ulang
+            kuisSudahDipicu = false; // Reset
         }
 
         function lanjutKuis() {
-            window.location.href = `quiz.html?buku_id=${bookId}`;
+            tutupModalSelesai(); // Tutup modal kecil
+            document.getElementById('modalQuiz').classList.remove('hidden'); // Buka modal kuis besar
+            tarikDataKuis(); // Mulai panggil soal
+        }
+
+        function tutupQuiz() {
+            document.getElementById('modalQuiz').classList.add('hidden');
+            // Kembalikan ke tampilan default saat memuat agar jika diklik lagi fresh
+            document.getElementById('quiz-content').innerHTML = `<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><p class="text-slate-500">Memuat soal evaluasi...</p></div>`;
+            document.getElementById('quiz-footer').classList.add('hidden');
+        }
+
+        // --- LOGIKA KUIS ---
+        async function tarikDataKuis() {
+            try {
+                // Catatan: Pastikan di Supabase nama kolom relasi buku adalah 'id_buku'
+                const { data, error } = await supabaseClient.from('kuis').select('*').eq('id_buku', bookId);
+                
+                if (error || !data || data.length === 0) {
+                    document.getElementById('quiz-header').classList.add('hidden'); // Sembunyikan header
+                    document.getElementById('quiz-content').innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fa-solid fa-face-smile text-6xl text-slate-300 mb-6"></i>
+                            <h4 class="text-xl font-bold text-slate-700">Tidak Ada Kuis</h4>
+                            <p class="text-slate-500 mt-2">Admin belum membuat evaluasi untuk modul ini.</p>
+                            <button onclick="tutupQuiz()" class="mt-8 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-8 rounded-xl transition">
+                                Kembali Membaca
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                currentQuizData = data;
+                renderSoal();
+                document.getElementById('quiz-header').classList.remove('hidden');
+                document.getElementById('quiz-footer').classList.remove('hidden');
+            } catch (err) { console.error(err); }
+        }
+
+        function renderSoal() {
+            const container = document.getElementById('quiz-content');
+            container.innerHTML = '';
+
+            currentQuizData.forEach((soal, index) => {
+                let htmlOpsi = '';
+                
+                if (soal.jenis_kuis === 'Pilihan Ganda' && soal.opsi_jawaban) {
+                    const opsi = soal.opsi_jawaban;
+                    htmlOpsi = `<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                        ${['A', 'B', 'C', 'D'].map(l => `
+                            <label class="radio-card flex items-start gap-3 p-4 border-2 border-slate-200 rounded-xl cursor-pointer transition">
+                                <input type="radio" name="soal_${soal.id}" value="${l}" class="mt-1 w-4 h-4 accent-blue-600">
+                                <span class="text-slate-700 text-sm md:text-base leading-snug"><strong>${l}.</strong> ${opsi[l] || ''}</span>
+                            </label>`).join('')}
+                    </div>`;
+                } else {
+                    htmlOpsi = `<div class="grid grid-cols-2 gap-4 mt-4">
+                        ${['Benar', 'Salah'].map(v => `
+                            <label class="radio-card flex items-center justify-center gap-2 p-4 border-2 border-slate-200 rounded-xl cursor-pointer transition">
+                                <input type="radio" name="soal_${soal.id}" value="${v}" class="w-4 h-4 accent-blue-600">
+                                <span class="text-slate-700 font-bold text-lg">${v}</span>
+                            </label>`).join('')}
+                    </div>`;
+                }
+                
+                container.innerHTML += `
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-400 shrink-0">${index + 1}</div>
+                            <div class="w-full">
+                                <p class="font-bold text-slate-800 text-base md:text-lg leading-relaxed">${soal.pertanyaan}</p>
+                                ${htmlOpsi}
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function kirimJawaban() {
+            let totalPoinDapat = 0; 
+            let jumlahBenar = 0;
+            let semuaTerjawab = true;
+            
+            currentQuizData.forEach(soal => {
+                const terpilih = document.querySelector(`input[name="soal_${soal.id}"]:checked`);
+                if (!terpilih) { semuaTerjawab = false; return; }
+                
+                if (terpilih.value === soal.jawaban_benar) { 
+                    totalPoinDapat += soal.poin_reward || 10; 
+                    jumlahBenar++;
+                }
+            });
+
+            if (!semuaTerjawab) return alert("Ups! Pastikan kamu sudah menjawab semua pertanyaan.");
+            
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true; 
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Menyimpan Hasil...";
+
+            try {
+                // Update ke Supabase
+                const { data: profil } = await supabaseClient.from('profiles').select('total_poin').eq('id', loggedInUser.id).single();
+                const poinBaru = (profil.total_poin || 0) + totalPoinDapat;
+                await supabaseClient.from('profiles').update({ total_poin: poinBaru }).eq('id', loggedInUser.id);
+                
+                // Ubah Tampilan Modal Menjadi Tampilan Sukses (Result Screen)
+                document.getElementById('quiz-header').classList.add('hidden');
+                document.getElementById('quiz-footer').classList.add('hidden');
+                document.getElementById('btn-tutup-kuis').classList.add('hidden'); // Sembunyikan X
+
+                document.getElementById('quiz-content').innerHTML = `
+                    <div class="text-center py-10 modal-enter">
+                        <div class="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fa-solid fa-trophy text-5xl text-amber-500"></i>
+                        </div>
+                        <h3 class="text-3xl font-black text-slate-800 mb-2">Evaluasi Selesai!</h3>
+                        <p class="text-slate-500 mb-4 text-lg">Kamu berhasil menjawab <strong>${jumlahBenar}</strong> dari <strong>${currentQuizData.length}</strong> pertanyaan.</p>
+                        
+                        <div class="inline-block bg-blue-50 border border-blue-200 px-6 py-3 rounded-2xl mb-8">
+                            <span class="text-blue-600 font-bold text-xl">+ ${totalPoinDapat} XP Didapatkan</span>
+                        </div>
+
+                        <div class="flex flex-col gap-3 max-w-sm mx-auto">
+                            <button onclick="window.location.href='index.html'" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">
+                                <i class="fa-solid fa-house mr-2"></i> Kembali ke Galeri
+                            </button>
+                            <button onclick="tutupQuiz()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-xl transition">
+                                <i class="fa-solid fa-book-open mr-2"></i> Baca Ulang Modul
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } catch (err) { 
+                alert("Gagal memproses data."); 
+                btn.disabled = false; 
+                btn.innerHTML = "<i class='fa-solid fa-paper-plane'></i> Kirim Jawaban"; 
+            }
         }
     </script>
 </body>
