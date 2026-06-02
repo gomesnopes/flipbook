@@ -20,6 +20,9 @@
         body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #0f172a; font-family: sans-serif; }
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        /* Pastikan pembungkus utama memakan tinggi penuh layar */
+        #flipbook_container { width: 100%; height: 100vh; position: relative; }
+        ._df_book { height: 100% !important; width: 100% !important; margin: 0 !important; }
     </style>
 </head>
 <body>
@@ -34,7 +37,7 @@
         </button>
     </div>
 
-    <div id="flipbook_container" class="w-full h-full"></div>
+    <div id="flipbook_container"></div>
 
     <div id="modalSelesai" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm modal-enter p-8 text-center relative overflow-hidden">
@@ -64,6 +67,24 @@
         let fileUrl = null;
         let kuisSudahDipicu = false;
 
+        // 1. Kunci konfigurasi dasar di tingkat global window DearFlip
+        window.DFLIP = window.DFLIP || {};
+        window.DFLIP.defaults = {
+            webgl: false,
+            soundEnable: true,
+            hideControls: "download,print,more,share,fullscreen,toggle,play", 
+            controlDuration: 0,
+            // DETEKTOR OTOMATIS: Dipasang di tingkat konfigurasi global inti
+            onPageChange: function(flipbook) {
+                if (flipbook && flipbook.currentPage === flipbook.totalPages && !kuisSudahDipicu) {
+                    kuisSudahDipicu = true;
+                    setTimeout(() => {
+                        tampilkanKonfirmasiSelesai();
+                    }, 1000);
+                }
+            }
+        };
+
         try {
             supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
             validasiAkses();
@@ -75,7 +96,6 @@
                 window.location.href = 'login.html?pesan=wajib_login';
                 return;
             }
-            loggedInUser = session.user;
 
             const urlParams = new URLSearchParams(window.location.search);
             bookId = urlParams.get('id');
@@ -87,29 +107,29 @@
                 return;
             }
 
-            // FIX: Bungkus ke dalam document ready agar memastikan kontainer HTML sudah siap
+            // Jalankan injeksi ketika dokumen HTML selesai siap dirender
             $(document).ready(function() {
-                // Hapus decodeURIComponent karena fileUrl sudah otomatis ter-decode oleh URLSearchParams
-                renderBuku(fileUrl); 
+                membangunEmbedBuku(fileUrl);
             });
         }
 
-        function renderBuku(urlPdf) {
-            // Inisialisasi Manual DearFlip
-            $('#flipbook_container').flipBook(urlPdf, {
-                webgl: false,
-                soundEnable: true,
-                height: '100vh',
-                hideControls: "download,print,more,share,fullscreen,toggle,play", 
-                onPageChange: function(flipbook) {
-                    if (flipbook && flipbook.currentPage === flipbook.totalPages && !kuisSudahDipicu) {
-                        kuisSudahDipicu = true;
-                        setTimeout(() => {
-                            tampilkanKonfirmasiSelesai();
-                        }, 1000);
-                    }
-                }
-            });
+        // PERBAIKAN UTAMA: Teknik Injeksi Atribut Dinamis
+        function membangunEmbedBuku(urlPdf) {
+            const container = document.getElementById('flipbook_container');
+            container.innerHTML = ''; // Sterilkan wadah
+
+            // Buat element div buku baru secara runtime
+            const divBuku = document.createElement('div');
+            divBuku.className = "_df_book"; // Trigger class utama DearFlip
+            divBuku.id = "df_instance_buku";
+            divBuku.setAttribute('source', urlPdf); // Inject link PDF langsung
+
+            container.appendChild(divBuku);
+
+            // Perintahkan DearFlip melakukan pindaian ulang (parse) secara manual
+            if (window.DFLIP && typeof window.DFLIP.parseBooks === "function") {
+                window.DFLIP.parseBooks();
+            }
         }
 
         function tampilkanKonfirmasiSelesai() {
@@ -118,11 +138,10 @@
 
         function tutupModalSelesai() {
             document.getElementById('modalSelesai').classList.add('hidden');
-            kuisSudahDipicu = false; // Reset pemicu
+            kuisSudahDipicu = false;
         }
 
         function lanjutKeKuis() {
-            // Lempar pengguna ke halaman kuis dengan membawa ID BUKU
             window.location.href = `quiz.html?buku_id=${bookId}`;
         }
     </script>
