@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Membaca Modul - FlipStory Pro</title>
+    <title>SIRASA</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -270,29 +270,11 @@
             });
         }
 
-        async function kirimJawaban() {
+       async function kirimJawaban() {
             let totalPoinDapat = 0; 
             let jumlahBenar = 0;
             let semuaTerjawab = true;
-            // Hitung berapa detik pengguna menghabiskan waktu dari buka buku sampai selesai kuis
-        let waktuSelesai = Date.now();
-        let durasiDetik = Math.floor((waktuSelesai - waktuMulaiMembaca) / 1000);
-
-        // HANYA proses poin ke database jika USER BELUM PERNAH mengerjakan kuis ini
-        if (!sudahPernahSelesai && totalPoinDapat > 0) {
             
-            const { data: profil } = await supabaseClient.from('profiles').select('total_poin').eq('id', loggedInUser.id).single();
-            const poinBaru = (profil.total_poin || 0) + totalPoinDapat;
-            await supabaseClient.from('profiles').update({ total_poin: poinBaru }).eq('id', loggedInUser.id);
-            
-            // Catat ke riwayat beserta durasi belajarnya
-            await supabaseClient.from('riwayat_kuis').insert({
-                id_user: loggedInUser.id,
-                id_buku: bookId,
-                poin_didapat: totalPoinDapat,
-                durasi_baca_detik: durasiDetik // <--- Data durasi masuk ke sini
-            });
-        }
             currentQuizData.forEach(soal => {
                 const terpilih = document.querySelector(`input[name="soal_${soal.id}"]:checked`);
                 if (!terpilih) { semuaTerjawab = false; return; }
@@ -310,30 +292,58 @@
             btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Menyimpan Hasil...";
 
             try {
-                // Update ke Supabase
-                const { data: profil } = await supabaseClient.from('profiles').select('total_poin').eq('id', loggedInUser.id).single();
-                const poinBaru = (profil.total_poin || 0) + totalPoinDapat;
-                await supabaseClient.from('profiles').update({ total_poin: poinBaru }).eq('id', loggedInUser.id);
+                // 1. Kalkulasi Durasi Baca
+                let waktuSelesai = Date.now();
+                // Jika waktuMulaiMembaca belum dideklarasikan di atas, tambahkan let waktuMulaiMembaca = Date.now(); di bagian atas script
+                let durasiDetik = Math.floor((waktuSelesai - waktuMulaiMembaca) / 1000);
+
+                // 2. Simpan Data HANYA jika USER BELUM PERNAH mengerjakan kuis ini sebelumnya
+                if (!sudahPernahSelesai) {
+                    
+                    // A. Update total poin di profil (hanya jika dapat poin)
+                    if (totalPoinDapat > 0) {
+                        const { data: profil } = await supabaseClient.from('profiles').select('total_poin').eq('id', loggedInUser.id).single();
+                        const poinBaru = (profil.total_poin || 0) + totalPoinDapat;
+                        await supabaseClient.from('profiles').update({ total_poin: poinBaru }).eq('id', loggedInUser.id);
+                    }
+                    
+                    // B. Catat ke riwayat agar analitik durasi terekam (Meskipun poin 0, durasi tetap disimpan!)
+                    const { error: errRiwayat } = await supabaseClient.from('riwayat_kuis').insert({
+                        id_user: loggedInUser.id,
+                        id_buku: bookId,
+                        poin_didapat: totalPoinDapat,
+                        durasi_baca_detik: durasiDetik
+                    });
+
+                    if (errRiwayat) {
+                        console.error("Gagal simpan riwayat:", errRiwayat);
+                        throw new Error("Gagal menyimpan riwayat analitik");
+                    }
+                }
                 
-                // Ubah Tampilan Modal Menjadi Tampilan Sukses (Result Screen)
+                // --- KODE TAMPILAN HASIL KUIS SAMA SEPERTI SEBELUMNYA ---
+                let textReward = sudahPernahSelesai 
+                    ? `<span class="text-amber-600 font-bold text-lg"><i class="fa-solid fa-graduation-cap"></i> Mode Latihan Selesai (0 XP)</span>`
+                    : `<span class="text-rose-600 font-bold text-xl">+ ${totalPoinDapat} XP Didapatkan!</span>`;
+
                 document.getElementById('quiz-header').classList.add('hidden');
                 document.getElementById('quiz-footer').classList.add('hidden');
-                document.getElementById('btn-tutup-kuis').classList.add('hidden'); // Sembunyikan X
+                document.getElementById('btn-tutup-kuis').classList.add('hidden'); 
 
                 document.getElementById('quiz-content').innerHTML = `
                     <div class="text-center py-10 modal-enter">
-                        <div class="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fa-solid fa-trophy text-5xl text-amber-500"></i>
+                        <div class="w-24 h-24 ${sudahPernahSelesai ? 'bg-slate-100' : 'bg-amber-100'} rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fa-solid ${sudahPernahSelesai ? 'fa-star text-slate-400' : 'fa-trophy text-amber-500'} text-5xl"></i>
                         </div>
-                        <h3 class="text-3xl font-black text-slate-800 mb-2">Evaluasi Selesai!</h3>
+                        <h3 class="text-3xl font-black text-slate-800 mb-2">${sudahPernahSelesai ? 'Selesai Latihan!' : 'Evaluasi Selesai!'}</h3>
                         <p class="text-slate-500 mb-4 text-lg">Kamu berhasil menjawab <strong>${jumlahBenar}</strong> dari <strong>${currentQuizData.length}</strong> pertanyaan.</p>
                         
-                        <div class="inline-block bg-blue-50 border border-blue-200 px-6 py-3 rounded-2xl mb-8">
-                            <span class="text-blue-600 font-bold text-xl">+ ${totalPoinDapat} XP Didapatkan</span>
+                        <div class="inline-block ${sudahPernahSelesai ? 'bg-slate-50 border-slate-200' : 'bg-rose-50 border-rose-200'} border px-6 py-3 rounded-2xl mb-8">
+                            ${textReward}
                         </div>
 
                         <div class="flex flex-col gap-3 max-w-sm mx-auto">
-                            <button onclick="window.location.href='index.html'" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">
+                            <button onclick="window.location.href='index.html'" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">
                                 <i class="fa-solid fa-house mr-2"></i> Kembali ke Galeri
                             </button>
                             <button onclick="tutupQuiz()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-xl transition">
@@ -343,7 +353,8 @@
                     </div>
                 `;
             } catch (err) { 
-                alert("Gagal memproses data."); 
+                console.error("Error di kirimJawaban:", err);
+                alert("Gagal memproses data: " + err.message); 
                 btn.disabled = false; 
                 btn.innerHTML = "<i class='fa-solid fa-paper-plane'></i> Kirim Jawaban"; 
             }
