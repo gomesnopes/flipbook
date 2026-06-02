@@ -67,12 +67,13 @@
         </div>
     </div>
 
-    <script>
+   <script>
         let supabaseClient;
         let bookId = null;
         let kuisSudahDipicu = false;
 
         try {
+            if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
             supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
             jalankanBuku();
         } catch (err) { console.error(err); }
@@ -85,7 +86,7 @@
                 return;
             }
 
-            // 2. Ambil ID dan File dari URL
+            // 2. Ambil ID dan File
             const urlParams = new URLSearchParams(window.location.search);
             bookId = urlParams.get('id');
             const fileUrl = urlParams.get('file');
@@ -96,61 +97,63 @@
                 return;
             }
 
-            // 3. Dekode URL PDF agar karakternya tidak rusak
+            // 3. Render Buku
             const pdfBersih = decodeURIComponent(fileUrl);
-
-            // 4. Injeksi HTML (Metode paling stabil)
             const wadah = document.getElementById('wadah-buku');
-            wadah.innerHTML = `<div class="_df_book" source="${pdfBersih}" id="flipbook_aktif"></div>`;
+            wadah.innerHTML = `<div class="_df_book" source="${pdfBersih}"></div>`;
 
-            // 5. Suruh DearFlip membaca injeksi kita
             if(window.DFLIP && window.DFLIP.parseBooks) {
                 window.DFLIP.parseBooks();
             }
 
-            // 6. Jalankan Scanner (Dipercepat menjadi 500ms agar lebih responsif)
+            // ====================================================
+            // JURUS SCANNER UNIVERSAL (ANTI-GAGAL)
+            // ====================================================
             setInterval(() => {
-                if(window.DFLIP && window.DFLIP.books && window.DFLIP.books['flipbook_aktif']) {
-                    let buku = window.DFLIP.books['flipbook_aktif'];
-                    let tombolSelesai = document.getElementById('btn-selesai');
+                // Pastikan DearFlip sudah merender bukunya
+                if(window.DFLIP && window.DFLIP.books) {
+                    // Ambil seluruh data buku tanpa peduli nama ID-nya
+                    let daftarBuku = Object.values(window.DFLIP.books);
+                    
+                    // Jika minimal ada 1 buku yang aktif
+                    if(daftarBuku.length > 0) {
+                        let buku = daftarBuku[0]; // Kunci buku yang sedang dibaca
+                        let tombolSelesai = document.getElementById('btn-selesai');
 
-                    // Jika pembaca tiba di halaman terakhir
-                    if(buku.currentPage === buku.totalPages) {
-                        
-                        // 1. Munculkan tombol Selesai
-                        tombolSelesai.classList.remove('hidden');
-                        tombolSelesai.classList.add('flex');
+                        // Cek apakah halaman saat ini adalah halaman terakhir
+                        if(buku.currentPage === buku.totalPages) {
+                            
+                            tombolSelesai.classList.remove('hidden');
+                            tombolSelesai.classList.add('flex');
 
-                        // 2. Munculkan pop-up modal secara otomatis (hanya 1 kali)
-                        if(!kuisSudahDipicu) {
-                            kuisSudahDipicu = true;
-                            setTimeout(() => {
-                                tampilkanKonfirmasi();
-                            }, 800); // Beri jeda 0.8 detik agar tidak mengagetkan
+                            if(!kuisSudahDipicu) {
+                                kuisSudahDipicu = true;
+                                setTimeout(() => {
+                                    tampilkanKonfirmasi();
+                                }, 800); // Jeda 0.8 detik agar transisi mulus
+                            }
+                        } else {
+                            // Jika user mundur ke halaman sebelumnya, sembunyikan lagi
+                            tombolSelesai.classList.add('hidden');
+                            tombolSelesai.classList.remove('flex');
+                            kuisSudahDipicu = false; 
                         }
-                        
-                    } else {
-                        // Jika pembaca membalik kembali ke halaman sebelumnya
-                        // Sembunyikan lagi tombolnya dan reset pemicu kuis
-                        tombolSelesai.classList.add('hidden');
-                        tombolSelesai.classList.remove('flex');
-                        kuisSudahDipicu = false; 
                     }
                 }
-            }, 500);
+            }, 500); // Mengecek setiap setengah detik
         }
 
+        // --- KONTROL MODAL ---
         function tampilkanKonfirmasi() {
             document.getElementById('modalSelesai').classList.remove('hidden');
         }
 
         function tutupModal() {
             document.getElementById('modalSelesai').classList.add('hidden');
-            kuisSudahDipicu = false;
+            kuisSudahDipicu = false; // Reset agar bisa dipicu ulang
         }
 
         function lanjutKuis() {
-            // Oper ID ke quiz.html
             window.location.href = `quiz.html?buku_id=${bookId}`;
         }
     </script>
