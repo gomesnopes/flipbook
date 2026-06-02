@@ -72,10 +72,10 @@
         async function validasiAkses() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
-                // Jika nekat buka URL buku.html tanpa login, usir ke login
                 window.location.href = 'login.html?pesan=wajib_login';
                 return;
             }
+            loggedInUser = session.user;
 
             const urlParams = new URLSearchParams(window.location.search);
             bookId = urlParams.get('id');
@@ -87,7 +87,11 @@
                 return;
             }
 
-            renderBuku(decodeURIComponent(fileUrl));
+            // FIX: Bungkus ke dalam document ready agar memastikan kontainer HTML sudah siap
+            $(document).ready(function() {
+                // Hapus decodeURIComponent karena fileUrl sudah otomatis ter-decode oleh URLSearchParams
+                renderBuku(fileUrl); 
+            });
         }
 
         function renderBuku(urlPdf) {
