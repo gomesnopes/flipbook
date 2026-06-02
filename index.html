@@ -17,11 +17,8 @@
             <i class="fa-solid fa-book-open-reader text-blue-600 text-2xl"></i>
             <h1 class="text-xl font-bold text-slate-800">FlipStory <span class="text-blue-600">Pro</span></h1>
         </div>
-        <div id="user-menu-container">
-            <a href="login.html" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition flex items-center gap-2 shadow-sm">
-                <i class="fa-solid fa-right-to-bracket"></i> Login / Daftar
-            </a>
-        </div>
+        
+        <div id="user-menu-container" class="opacity-0 transition-opacity duration-150"></div>
     </nav>
 
     <div id="guest-hero" class="hidden bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-12 text-center relative overflow-hidden shadow-inner">
@@ -56,13 +53,17 @@
 
         async function cekStatusLogin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
+            const container = document.getElementById('user-menu-container');
+            
             if (session) {
                 loggedInUser = session.user;
                 const { data: profil } = await supabaseClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
                 
                 if (profil) {
-                    // Ubah navbar menjadi Profil User
-                    document.getElementById('user-menu-container').innerHTML = `
+                    document.getElementById('guest-hero').classList.add('hidden');
+                    
+                    // Isi menu profil jika sudah login
+                    container.innerHTML = `
                         <div class="flex items-center gap-4">
                             <a href="profile.html" class="text-right hover:bg-slate-100 p-2 rounded-lg transition cursor-pointer hidden sm:block">
                                 <p class="text-sm font-bold text-slate-800 leading-tight">${profil.nama_lengkap}</p>
@@ -72,25 +73,30 @@
                             <button onclick="prosesLogout()" class="text-slate-400 hover:text-red-500 ml-1" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
                         </div>
                     `;
-                    return; // Stop di sini, spanduk tetap tersembunyi (hidden)
+                    container.classList.remove('opacity-0'); // Munculkan secara halus
+                    return;
                 }
             }
             
-            // JIKA TIDAK LOGIN: Baru munculkan spanduk banner tamu
+            // JIKA BELUM LOGIN: Suntikkan tombol Login dan tampilkan banner hero
             document.getElementById('guest-hero').classList.remove('hidden');
+            container.innerHTML = `
+                <a href="login.html" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-right-to-bracket"></i> Login / Daftar
+                </a>
+            `;
+            container.classList.remove('opacity-0'); // Munculkan secara halus
         }
+
         async function prosesLogout() {
             await supabaseClient.auth.signOut();
             window.location.reload();
         }
 
-        // FUNGSI PENGARAH (ROUTING)
         function arahkanMembaca(idBuku, urlFile) {
             if (loggedInUser) {
-                // Jika sudah login, lempar ke halaman buku.html dengan membawa ID dan URL PDF
                 window.location.href = `buku.html?id=${idBuku}&file=${encodeURIComponent(urlFile)}`;
             } else {
-                // Jika belum, arahkan ke login.html dengan pesan peringatan
                 window.location.href = `login.html?pesan=wajib_login`;
             }
         }
