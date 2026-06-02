@@ -102,45 +102,39 @@
             const wadah = document.getElementById('wadah-buku');
             wadah.innerHTML = `<div class="_df_book" source="${pdfBersih}"></div>`;
 
+            // ====================================================
+            // SOLUSI: Menggunakan Event Listener API DearFlip
+            // ====================================================
+            window.DFLIP.defaults.onFlip = function(flipbook) {
+                // Ambil data halaman dari properti internal DearFlip
+                let halamanSaatIni = flipbook.target._activePage || flipbook.target.page;
+                let totalHalaman = flipbook.target.pageCount || flipbook.options.pageCount;
+                
+                let tombolSelesai = document.getElementById('btn-selesai');
+
+                // Cek apakah halaman saat ini adalah halaman terakhir
+                if (halamanSaatIni && totalHalaman && halamanSaatIni >= totalHalaman) {
+                    tombolSelesai.classList.remove('hidden');
+                    tombolSelesai.classList.add('flex');
+
+                    if (!kuisSudahDipicu) {
+                        kuisSudahDipicu = true;
+                        setTimeout(() => {
+                            tampilkanKonfirmasi();
+                        }, 800); // Jeda 0.8 detik agar animasi balik halaman selesai
+                    }
+                } else {
+                    // Jika user mundur ke halaman sebelumnya, sembunyikan lagi
+                    tombolSelesai.classList.add('hidden');
+                    tombolSelesai.classList.remove('flex');
+                    kuisSudahDipicu = false; 
+                }
+            };
+
+            // Render buku SETELAH event listener terpasang
             if(window.DFLIP && window.DFLIP.parseBooks) {
                 window.DFLIP.parseBooks();
             }
-
-            // ====================================================
-            // JURUS SCANNER UNIVERSAL (ANTI-GAGAL)
-            // ====================================================
-            setInterval(() => {
-                // Pastikan DearFlip sudah merender bukunya
-                if(window.DFLIP && window.DFLIP.books) {
-                    // Ambil seluruh data buku tanpa peduli nama ID-nya
-                    let daftarBuku = Object.values(window.DFLIP.books);
-                    
-                    // Jika minimal ada 1 buku yang aktif
-                    if(daftarBuku.length > 0) {
-                        let buku = daftarBuku[0]; // Kunci buku yang sedang dibaca
-                        let tombolSelesai = document.getElementById('btn-selesai');
-
-                        // Cek apakah halaman saat ini adalah halaman terakhir
-                        if(buku.currentPage === buku.totalPages) {
-                            
-                            tombolSelesai.classList.remove('hidden');
-                            tombolSelesai.classList.add('flex');
-
-                            if(!kuisSudahDipicu) {
-                                kuisSudahDipicu = true;
-                                setTimeout(() => {
-                                    tampilkanKonfirmasi();
-                                }, 800); // Jeda 0.8 detik agar transisi mulus
-                            }
-                        } else {
-                            // Jika user mundur ke halaman sebelumnya, sembunyikan lagi
-                            tombolSelesai.classList.add('hidden');
-                            tombolSelesai.classList.remove('flex');
-                            kuisSudahDipicu = false; 
-                        }
-                    }
-                }
-            }, 500); // Mengecek setiap setengah detik
         }
 
         // --- KONTROL MODAL ---
