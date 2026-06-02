@@ -270,22 +270,29 @@
     </main>
 
     <script>
-        // --- 1. INISIALISASI SUPABASE ---
-        // --- 1. INISIALISASI SUPABASE ---
+        // ==========================================
+        // 1. INISIALISASI SUPABASE & VARIABEL GLOBAL
+        // ==========================================
         let supabaseClient;
-        try {
-            if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
-            supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-            
-            // Panggil semua fungsi render data awal
-            muatDataDasbor();      // <-- Eksekusi grafik real-time
-            fetchDaftarBukuAdmin();
-            fetchDaftarKuis();
-        } catch (err) {
-            console.error("Supabase Error:", err);
-        }
+        let chartInstances = {};
 
-        // --- 2. LOGIKA NAVIGASI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
+                supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+                
+                // Jalankan semua penarikan data secara paralel saat halaman dibuka
+                fetchDaftarBukuAdmin();
+                fetchDaftarKuis();
+                muatDataDasbor();
+            } catch (err) {
+                console.error("Gagal inisialisasi Supabase:", err);
+            }
+        });
+
+        // ==========================================
+        // 2. LOGIKA NAVIGASI TAB MENU
+        // ==========================================
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => {
@@ -298,20 +305,10 @@
             activeBtn.classList.add('bg-blue-600', 'text-white');
         }
 
-        // --- 3. AMBIL DAFTAR BUKU (Untuk Tabel Modul & Dropdown Kuis) ---
+        // ==========================================
+        // 3. LOGIKA MANAJEMEN MODUL (BUKU)
+        // ==========================================
         async function fetchDaftarBukuAdmin() {
-
-                    try {
-            if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
-            supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-            
-            // Langsung ambil daftar buku dan kuis saat admin dibuka
-            fetchDaftarBukuAdmin();
-            fetchDaftarKuis(); // <--- Tambahkan baris ini
-        } catch (err) {
-            console.error("Supabase Error:", err);
-        }
-
             try {
                 const { data, error } = await supabaseClient.from('buku').select('id, judul, kategori, cover_url').order('created_at', { ascending: false });
                 if (error) throw error;
@@ -327,7 +324,6 @@
                 }
 
                 data.forEach(buku => {
-                    // Isi Tabel Modul
                     const cover = buku.cover_url ? `<img src="${buku.cover_url}" class="w-10 h-14 object-cover rounded shadow-sm">` : `<i class="fa-solid fa-file-pdf text-2xl text-red-400"></i>`;
                     tabel.innerHTML += `
                         <tr class="hover:bg-slate-50 transition-colors">
@@ -339,16 +335,13 @@
                             </td>
                         </tr>
                     `;
-
-                    // Isi Dropdown Pembuatan Kuis
                     dropdown.innerHTML += `<option value="${buku.id}">${buku.judul}</option>`;
                 });
             } catch (err) {
-                console.error("Gagal load buku:", err);
+                console.error("Gagal load daftar buku:", err);
             }
         }
 
-        // --- 4. UPLOAD MODUL (Pindahan dari Front-end) ---
         async function uploadModul() {
             const judul = document.getElementById('judulBuku').value;
             const kategori = document.getElementById('kategoriBuku').value;
@@ -366,7 +359,6 @@
             status.innerHTML = `<i class="fa-solid fa-camera fa-spin mr-2"></i> Mengekstrak cover...`;
 
             try {
-                // Ekstrak Cover menggunakan PDF.js
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 const page = await pdf.getPage(1);
@@ -393,7 +385,7 @@
                 
                 setTimeout(() => { 
                     document.getElementById('judulBuku').value = ''; fileInput.value = ''; status.classList.add('hidden');
-                    fetchDaftarBukuAdmin(); // Refresh tabel dan dropdown
+                    fetchDaftarBukuAdmin(); 
                     btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Proses & Upload ke Server`; 
                 }, 1500);
             } catch (error) {
@@ -403,7 +395,9 @@
             }
         }
 
-        // --- 5. FORM DINAMIS KUIS ---
+        // ==========================================
+        // 4. LOGIKA MANAJEMEN KUIS
+        // ==========================================
         function toggleTipeKuis() {
             const jenis = document.getElementById('jenisKuis').value;
             const formPG = document.getElementById('formPilihanGanda');
@@ -417,9 +411,6 @@
             }
         }
 
-                // --- 5. LOGIKA MANAJEMEN KUIS (CRUD) ---
-
-        // Fungsi A: Menyimpan Kuis Baru ke Database
         async function simpanKuis(btn) {
             const idBuku = document.getElementById('pilihBukuKuis').value;
             const jenis = document.getElementById('jenisKuis').value;
@@ -429,67 +420,43 @@
 
             if (!idBuku || !pertanyaan) return alert("Pilih Modul Buku dan tulis pertanyaannya!");
 
-            // Jika pilihan ganda, rangkai opsi A, B, C, D menjadi JSON
             if (jenis === 'Pilihan Ganda') {
                 const a = document.getElementById('opsiA').value;
                 const b = document.getElementById('opsiB').value;
                 const c = document.getElementById('opsiC').value;
                 const d = document.getElementById('opsiD').value;
-                
                 if (!a || !b || !c || !d) return alert("Harap isi semua opsi jawaban (A, B, C, D)!");
                 opsiJawaban = { A: a, B: b, C: c, D: d };
             }
 
-            // Animasi tombol loading
             const teksAsli = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
 
             try {
                 const { error } = await supabaseClient.from('kuis').insert([{
-                    id_buku: idBuku,
-                    jenis_kuis: jenis,
-                    pertanyaan: pertanyaan,
-                    opsi_jawaban: opsiJawaban,
-                    jawaban_benar: kunci
+                    id_buku: idBuku, jenis_kuis: jenis, pertanyaan: pertanyaan, opsi_jawaban: opsiJawaban, jawaban_benar: kunci
                 }]);
-
                 if (error) throw error;
-
-                alert("Berhasil! Pertanyaan kuis telah disimpan.");
                 
-                // Bersihkan form setelah sukses
+                alert("Berhasil! Pertanyaan kuis telah disimpan.");
                 document.getElementById('teksPertanyaan').value = '';
                 if(jenis === 'Pilihan Ganda') {
-                    document.getElementById('opsiA').value = '';
-                    document.getElementById('opsiB').value = '';
-                    document.getElementById('opsiC').value = '';
-                    document.getElementById('opsiD').value = '';
+                    document.getElementById('opsiA').value = ''; document.getElementById('opsiB').value = '';
+                    document.getElementById('opsiC').value = ''; document.getElementById('opsiD').value = '';
                 }
-                
-                fetchDaftarKuis(); // Refresh tabel di bawah form
-            } catch (err) {
-                alert("Gagal menyimpan kuis: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = teksAsli;
-            }
+                fetchDaftarKuis();
+            } catch (err) { alert("Gagal menyimpan kuis: " + err.message); } 
+            finally { btn.disabled = false; btn.innerHTML = teksAsli; }
         }
 
-        // Fungsi B: Mengambil dan Menampilkan Daftar Kuis
         async function fetchDaftarKuis() {
             try {
-                // Tarik data kuis dan gabungkan dengan tabel buku untuk mengambil judulnya
-                const { data, error } = await supabaseClient
-                    .from('kuis')
-                    .select('id, pertanyaan, jenis_kuis, jawaban_benar, buku (judul)')
-                    .order('created_at', { ascending: false });
-
+                const { data, error } = await supabaseClient.from('kuis').select('id, pertanyaan, jenis_kuis, jawaban_benar, buku (judul)').order('created_at', { ascending: false });
                 if (error) throw error;
 
                 const tbody = document.getElementById('tabelKuis');
                 tbody.innerHTML = '';
-
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="3" class="py-6 text-center text-slate-400">Belum ada pertanyaan kuis.</td></tr>';
                     return;
@@ -508,175 +475,134 @@
                                 <div class="text-xs text-emerald-600 font-bold mt-1">Kunci Jawaban: ${q.jawaban_benar}</div>
                             </td>
                             <td class="py-3 px-6 text-center">
-                                <button onclick="hapusKuis(${q.id})" class="text-red-500 hover:bg-red-50 p-2 rounded transition" title="Hapus Pertanyaan">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
+                                <button onclick="hapusKuis(${q.id})" class="text-red-500 hover:bg-red-50 p-2 rounded transition" title="Hapus Pertanyaan"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
                 });
-            } catch (err) {
-                console.error("Gagal load kuis:", err);
-            }
+            } catch (err) { console.error("Gagal load kuis:", err); }
         }
 
-        // Fungsi C: Menghapus Pertanyaan Kuis
         async function hapusKuis(idKuis) {
             if(!confirm("Yakin ingin menghapus pertanyaan ini secara permanen?")) return;
-            
             try {
                 const { error } = await supabaseClient.from('kuis').delete().eq('id', idKuis);
                 if (error) throw error;
-                fetchDaftarKuis(); // Refresh tabel
-            } catch (err) {
-                alert("Gagal menghapus data: " + err.message);
-            }
+                fetchDaftarKuis();
+            } catch (err) { alert("Gagal menghapus data: " + err.message); }
         }
 
+        // ==========================================
+        // 5. DASBOR ANALITIK REAL-TIME (AMAN DARI CRASH)
+        // ==========================================
+        async function muatDataDasbor() {
+            try {
+                const { data: profil, error } = await supabaseClient.from('profiles').select('*').order('total_poin', { ascending: false });
+                if (error) throw error;
+                
+                // Mencegah error jika data masih kosong (belum ada user sama sekali)
+                const totalPeserta = profil ? profil.length : 0;
+                if (totalPeserta === 0) return; 
 
-             // --- 6. RENDER DATA DASBOR & GRAFIK (REAL-TIME) ---
-let chartInstances = {}; // Menyimpan grafik agar bisa diperbarui tanpa tumpang tindih
+                const totalPoin = profil.reduce((sum, p) => sum + (p.total_poin || 0), 0);
+                const rataRataPoin = totalPeserta > 0 ? Math.round(totalPoin / totalPeserta) : 0;
+                const pesertaAktifKuis = profil.filter(p => p.total_poin > 0).length;
+                const persentaseAkurasi = totalPeserta > 0 ? Math.round((pesertaAktifKuis / totalPeserta) * 100) : 0;
 
-async function muatDataDasbor() {
-    try {
-        // Ambil data profil, urutkan berdasarkan poin tertinggi (untuk leaderboard)
-        const { data: profil, error } = await supabaseClient
-            .from('profiles')
-            .select('id, nama_lengkap, jenis_kelamin, tanggal_lahir, total_poin, kategori')
-            .order('total_poin', { ascending: false });
+                // Gunakan blok aman (if) agar tidak crash jika ID HTML tidak ketemu
+                if(document.getElementById('stat-peserta')) document.getElementById('stat-peserta').innerText = totalPeserta;
+                if(document.getElementById('stat-poin')) document.getElementById('stat-poin').innerText = totalPoin.toLocaleString('id-ID');
+                if(document.getElementById('stat-rata')) document.getElementById('stat-rata').innerText = rataRataPoin;
+                if(document.getElementById('stat-akurasi')) document.getElementById('stat-akurasi').innerText = persentaseAkurasi + '%';
 
-        if (error) throw error;
-        if (!profil || profil.length === 0) return;
+                let umurRents = { '< 15 Thn': 0, '16-18 Thn': 0, '19-25 Thn': 0, '> 25 Thn': 0 };
+                let genderCount = { 'Laki-laki': 0, 'Perempuan': 0 };
+                let katTotal = { 'Pelajar': { poin: 0, count: 0 }, 'Mahasiswa': { poin: 0, count: 0 }, 'Umum': { poin: 0, count: 0 } };
+                const tahunIni = new Date().getFullYear();
 
-        // --- A. Hitung Ringkasan Kartu Atas ---
-        const totalPeserta = profil.length;
-        const totalPoin = profil.reduce((sum, p) => sum + (p.total_poin || 0), 0);
-        const rataRataPoin = Math.round(totalPoin / totalPeserta);
-        
-        // (Metrik Akurasi Sementara: % User yang sudah pernah mendapatkan poin)
-        const pesertaAktifKuis = profil.filter(p => p.total_poin > 0).length;
-        const persentaseAkurasi = totalPeserta > 0 ? Math.round((pesertaAktifKuis / totalPeserta) * 100) : 0;
+                profil.forEach(p => {
+                    if(p.tanggal_lahir) {
+                        const umur = tahunIni - new Date(p.tanggal_lahir).getFullYear();
+                        if (umur < 15) umurRents['< 15 Thn']++;
+                        else if (umur <= 18) umurRents['16-18 Thn']++;
+                        else if (umur <= 25) umurRents['19-25 Thn']++;
+                        else umurRents['> 25 Thn']++;
+                    }
+                    if (genderCount[p.jenis_kelamin] !== undefined) genderCount[p.jenis_kelamin]++;
+                    if (katTotal[p.kategori]) {
+                        katTotal[p.kategori].poin += (p.total_poin || 0);
+                        katTotal[p.kategori].count++;
+                    }
+                });
 
-        document.getElementById('stat-peserta').innerText = totalPeserta;
-        document.getElementById('stat-poin').innerText = totalPoin.toLocaleString('id-ID');
-        document.getElementById('stat-rata').innerText = rataRataPoin;
-        document.getElementById('stat-akurasi').innerText = persentaseAkurasi + '%';
+                const rataKategori = [
+                    katTotal['Pelajar'].count ? Math.round(katTotal['Pelajar'].poin / katTotal['Pelajar'].count) : 0,
+                    katTotal['Mahasiswa'].count ? Math.round(katTotal['Mahasiswa'].poin / katTotal['Mahasiswa'].count) : 0,
+                    katTotal['Umum'].count ? Math.round(katTotal['Umum'].poin / katTotal['Umum'].count) : 0
+                ];
 
-        // --- B. Olah Demografi Usia ---
-        let umurRents = { '< 15 Thn': 0, '16-18 Thn': 0, '19-25 Thn': 0, '> 25 Thn': 0 };
-        const tahunIni = new Date().getFullYear();
-        
-        profil.forEach(p => {
-            if(p.tanggal_lahir) {
-                const tahunLahir = new Date(p.tanggal_lahir).getFullYear();
-                const umur = tahunIni - tahunLahir;
-                if (umur < 15) umurRents['< 15 Thn']++;
-                else if (umur >= 16 && umur <= 18) umurRents['16-18 Thn']++;
-                else if (umur >= 19 && umur <= 25) umurRents['19-25 Thn']++;
-                else umurRents['> 25 Thn']++;
-            }
-        });
+                const wadahPeringkat = document.getElementById('papan-peringkat');
+                if (wadahPeringkat) {
+                    wadahPeringkat.innerHTML = ''; 
+                    const top5 = profil.slice(0, 5); 
+                    const warnaBg = ['bg-blue-200 text-blue-700', 'bg-pink-200 text-pink-700', 'bg-indigo-200 text-indigo-700', 'bg-amber-200 text-amber-700', 'bg-emerald-200 text-emerald-700'];
+                    
+                    top5.forEach((p, index) => {
+                        if (p.total_poin > 0) {
+                            const inisial = p.nama_lengkap.charAt(0).toUpperCase();
+                            const warna = warnaBg[index % warnaBg.length];
+                            wadahPeringkat.innerHTML += `
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-white hover:shadow-sm transition">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-bold text-slate-400 w-4">${index + 1}</span>
+                                        <div class="w-8 h-8 rounded-full ${warna} flex items-center justify-center font-bold text-sm">${inisial}</div>
+                                        <span class="font-bold text-sm">${p.nama_lengkap}</span>
+                                        <span class="text-[10px] uppercase font-bold bg-slate-200 px-2 py-0.5 rounded text-slate-600">${p.kategori}</span>
+                                    </div>
+                                    <span class="font-bold text-emerald-600">${p.total_poin} XP</span>
+                                </div>`;
+                        }
+                    });
+                    if (wadahPeringkat.innerHTML === '') wadahPeringkat.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Belum ada skor yang dicetak.</p>';
+                }
 
-        // --- C. Olah Demografi Gender ---
-        let genderCount = { 'Laki-laki': 0, 'Perempuan': 0 };
-        profil.forEach(p => {
-            if (genderCount[p.jenis_kelamin] !== undefined) genderCount[p.jenis_kelamin]++;
-        });
+                // Render grafik hanya jika Canvas-nya ada
+                if(document.getElementById('chartUsia')) renderGrafikDinami(umurRents, genderCount, rataKategori);
 
-        // --- D. Olah Rata-Rata Poin per Kategori ---
-        let katTotal = { 'Pelajar': { poin: 0, count: 0 }, 'Mahasiswa': { poin: 0, count: 0 }, 'Umum': { poin: 0, count: 0 } };
-        profil.forEach(p => {
-            if (katTotal[p.kategori]) {
-                katTotal[p.kategori].poin += (p.total_poin || 0);
-                katTotal[p.kategori].count++;
-            }
-        });
-        const rataKategori = [
-            katTotal['Pelajar'].count ? Math.round(katTotal['Pelajar'].poin / katTotal['Pelajar'].count) : 0,
-            katTotal['Mahasiswa'].count ? Math.round(katTotal['Mahasiswa'].poin / katTotal['Mahasiswa'].count) : 0,
-            katTotal['Umum'].count ? Math.round(katTotal['Umum'].poin / katTotal['Umum'].count) : 0
-        ];
+            } catch (err) { console.error("Gagal load data dasbor:", err); }
+        }
 
-        // --- E. Update Papan Peringkat (Top 5) ---
-        const wadahPeringkat = document.getElementById('papan-peringkat');
-        wadahPeringkat.innerHTML = ''; 
-        const top5 = profil.slice(0, 5); 
-        const warnaBg = ['bg-blue-200 text-blue-700', 'bg-pink-200 text-pink-700', 'bg-indigo-200 text-indigo-700', 'bg-amber-200 text-amber-700', 'bg-emerald-200 text-emerald-700'];
-        
-        top5.forEach((p, index) => {
-            if (p.total_poin > 0) { // Hanya tampilkan yang punya poin
-                const inisial = p.nama_lengkap.charAt(0).toUpperCase();
-                const warna = warnaBg[index % warnaBg.length];
-                wadahPeringkat.innerHTML += `
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-white hover:shadow-sm transition">
-                        <div class="flex items-center gap-3">
-                            <span class="font-bold text-slate-400 w-4">${index + 1}</span>
-                            <div class="w-8 h-8 rounded-full ${warna} flex items-center justify-center font-bold text-sm">${inisial}</div>
-                            <span class="font-bold text-sm">${p.nama_lengkap}</span>
-                            <span class="text-[10px] uppercase font-bold bg-slate-200 px-2 py-0.5 rounded text-slate-600">${p.kategori}</span>
-                        </div>
-                        <span class="font-bold text-emerald-600">${p.total_poin} XP</span>
-                    </div>
-                `;
-            }
-        });
+        function renderGrafikDinami(umurRents, genderCount, rataKategori) {
+            if(chartInstances.usia) chartInstances.usia.destroy();
+            if(chartInstances.gender) chartInstances.gender.destroy();
+            if(chartInstances.kategori) chartInstances.kategori.destroy();
 
-        if (wadahPeringkat.innerHTML === '') wadahPeringkat.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Belum ada skor yang dicetak.</p>';
+            const opsiUmum = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
 
-        // --- F. Render Semua Grafik ---
-        renderGrafikDinami(umurRents, genderCount, rataKategori);
+            chartInstances.usia = new Chart(document.getElementById('chartUsia').getContext('2d'), {
+                type: 'bar', data: { labels: Object.keys(umurRents), datasets: [{ data: Object.values(umurRents), backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 }] }, options: opsiUmum
+            });
+            chartInstances.gender = new Chart(document.getElementById('chartGender').getContext('2d'), {
+                type: 'doughnut', data: { labels: Object.keys(genderCount), datasets: [{ data: Object.values(genderCount), backgroundColor: ['#3b82f6', '#ec4899'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+            });
+            chartInstances.kategori = new Chart(document.getElementById('chartKategori').getContext('2d'), {
+                type: 'bar', data: { labels: ['Pelajar', 'Mahasiswa', 'Umum'], datasets: [{ data: rataKategori, backgroundColor: ['#10b981', '#f59e0b', '#6366f1'], borderRadius: 6 }] }, options: opsiUmum
+            });
+        }
 
-    } catch (err) {
-        console.error("Gagal load data dasbor:", err);
-    }
-}
-
-function renderGrafikDinami(umurRents, genderCount, rataKategori) {
-    if(chartInstances.usia) chartInstances.usia.destroy();
-    if(chartInstances.gender) chartInstances.gender.destroy();
-    if(chartInstances.kategori) chartInstances.kategori.destroy();
-
-    const opsiUmum = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-
-    chartInstances.usia = new Chart(document.getElementById('chartUsia').getContext('2d'), {
-        type: 'bar',
-        data: { labels: Object.keys(umurRents), datasets: [{ data: Object.values(umurRents), backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 }] },
-        options: opsiUmum
-    });
-
-    chartInstances.gender = new Chart(document.getElementById('chartGender').getContext('2d'), {
-        type: 'doughnut',
-        data: { labels: Object.keys(genderCount), datasets: [{ data: Object.values(genderCount), backgroundColor: ['#3b82f6', '#ec4899'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
-    });
-
-    chartInstances.kategori = new Chart(document.getElementById('chartKategori').getContext('2d'), {
-        type: 'bar',
-        data: { labels: ['Pelajar', 'Mahasiswa', 'Umum'], datasets: [{ data: rataKategori, backgroundColor: ['#10b981', '#f59e0b', '#6366f1'], borderRadius: 6 }] },
-        options: opsiUmum
-    });
-}
-
-async function hapusSemuaDataPeserta() {
-    if(!confirm("PERINGATAN: Yakin ingin menghapus semua data peserta dan riwayat kuis? Tombol ini akan mereset sistem untuk keperluan uji coba massal.")) return;
-    
-    try {
-        // Menghapus data riwayat kuis (jika tabel riwayat_kuis sudah dibuat)
-        await supabaseClient.from('riwayat_kuis').delete().neq('id', 0);
-        
-        // Menghapus data profil peserta (mengandalkan RLS Supabase yang mengizinkan update/delete)
-        const { error } = await supabaseClient.from('profiles').delete().neq('total_poin', -1);
-        
-        if (error) throw error;
-        
-        alert("Berhasil! Seluruh data peserta telah dikosongkan. Sistem siap digunakan untuk simulasi input baru.");
-        
-        // Refresh halaman agar dashboard kembali ke angka nol
-        window.location.reload();
-    } catch (err) {
-        alert("Gagal menghapus data: " + err.message);
-    }
-}
+        // ==========================================
+        // 6. FUNGSI HAPUS SEMUA DATA (RESET)
+        // ==========================================
+        async function hapusSemuaDataPeserta() {
+            if(!confirm("PERINGATAN: Yakin ingin menghapus semua data peserta dan riwayat kuis? Tombol ini akan mereset sistem.")) return;
+            try {
+                await supabaseClient.from('riwayat_kuis').delete().neq('id', 0);
+                const { error } = await supabaseClient.from('profiles').delete().neq('total_poin', -1);
+                if (error) throw error;
+                alert("Berhasil! Seluruh data peserta telah dikosongkan.");
+                window.location.reload();
+            } catch (err) { alert("Gagal menghapus data: " + err.message); }
+        }
     </script>
 </body>
 </html>
