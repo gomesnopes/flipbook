@@ -26,7 +26,6 @@
         @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         #sidebar { transition: width 0.3s ease, transform 0.3s ease; }
         
-        /* Custom Scrollbar for Draft List */
         .draft-scroll::-webkit-scrollbar { width: 6px; }
         .draft-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .draft-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -72,12 +71,68 @@
         <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
             <div class="max-w-[1400px] mx-auto">
                 
-                <!-- 1. TAB DASHBOARD -->
+                <!-- 1. TAB DASHBOARD ANALITIK -->
                 <section id="dashboard" class="tab-content active">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Penelitian</h2>
-                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6 flex gap-3 text-blue-800">
-                        <i class="fa-solid fa-circle-info mt-1"></i>
-                        <p class="text-sm">Grafik Pre-Test vs Post-Test N-Gain Score akan muncul di sini setelah alur baru (Halaman User) diterapkan di Tahap 2.</p>
+                    
+                    <!-- Kartu Ringkasan (Top Cards) -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl"><i class="fa-solid fa-users"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Total Entri Data</p><h3 id="stat-total-entri" class="text-2xl font-black text-slate-800">0</h3></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-bullseye"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Rata-Rata Nilai (Global)</p><h3 id="stat-avg-poin" class="text-2xl font-black text-slate-800">0</h3></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Rata-Rata Durasi (Global)</p><h3 id="stat-avg-waktu" class="text-2xl font-black text-slate-800">0s</h3></div>
+                        </div>
+                        <button onclick="muatDataDasbor()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-5 rounded-xl border border-indigo-200 shadow-sm flex flex-col items-center justify-center gap-1 transition">
+                            <i class="fa-solid fa-arrows-rotate text-xl"></i>
+                            <span class="text-xs font-bold uppercase">Refresh Data</span>
+                        </button>
+                    </div>
+
+                    <!-- Grafik Rata-rata per Modul -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-chart-bar text-emerald-500 mr-2"></i> Rata-rata Nilai (Skor) per Modul</h4>
+                            <p class="text-xs text-slate-400 mb-4">Mengukur tingkat pemahaman rata-rata responden pada tiap materi/instrumen.</p>
+                            <div class="relative h-64 w-full flex-grow"><canvas id="chartNilaiModul"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-stopwatch text-rose-500 mr-2"></i> Rata-rata Durasi Membaca/Tes per Modul</h4>
+                            <p class="text-xs text-slate-400 mb-4">Mengukur berapa lama waktu (detik) yang dihabiskan responden pada tiap materi.</p>
+                            <div class="relative h-64 w-full flex-grow"><canvas id="chartWaktuModul"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Analitik Detail -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-10">
+                        <div class="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-slate-800"><i class="fa-solid fa-table-list text-indigo-500 mr-2"></i> Rincian Data Individu Responden</h4>
+                                <p class="text-xs text-slate-500">Log lengkap interaksi setiap pengguna pada setiap modul/kuis.</p>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[900px]">
+                                <thead>
+                                    <tr class="bg-white text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200">
+                                        <th class="py-3 px-5 font-bold">Waktu & Tanggal</th>
+                                        <th class="py-3 px-5 font-bold">Nama Responden</th>
+                                        <th class="py-3 px-5 font-bold">Modul / Instrumen</th>
+                                        <th class="py-3 px-5 font-bold text-center">Durasi (Detik)</th>
+                                        <th class="py-3 px-5 font-bold text-center">Skor Didapat</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelAnalitikDetail" class="text-sm text-slate-700 divide-y divide-slate-100">
+                                    <tr><td colspan="5" class="py-8 text-center text-slate-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat data penelitian...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -173,7 +228,7 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- MODAL TAMBAH MODUL (TETAP SAMA) -->
+    <!-- MODAL TAMBAH MODUL -->
     <!-- ============================================== -->
     <div id="modalTambahModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden flex flex-col border border-slate-100">
@@ -232,20 +287,18 @@
             </div>
             
             <div class="p-6 overflow-y-auto flex-1 bg-slate-100/50">
-                <!-- Wrapper Kiri dan Kanan -->
                 <div class="flex flex-col lg:flex-row gap-6 h-full">
                     
                     <!-- KIRI: BUILDER SOAL -->
                     <div class="flex-1 space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                        <!-- Mode Edit Info -->
                         <div id="editModeNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg text-xs font-bold mb-4">
-                            <i class="fa-solid fa-pen mr-1"></i> Mode Edit: Kamu sedang mengedit 1 soal yang sudah ada. Fitur antrean dimatikan.
+                            <i class="fa-solid fa-pen mr-1"></i> Mode Edit: Kamu sedang mengedit 1 soal. Fitur antrean dimatikan.
                         </div>
 
                         <input type="hidden" id="formKuisId">
 
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-slate-700">Induk Konten (Soal-soal ini akan masuk ke sini)</label>
+                            <label class="block text-sm font-medium mb-1 text-slate-700">Induk Konten</label>
                             <select id="formKuisBuku" class="w-full p-2.5 border border-slate-300 rounded-lg bg-indigo-50 outline-none font-semibold text-indigo-800 focus:ring-2 focus:ring-indigo-500"></select>
                         </div>
                         
@@ -273,20 +326,17 @@
                             <div id="wadahDynamicOptions" class="space-y-2"></div>
                         </div>
 
-                        <!-- Tombol Tambah ke Antrean (Hanya tampil saat Add Mode) -->
                         <button id="btnTambahAntrean" onclick="tambahKeDraft()" class="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold py-3 rounded-xl transition border border-indigo-200 border-dashed flex items-center justify-center gap-2 mt-4">
                             <i class="fa-solid fa-arrow-right-to-bracket"></i> Masukkan Soal ke Antrean Draft
                         </button>
                     </div>
 
-                    <!-- KANAN: DRAFT ANTREAN (Hanya tampil saat Add Mode) -->
+                    <!-- KANAN: DRAFT ANTREAN -->
                     <div id="panelAntrean" class="w-full lg:w-5/12 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
                         <div class="bg-slate-800 text-white px-4 py-3 border-b flex justify-between items-center shrink-0">
                             <h4 class="font-bold text-sm"><i class="fa-solid fa-layer-group mr-2 text-indigo-400"></i> Antrean (<span id="draftCount">0</span> Soal)</h4>
                             <button onclick="kosongkanDraft()" class="text-xs text-rose-400 hover:text-white transition underline">Reset</button>
                         </div>
-                        
-                        <!-- List Item -->
                         <div id="draftList" class="flex-1 overflow-y-auto p-4 space-y-3 draft-scroll bg-slate-50 min-h-[250px]">
                             <div class="text-center py-10 text-slate-400" id="draftEmptyState">
                                 <i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i>
@@ -311,10 +361,11 @@
 
     <script>
         let supabaseClient;
+        let chartInstances = {};
         const LABELS = ['A', 'B', 'C', 'D', 'E'];
-
-        // Variabel Penyimpan Antrean (Bulk Insert)
         let draftKuisArray = [];
+        let dataEditSementara = null; 
+        let isEditMode = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -323,8 +374,114 @@
                 fetchDaftarBukuAdmin();
                 fetchDaftarKuis();
                 fetchPengguna();
+                muatDataDasbor(); // Fungsi baru untuk merender grafik dan tabel analitik
             } catch (err) { console.error("Gagal inisialisasi Supabase:", err); }
         });
+
+        // ==========================================
+        // FUNGSI DASBOR ANALITIK (GRAFIK & TABEL)
+        // ==========================================
+        async function muatDataDasbor() {
+            try {
+                // 1. Ambil data dari tabel riwayat_kuis yang di-join dengan profile dan buku
+                const { data: riwayat, error } = await supabaseClient
+                    .from('riwayat_kuis')
+                    .select('poin_didapat, durasi_baca_detik, jenis_tes, created_at, profiles(nama_lengkap), buku(judul)')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const tbodyDetail = document.getElementById('tabelAnalitikDetail');
+                
+                if (!riwayat || riwayat.length === 0) {
+                    tbodyDetail.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada data partisipasi dari responden.</td></tr>';
+                    return;
+                }
+
+                // 2. Kalkulasi Ringkasan (Top Cards)
+                let totalSkor = 0;
+                let totalWaktu = 0;
+                
+                riwayat.forEach(r => {
+                    totalSkor += (r.poin_didapat || 0);
+                    totalWaktu += (r.durasi_baca_detik || 0);
+                });
+
+                document.getElementById('stat-total-entri').innerText = riwayat.length;
+                document.getElementById('stat-avg-poin').innerText = Math.round(totalSkor / riwayat.length);
+                document.getElementById('stat-avg-waktu').innerText = Math.round(totalWaktu / riwayat.length) + 's';
+
+                // 3. Render Tabel Detail (Individu)
+                tbodyDetail.innerHTML = '';
+                riwayat.forEach(r => {
+                    const tgl = new Date(r.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+                    const nama = r.profiles ? r.profiles.nama_lengkap : 'User Terhapus';
+                    const modul = r.buku ? r.buku.judul : 'Modul Terhapus';
+                    const durasi = r.durasi_baca_detik ? `${r.durasi_baca_detik} detik` : '-';
+                    const skor = r.poin_didapat !== null ? r.poin_didapat : 0;
+                    
+                    // Label jenis tes
+                    const labelTes = r.jenis_tes === 'Post-Test' 
+                        ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">POST</span>`
+                        : `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">PRE</span>`;
+
+                    tbodyDetail.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                            <td class="py-3 px-5 text-slate-500 text-xs">${tgl}</td>
+                            <td class="py-3 px-5 font-bold text-slate-800">${nama}</td>
+                            <td class="py-3 px-5 text-indigo-600 font-medium text-sm truncate max-w-[200px]">${modul} ${labelTes}</td>
+                            <td class="py-3 px-5 text-center font-mono text-slate-500">${durasi}</td>
+                            <td class="py-3 px-5 text-center font-black text-emerald-600">${skor}</td>
+                        </tr>
+                    `;
+                });
+
+                // 4. Kelompokkan Data untuk Grafik Berdasarkan Modul
+                const modulStat = {};
+                riwayat.forEach(r => {
+                    const judul = r.buku ? r.buku.judul : 'Unknown';
+                    if (!modulStat[judul]) {
+                        modulStat[judul] = { totalPoin: 0, totalWaktu: 0, count: 0 };
+                    }
+                    modulStat[judul].totalPoin += (r.poin_didapat || 0);
+                    modulStat[judul].totalWaktu += (r.durasi_baca_detik || 0);
+                    modulStat[judul].count += 1;
+                });
+
+                const labelModul = [];
+                const avgPoinData = [];
+                const avgWaktuData = [];
+
+                Object.keys(modulStat).forEach(judul => {
+                    labelModul.push(judul.length > 15 ? judul.substring(0, 15) + '...' : judul); // Potong judul panjang
+                    avgPoinData.push(Math.round(modulStat[judul].totalPoin / modulStat[judul].count));
+                    avgWaktuData.push(Math.round(modulStat[judul].totalWaktu / modulStat[judul].count));
+                });
+
+                // 5. Render Grafik dengan Chart.js
+                const opsiGrafik = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+
+                // Destroy grafik lama jika ada
+                if (chartInstances.nilai) chartInstances.nilai.destroy();
+                if (chartInstances.waktu) chartInstances.waktu.destroy();
+
+                chartInstances.nilai = new Chart(document.getElementById('chartNilaiModul').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: labelModul, datasets: [{ data: avgPoinData, backgroundColor: '#10b981', borderRadius: 6 }] },
+                    options: { ...opsiGrafik, scales: { y: { beginAtZero: true, title: { display: true, text: 'Rata-rata Skor' } } } }
+                });
+
+                chartInstances.waktu = new Chart(document.getElementById('chartWaktuModul').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: labelModul, datasets: [{ data: avgWaktuData, backgroundColor: '#f43f5e', borderRadius: 6 }] },
+                    options: { ...opsiGrafik, scales: { y: { beginAtZero: true, title: { display: true, text: 'Waktu (Detik)' } } } }
+                });
+
+            } catch (err) {
+                console.error("Gagal memuat analitik dasbor:", err);
+            }
+        }
+
 
         // ==========================================
         // KONTROL UI & MODAL UMUM
@@ -332,7 +489,7 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             if (window.innerWidth < 768) { sidebar.classList.toggle('-translate-x-full'); } 
-            else { sidebar.classList.toggle('md:w-0'); sidebar.classList.toggle('md:w-64'); }
+            else { sidebar.classList.toggle('md:w-0'); sidebar.classList.toggle('md:w-64'); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 350); }
         }
 
         function switchTab(tabId) {
@@ -345,23 +502,21 @@
             const activeBtn = document.getElementById('nav-' + tabId);
             activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300');
             activeBtn.classList.add('bg-rose-600', 'text-white');
+            
+            // Refresh layout chart js
+            if(tabId === 'dashboard') { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100); }
         }
 
         function tutupModal(idModal) { document.getElementById(idModal).classList.add('hidden'); }
         
         window.addEventListener('click', function(event) {
             if (event.target === document.getElementById('modalTambahModul')) tutupModal('modalTambahModul');
-            // Cegah tutup kuis sembarangan jika klik di luar agar antrean tidak hilang
         });
 
         function tutupModalKuisTanya() {
             if(draftKuisArray.length > 0) {
-                if(confirm("Tutup jendela ini? Semua soal di antrean akan HILANG.")) {
-                    tutupModal('modalTambahKuis');
-                }
-            } else {
-                tutupModal('modalTambahKuis');
-            }
+                if(confirm("Tutup jendela ini? Semua soal di antrean akan HILANG.")) { tutupModal('modalTambahKuis'); }
+            } else { tutupModal('modalTambahKuis'); }
         }
 
         // ==========================================
@@ -444,16 +599,12 @@
         // ==========================================
         // STUDIO KUIS (SISTEM DRAFT / ANTREAN)
         // ==========================================
-        let dataEditSementara = null; 
-        let isEditMode = false;
-
         function bukaModalKuisTambah() {
             kosongkanDraft();
             document.getElementById('formKuisId').value = '';
             document.getElementById('formKuisPertanyaan').value = '';
             document.getElementById('formKuisJumlahOpsi').value = '3';
             
-            // Konfigurasi Tampilan untuk Mode Massal (Bulk)
             isEditMode = false;
             document.getElementById('editModeNotice').classList.add('hidden');
             document.getElementById('panelAntrean').classList.remove('hidden');
@@ -465,7 +616,6 @@
             document.getElementById('modalTambahKuis').classList.remove('hidden');
         }
 
-        // Cetak Baris Opsi Jawaban Dinamis
         function renderDynamicOptions() {
             const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
             const wadah = document.getElementById('wadahDynamicOptions');
@@ -502,7 +652,6 @@
             }
         }
 
-        // Fungsi Tambah Ke Antrean (Draft)
         function tambahKeDraft() {
             const pertanyaan = document.getElementById('formKuisPertanyaan').value.trim();
             const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
@@ -523,7 +672,6 @@
                 if (poinInput > poinMaksimal) { poinMaksimal = poinInput; labelKunciOtomatis = lbl; }
             }
 
-            // Simpan ke Array Memory
             draftKuisArray.push({
                 jenis_kuis: 'Kuesioner Berbobot', 
                 pertanyaan: pertanyaan, 
@@ -532,10 +680,7 @@
                 poin_reward: poinMaksimal
             });
 
-            // Update UI Draft
             renderDraftList();
-
-            // Kosongkan Kolom Pertanyaan untuk Soal Berikutnya (Biarkan Dropdown Opsi sama)
             document.getElementById('formKuisPertanyaan').value = '';
             document.getElementById('formKuisPertanyaan').focus();
         }
@@ -555,7 +700,7 @@
             draftKuisArray.forEach((item, index) => {
                 html += `
                     <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group">
-                        <button onclick="hapusDariDraft(${index})" class="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition" title="Hapus soal ini dari antrean"><i class="fa-solid fa-circle-xmark"></i></button>
+                        <button onclick="hapusDariDraft(${index})" class="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition"><i class="fa-solid fa-circle-xmark"></i></button>
                         <p class="text-xs font-bold text-slate-400 mb-1">Soal ${index + 1}</p>
                         <p class="text-sm font-bold text-slate-800 line-clamp-2 mb-2 leading-tight">${item.pertanyaan}</p>
                         <p class="text-[10px] text-emerald-600 font-bold bg-emerald-50 inline-block px-1.5 py-0.5 rounded">Skor Maksimal: ${item.poin_reward} XP</p>
@@ -563,27 +708,16 @@
                 `;
             });
             list.innerHTML = html;
-            // Auto scroll to bottom
             list.scrollTop = list.scrollHeight;
         }
 
-        function hapusDariDraft(index) {
-            draftKuisArray.splice(index, 1);
-            renderDraftList();
-        }
+        function hapusDariDraft(index) { draftKuisArray.splice(index, 1); renderDraftList(); }
+        function kosongkanDraft() { draftKuisArray = []; renderDraftList(); document.getElementById('draftEmptyState').classList.remove('hidden'); }
 
-        function kosongkanDraft() {
-            draftKuisArray = [];
-            renderDraftList();
-            document.getElementById('draftEmptyState').classList.remove('hidden');
-        }
-
-        // Eksekusi Simpan Final (Ke Supabase)
         async function simpanKuisKeDatabase(btn) {
             const idBuku = document.getElementById('formKuisBuku').value;
             if (!idBuku) return alert("Pilih Induk Konten (Modul) di sebelah kiri terlebih dahulu!");
 
-            // Jika dalam Mode Edit Tunggal
             if (isEditMode) {
                 const idKuis = document.getElementById('formKuisId').value;
                 const pertanyaan = document.getElementById('formKuisPertanyaan').value.trim();
@@ -607,12 +741,9 @@
                 return;
             }
 
-            // Jika Mode Tambah Massal (Bulk Add)
             const cekTeksSisa = document.getElementById('formKuisPertanyaan').value.trim();
             if (cekTeksSisa !== "") {
-                if(confirm("Ada soal yang sedang kamu ketik tapi belum dimasukkan ke antrean. Masukkan secara otomatis sebelum menyimpan?")) {
-                    tambahKeDraft();
-                }
+                if(confirm("Ada soal yang sedang kamu ketik tapi belum dimasukkan ke antrean. Masukkan secara otomatis sebelum menyimpan?")) { tambahKeDraft(); }
             }
 
             if(draftKuisArray.length === 0) return alert("Antrean masih kosong! Buat soal dan klik 'Masukkan ke Antrean' terlebih dahulu.");
@@ -620,35 +751,22 @@
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan ${draftKuisArray.length} Soal...`;
 
             try {
-                // Injeksi idBuku ke seluruh array draft
-                const payloadFinal = draftKuisArray.map(soal => {
-                    return { ...soal, id_buku: idBuku };
-                });
-
-                // Tembak sekaligus ke Supabase (Bulk Insert)
+                const payloadFinal = draftKuisArray.map(soal => { return { ...soal, id_buku: idBuku }; });
                 const { error } = await supabaseClient.from('kuis').insert(payloadFinal);
                 if(error) throw error;
 
-                tutupModal('modalTambahKuis');
-                fetchDaftarKuis();
-                kosongkanDraft();
+                tutupModal('modalTambahKuis'); fetchDaftarKuis(); kosongkanDraft();
                 alert(`Berhasil menyimpan ${payloadFinal.length} soal sekaligus!`);
-            } catch(e) {
-                alert("Gagal menyimpan ke database. Coba lagi.");
-            } finally {
-                btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Semua ke Database`;
-            }
+            } catch(e) { alert("Gagal menyimpan ke database. Coba lagi."); } 
+            finally { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Semua ke Database`; }
         }
 
-        // Load Ulang untuk Mode Edit Tunggal
         function bukaModalEditKuis(qStr) {
             const q = JSON.parse(decodeURIComponent(qStr));
-            
-            // Konfigurasi Tampilan untuk Edit Mode
             isEditMode = true;
             document.getElementById('editModeNotice').classList.remove('hidden');
-            document.getElementById('panelAntrean').classList.add('hidden'); // Sembunyikan panel kanan
-            document.getElementById('btnTambahAntrean').classList.add('hidden'); // Sembunyikan tombol draft
+            document.getElementById('panelAntrean').classList.add('hidden'); 
+            document.getElementById('btnTambahAntrean').classList.add('hidden'); 
             document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-check"></i> Perbarui Data Soal`;
 
             document.getElementById('formKuisId').value = q.id;
@@ -665,9 +783,6 @@
             document.getElementById('modalTambahKuis').classList.remove('hidden');
         }
 
-        // ==========================================
-        // RENDER TABEL BAWAH
-        // ==========================================
         async function fetchDaftarKuis() {
             try {
                 const { data } = await supabaseClient.from('kuis').select('*, buku(judul, tipe_konten)').order('created_at', { ascending: false });
@@ -713,9 +828,6 @@
 
         async function hapusKuis(id) { if(confirm("Hapus pertanyaan ini secara permanen?")) { await supabaseClient.from('kuis').delete().eq('id', id); fetchDaftarKuis(); } }
 
-        // ==========================================
-        // PENGATURAN / RESET
-        // ==========================================
         async function hapusSemuaDataPeserta() {
             if(!confirm("PERINGATAN: Yakin menghapus seluruh riwayat Pre-Test, Post-Test, dan nilai peserta?")) return;
             try { await supabaseClient.from('riwayat_kuis').delete().neq('id', 0); await supabaseClient.from('profiles').delete().neq('total_poin', -1); window.location.reload(); } catch(e){} 
