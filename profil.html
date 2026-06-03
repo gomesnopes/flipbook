@@ -3,274 +3,335 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil Saya - FlipStory Pro</title>
+    <title>Profil & Rapor Belajar - SIRASA</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
 
     <style>
-        .modal-enter { animation: zoomIn 0.3s ease-out forwards; }
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .glass-nav { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
-        <a href="index.html" class="flex items-center gap-2 hover:opacity-80 transition">
-            <i class="fa-solid fa-arrow-left text-slate-400 text-lg"></i>
-            <h1 class="text-xl font-bold text-slate-800 ml-2">Profil <span class="text-blue-600">Saya</span></h1>
+    <nav class="glass-nav shadow-sm border-b border-slate-200 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-40 transition-all">
+        <a href="index.html" class="flex items-center gap-3 cursor-pointer group text-slate-500 hover:text-rose-600 transition">
+            <div class="w-10 h-10 bg-slate-100 group-hover:bg-rose-100 rounded-xl flex items-center justify-center text-xl transition transform">
+                <i class="fa-solid fa-arrow-left"></i>
+            </div>
+            <span class="font-bold hidden sm:block">Kembali ke Galeri</span>
         </a>
-        <button onclick="prosesLogout()" class="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2">
-            <i class="fa-solid fa-right-from-bracket"></i> Keluar
-        </button>
+        <h1 class="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <i class="fa-solid fa-user-graduate text-rose-500"></i> Rapor Belajarmu
+        </h1>
     </nav>
 
-    <!-- Konten Utama -->
-    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8">
+    <!-- Main Dashboard Container -->
+    <main class="flex-1 max-w-[1400px] w-full mx-auto px-4 md:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <!-- Kartu Identitas Profil -->
-        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 mb-8 relative overflow-hidden">
-            <!-- Dekorasi Latar -->
-            <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-600 to-indigo-700"></div>
-            
-            <div class="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 mt-12">
-                <div id="avatar-huruf" class="w-32 h-32 rounded-full bg-white border-4 border-slate-50 text-blue-600 flex items-center justify-center font-black text-6xl shadow-md shrink-0">
-                    -
+        <!-- KOLOM KIRI: EDIT PROFIL -->
+        <aside class="col-span-1 fade-in">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-rose-500 to-indigo-600 z-0"></div>
+                
+                <div class="relative z-10 flex flex-col items-center mt-8 mb-6">
+                    <div id="avatar-inisial" class="w-24 h-24 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center text-4xl font-black text-slate-300 uppercase">?</div>
+                    <h2 id="teks-nama" class="text-xl font-black text-slate-800 mt-3 text-center">-</h2>
+                    <p id="teks-kategori" class="text-sm text-slate-500 font-medium">-</p>
                 </div>
-                <div class="text-center md:text-left flex-1">
-                    <h2 id="teks-nama" class="text-3xl font-black text-slate-800 mb-1">Memuat...</h2>
-                    <p id="teks-email" class="text-slate-500 font-medium mb-3">memuat@email.com</p>
-                    <div class="flex flex-wrap justify-center md:justify-start gap-2">
-                        <span id="badge-kategori" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase">-</span>
-                        <span id="badge-gender" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold uppercase">-</span>
+
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl mb-6 text-xs text-amber-700 font-medium flex gap-2 items-start">
+                    <i class="fa-solid fa-lock mt-0.5"></i>
+                    <p>Alamat email dan kata sandi dikunci oleh sistem. Hubungi administrator jika ingin mengubahnya.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email <span class="text-rose-500">*</span></label>
+                        <input type="email" id="input-email" disabled class="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-500 rounded-xl cursor-not-allowed font-medium text-sm">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nama Lengkap</label>
+                        <input type="text" id="input-nama" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 transition text-sm font-semibold text-slate-700">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
+                            <select id="input-kategori" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 text-sm font-medium">
+                                <option value="Pelajar">Pelajar</option>
+                                <option value="Mahasiswa">Mahasiswa</option>
+                                <option value="Umum">Umum</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Gender</label>
+                            <select id="input-gender" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 text-sm font-medium">
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="simpanProfil(this)" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl shadow-md transition mt-4 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Profil
+                    </button>
                 </div>
-                <button onclick="bukaModalEdit()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2.5 px-5 rounded-xl shadow-sm transition flex items-center gap-2 w-full md:w-auto justify-center mt-4 md:mt-0">
-                    <i class="fa-solid fa-pen-to-square"></i> Edit Profil
-                </button>
             </div>
-        </div>
+        </aside>
 
-        <!-- Kartu Statistik -->
-        <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-chart-simple text-blue-500 mr-2"></i> Statistik Belajarmu</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-2xl"><i class="fa-solid fa-star"></i></div>
-                <div><p class="text-xs font-bold text-slate-400 uppercase">Total XP</p><h3 id="stat-xp" class="text-2xl font-black text-slate-800">0</h3></div>
+        <!-- KOLOM KANAN: INFOGRAFIS & ANALITIK PRIBADI -->
+        <div class="col-span-1 lg:col-span-2 space-y-6 fade-in" style="animation-delay: 0.1s;">
+            
+            <!-- Statistik Cepat -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center flex flex-col justify-center items-center">
+                    <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-star"></i></div>
+                    <h3 id="stat-xp" class="text-2xl font-black text-slate-800">0</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Total XP</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center flex flex-col justify-center items-center">
+                    <div class="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-clipboard-check"></i></div>
+                    <h3 id="stat-tes" class="text-2xl font-black text-slate-800">0</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Tes Selesai</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center flex flex-col justify-center items-center">
+                    <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-clock"></i></div>
+                    <h3 id="stat-waktu" class="text-2xl font-black text-slate-800">0m</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Waktu Belajar</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center flex flex-col justify-center items-center">
+                    <div class="w-10 h-10 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <h3 id="stat-akurasi" class="text-2xl font-black text-slate-800">0</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Rata-rata Skor</p>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-book-open-reader"></i></div>
-                <div><p class="text-xs font-bold text-slate-400 uppercase">Modul Selesai</p><h3 id="stat-modul" class="text-2xl font-black text-slate-800">0</h3></div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-stopwatch"></i></div>
-                <div><p class="text-xs font-bold text-slate-400 uppercase">Avg. Waktu Baca</p><h3 id="stat-waktu" class="text-2xl font-black text-slate-800">0s</h3></div>
-            </div>
-        </div>
 
-        <!-- Riwayat Belajar -->
-        <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-clock-rotate-left text-blue-500 mr-2"></i> Riwayat Modul Terakhir</h3>
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[600px] overflow-x-auto block md:table">
-                <thead>
-                    <tr class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
-                        <th class="py-4 px-6 font-bold">Tanggal</th>
-                        <th class="py-4 px-6 font-bold w-1/2">Modul yang Diselesaikan</th>
-                        <th class="py-4 px-6 font-bold">Durasi</th>
-                        <th class="py-4 px-6 font-bold text-right">XP Didapat</th>
-                    </tr>
-                </thead>
-                <tbody id="tabel-riwayat" class="text-sm text-slate-700 divide-y divide-slate-100">
-                    <tr><td colspan="4" class="py-8 text-center text-slate-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat riwayat...</td></tr>
-                </tbody>
-            </table>
+            <!-- Grafik Tren N-Gain (Pre vs Post) -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <div class="mb-4">
+                    <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-arrow-up-right-dots text-emerald-500 mr-2"></i> Peningkatan Pemahaman (Pre-Test vs Post-Test)</h3>
+                    <p class="text-xs text-slate-500">Melihat seberapa besar peningkatan skormu setelah membaca materi edukasi.</p>
+                </div>
+                <div class="relative h-64 w-full">
+                    <canvas id="chartPrePost"></canvas>
+                </div>
+                <div id="pesan-kosong-prepost" class="hidden text-center py-10 text-slate-400 absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-chart-simple text-4xl mb-2 text-slate-200"></i>
+                    <p class="text-sm font-medium">Belum ada data Pre-Test & Post-Test yang bisa dibandingkan.</p>
+                </div>
+            </div>
+
+            <!-- Grafik Tren Aktivitas Baca -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <div class="mb-4">
+                    <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-chart-line text-blue-500 mr-2"></i> Tren Aktivitas Belajar (7 Hari Terakhir)</h3>
+                    <p class="text-xs text-slate-500">Konsistensi perolehan XP dan durasi membaca (dalam menit) minggu ini.</p>
+                </div>
+                <div class="relative h-64 w-full">
+                    <canvas id="chartAktivitas"></canvas>
+                </div>
+            </div>
+
         </div>
     </main>
 
-    <!-- Modal Edit Profil -->
-    <div id="modalEdit" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm modal-enter overflow-hidden flex flex-col">
-            <div class="bg-slate-50 px-6 py-5 border-b flex justify-between items-center">
-                <h3 class="font-bold text-lg text-slate-800">Edit Data Diri</h3>
-                <button onclick="tutupModalEdit()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-slate-700">Nama Lengkap</label>
-                    <input type="text" id="edit-nama" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-slate-700">Gender</label>
-                        <select id="edit-gender" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                            <option value="Laki-laki">Laki-laki</option>
-                            <option value="Perempuan">Perempuan</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-slate-700">Kategori</label>
-                        <select id="edit-kategori" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                            <option value="Pelajar">Pelajar</option>
-                            <option value="Mahasiswa">Mahasiswa</option>
-                            <option value="Umum">Umum</option>
-                        </select>
-                    </div>
-                </div>
-                <p class="text-xs text-slate-400 mt-2">*Email dan kata sandi tidak dapat diubah dari halaman ini.</p>
-            </div>
-            <div class="p-6 bg-slate-50 border-t flex gap-3">
-                <button onclick="tutupModalEdit()" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition hover:bg-slate-300">Batal</button>
-                <button onclick="simpanProfil(this)" class="w-1/2 bg-blue-600 text-white font-bold py-3 rounded-xl transition hover:bg-blue-700"><i class="fa-solid fa-save mr-1"></i> Simpan</button>
-            </div>
-        </div>
-    </div>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-8 text-center">
+        <p class="text-slate-500 text-sm font-medium">© 2026 SIRASA. Dibangun untuk mengedukasi generasi peduli kesehatan.</p>
+    </footer>
 
     <script>
         let supabaseClient;
         let loggedInUser = null;
-        let profilUser = null;
+        let chartInstances = {};
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
-                supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-                
-                await autentikasiUser();
-                await muatDataProfil();
-                await muatRiwayat();
-            } catch (err) { console.error(err); }
-        });
+        try {
+            if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
+            supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+            inisialisasiProfil();
+        } catch (err) { console.error("Error inisialisasi:", err); }
 
-        // 1. Cek Sesi Login
-        async function autentikasiUser() {
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
-            if (error || !session) {
-                window.location.href = 'login.html?pesan=wajib_login';
+        async function inisialisasiProfil() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html'; // Usir jika belum login
                 return;
             }
             loggedInUser = session.user;
-            document.getElementById('teks-email').innerText = loggedInUser.email;
+            document.getElementById('input-email').value = loggedInUser.email;
+
+            await loadDataProfil();
+            await loadDataAnalitik();
         }
 
-        // 2. Tarik Data Profil
-        async function muatDataProfil() {
-            const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
-            if (error) return console.error(error);
-            
-            profilUser = data;
-            document.getElementById('teks-nama').innerText = data.nama_lengkap;
-            document.getElementById('avatar-huruf').innerText = data.nama_lengkap.charAt(0).toUpperCase();
-            document.getElementById('badge-kategori').innerText = data.kategori;
-            document.getElementById('badge-gender').innerText = data.jenis_kelamin;
-            document.getElementById('stat-xp').innerText = data.total_poin.toLocaleString('id-ID');
-        }
+        async function loadDataProfil() {
+            try {
+                const { data: profil, error } = await supabaseClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
+                if (error) throw error;
 
-        // 3. Tarik Riwayat Belajar dari riwayat_kuis
-        async function muatRiwayat() {
-            const { data: riwayat, error } = await supabaseClient
-                .from('riwayat_kuis')
-                .select('*, buku(judul)')
-                .eq('id_user', loggedInUser.id)
-                .order('created_at', { ascending: false });
-
-            const tbody = document.getElementById('tabel-riwayat');
-            tbody.innerHTML = '';
-
-            if (error || !riwayat || riwayat.length === 0) {
-                document.getElementById('stat-modul').innerText = "0";
-                document.getElementById('stat-waktu').innerText = "0s";
-                tbody.innerHTML = '<tr><td colspan="4" class="py-12 text-center text-slate-400"><div class="text-4xl mb-3">📭</div>Belum ada modul yang diselesaikan. <br>Ayo mulai baca di galeri!</td></tr>';
-                return;
-            }
-
-            // Kalkulasi Statistik
-            let totalDurasi = 0;
-            document.getElementById('stat-modul').innerText = riwayat.length;
-
-            riwayat.forEach(r => {
-                totalDurasi += (r.durasi_baca_detik || 0);
+                // Set Teks Header
+                document.getElementById('teks-nama').innerText = profil.nama_lengkap;
+                document.getElementById('teks-kategori').innerText = `${profil.kategori} • ${profil.jenis_kelamin}`;
+                document.getElementById('avatar-inisial').innerText = profil.nama_lengkap.charAt(0);
+                document.getElementById('avatar-inisial').className = "w-24 h-24 bg-gradient-to-tr from-rose-500 to-indigo-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-4xl font-black text-white uppercase";
                 
-                const tgl = new Date(r.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-                const judul = r.buku ? r.buku.judul : '<span class="text-red-400 italic">Modul telah dihapus admin</span>';
+                // Set Form Input
+                document.getElementById('input-nama').value = profil.nama_lengkap;
+                document.getElementById('input-kategori').value = profil.kategori;
+                document.getElementById('input-gender').value = profil.jenis_kelamin;
                 
-                // Format durasi (contoh: 120s -> 2m 0s)
-                let teksDurasi = r.durasi_baca_detik + 's';
-                if(r.durasi_baca_detik > 60) {
-                    const m = Math.floor(r.durasi_baca_detik / 60);
-                    const s = r.durasi_baca_detik % 60;
-                    teksDurasi = `${m}m ${s}s`;
-                }
+                // Set Quick Stat XP
+                document.getElementById('stat-xp').innerText = profil.total_poin;
 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-4 px-6 text-slate-500">${tgl}</td>
-                        <td class="py-4 px-6 font-bold text-slate-700 whitespace-normal min-w-[200px]">${judul}</td>
-                        <td class="py-4 px-6 text-slate-500"><i class="fa-regular fa-clock mr-1"></i> ${teksDurasi}</td>
-                        <td class="py-4 px-6 text-right font-black text-emerald-600">+${r.poin_didapat} XP</td>
-                    </tr>
-                `;
-            });
-
-            // Rata-rata durasi
-            const avgDurasi = Math.round(totalDurasi / riwayat.length);
-            document.getElementById('stat-waktu').innerText = avgDurasi + 's';
-        }
-
-        // 4. Logika Modal Edit
-        function bukaModalEdit() {
-            if(!profilUser) return;
-            document.getElementById('edit-nama').value = profilUser.nama_lengkap;
-            document.getElementById('edit-gender').value = profilUser.jenis_kelamin;
-            document.getElementById('edit-kategori').value = profilUser.kategori;
-            document.getElementById('modalEdit').classList.remove('hidden');
-        }
-
-        function tutupModalEdit() {
-            document.getElementById('modalEdit').classList.add('hidden');
+            } catch (e) { console.error("Gagal load profil:", e); }
         }
 
         async function simpanProfil(btn) {
-            const nama = document.getElementById('edit-nama').value;
-            const gender = document.getElementById('edit-gender').value;
-            const kategori = document.getElementById('edit-kategori').value;
+            const nama = document.getElementById('input-nama').value;
+            const kategori = document.getElementById('input-kategori').value;
+            const gender = document.getElementById('input-gender').value;
 
             if(!nama) return alert("Nama tidak boleh kosong!");
 
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
-            
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
             try {
-                const { error } = await supabaseClient.from('profiles').update({ 
-                    nama_lengkap: nama, jenis_kelamin: gender, kategori: kategori 
-                }).eq('id', loggedInUser.id);
-                
-                if (error) throw error;
-                
-                tutupModalEdit();
-                await muatDataProfil(); // Refresh data di layar
-            } catch (err) {
+                await supabaseClient.from('profiles').update({ nama_lengkap: nama, kategori: kategori, jenis_kelamin: gender }).eq('id', loggedInUser.id);
+                loadDataProfil(); // Refresh data teks di atas
+                alert("Profil berhasil diperbarui!");
+            } catch(e) {
                 alert("Gagal memperbarui profil.");
             } finally {
-                btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save mr-1"></i> Simpan`;
+                btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Profil`;
             }
         }
 
-        // 5. Logout
-        async function prosesLogout() {
-            if(confirm("Yakin ingin keluar dari akun?")) {
-                await supabaseClient.auth.signOut();
-                window.location.href = 'index.html';
-            }
-        }
+        // ==========================================
+        // SISTEM GRAFIK & ANALITIK PRIBADI
+        // ==========================================
+        async function loadDataAnalitik() {
+            try {
+                // Tarik data riwayat khusus user ini, join dengan tabel buku untuk tahu nama materinya
+                const { data: riwayat } = await supabaseClient
+                    .from('riwayat_kuis')
+                    .select('*, buku(judul, tipe_konten)')
+                    .eq('id_user', loggedInUser.id)
+                    .order('created_at', { ascending: false });
 
-        // Tutup modal jika klik di luar
-        window.addEventListener('click', function(e) {
-            const modal = document.getElementById('modalEdit');
-            if (e.target === modal) tutupModalEdit();
-        });
+                if (!riwayat || riwayat.length === 0) {
+                    document.getElementById('pesan-kosong-prepost').classList.remove('hidden');
+                    return;
+                }
+
+                // --- 1. Kalkulasi Statistik Cepat ---
+                let totalDurasiDetik = 0;
+                let totalSkor = 0;
+                
+                riwayat.forEach(r => {
+                    totalDurasiDetik += (r.durasi_baca_detik || 0);
+                    totalSkor += (r.poin_didapat || 0);
+                });
+
+                document.getElementById('stat-tes').innerText = riwayat.length;
+                document.getElementById('stat-waktu').innerText = Math.round(totalDurasiDetik / 60) + 'm';
+                document.getElementById('stat-akurasi').innerText = Math.round(totalSkor / riwayat.length);
+
+
+                // --- 2. Data Tren N-Gain (Pre-Test vs Post-Test) ---
+                const mapTrend = {};
+                riwayat.forEach(r => {
+                    const judulAsli = r.buku ? r.buku.judul : 'Modul Terhapus';
+                    // Bersihkan prefix Pre/Post untuk mengelompokkan topik yang sama
+                    const topikDasar = judulAsli.replace(/^(Pre-Test:\s*|Post-Test:\s*)/i, '').trim();
+                    const jenis = r.jenis_tes || (r.buku && r.buku.tipe_konten === 'Hanya Kuis' ? 'Pre-Test' : 'Post-Test');
+
+                    if (!mapTrend[topikDasar]) mapTrend[topikDasar] = { pre: 0, post: 0 };
+                    
+                    if (jenis === 'Pre-Test' || judulAsli.toLowerCase().includes('pre')) {
+                        mapTrend[topikDasar].pre = r.poin_didapat || 0;
+                    } else {
+                        mapTrend[topikDasar].post = r.poin_didapat || 0;
+                    }
+                });
+
+                const labelTopik = Object.keys(mapTrend);
+                const dataPre = labelTopik.map(k => mapTrend[k].pre);
+                const dataPost = labelTopik.map(k => mapTrend[k].post);
+
+                if (labelTopik.length === 0) {
+                    document.getElementById('pesan-kosong-prepost').classList.remove('hidden');
+                } else {
+                    document.getElementById('pesan-kosong-prepost').classList.add('hidden');
+                    if(chartInstances['prepost']) chartInstances['prepost'].destroy();
+                    
+                    chartInstances['prepost'] = new Chart(document.getElementById('chartPrePost').getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: labelTopik.map(l => l.length > 15 ? l.substring(0, 15) + '...' : l),
+                            datasets: [
+                                { label: 'Nilai Pre-Test', data: dataPre, backgroundColor: '#f59e0b', borderRadius: 6 },
+                                { label: 'Nilai Post-Test', data: dataPost, backgroundColor: '#10b981', borderRadius: 6 }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, suggestedMax: 10 } }, plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
+
+                // --- 3. Data Tren Aktivitas (7 Hari Terakhir) ---
+                const trendLabels = [];
+                const trendXP = [];
+                const trendDurasiMenit = [];
+
+                const hariIni = new Date();
+                for(let i=6; i>=0; i--) {
+                    let d = new Date(hariIni); d.setDate(d.getDate() - i);
+                    trendLabels.push(d.toLocaleDateString('id-ID', { weekday: 'short' }));
+                    trendXP.push(0);
+                    trendDurasiMenit.push(0);
+                }
+
+                riwayat.forEach(r => {
+                    if(r.created_at) {
+                        let rDate = new Date(r.created_at);
+                        let diffDays = Math.floor((hariIni - rDate) / (1000 * 60 * 60 * 24));
+                        if (diffDays >= 0 && diffDays < 7) {
+                            let index = 6 - diffDays;
+                            trendXP[index] += (r.poin_didapat || 0);
+                            trendDurasiMenit[index] += ((r.durasi_baca_detik || 0) / 60); // Konversi ke menit
+                        }
+                    }
+                });
+
+                if(chartInstances['aktivitas']) chartInstances['aktivitas'].destroy();
+                chartInstances['aktivitas'] = new Chart(document.getElementById('chartAktivitas').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: trendLabels,
+                        datasets: [
+                            { label: 'XP Didapat', data: trendXP, borderColor: '#e11d48', backgroundColor: 'rgba(225, 29, 72, 0.1)', fill: true, tension: 0.4, yAxisID: 'y' },
+                            { label: 'Durasi (Menit)', data: trendDurasiMenit.map(d => Math.round(d)), borderColor: '#3b82f6', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.4, yAxisID: 'y1' }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Poin XP' } },
+                            y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Menit' } }
+                        },
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+
+            } catch (err) { console.error("Gagal load analitik:", err); }
+        }
     </script>
 </body>
 </html>
