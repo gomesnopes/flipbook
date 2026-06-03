@@ -36,6 +36,7 @@
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
 
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-64 md:w-0 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0 transition-all duration-300 shadow-xl md:shadow-none">
         <div class="h-16 flex items-center justify-between px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800 min-w-[256px]">
             <div><i class="fa-solid fa-ribbon text-rose-500 mr-2"></i> Admin SIRASA</div>
@@ -50,6 +51,7 @@
         </nav>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col h-full overflow-hidden relative">
         <header class="bg-white h-16 border-b border-slate-200 flex items-center px-6 shrink-0 z-10 shadow-sm">
             <button onclick="toggleSidebar()" class="text-slate-500 hover:text-rose-600 transition p-2 bg-slate-100 rounded-lg"><i class="fa-solid fa-bars text-xl"></i></button>
@@ -59,6 +61,7 @@
         <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
             <div class="max-w-[1400px] mx-auto">
                 
+                <!-- 1. TAB DASHBOARD ANALITIK -->
                 <section id="dashboard" class="tab-content active">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Penelitian Terpadu</h2>
                     
@@ -91,6 +94,7 @@
                         </div>
                     </div>
 
+                    <!-- TABEL TREN PRE-TEST vs POST-TEST -->
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-8">
                         <div class="p-5 border-b border-slate-200 bg-slate-50"><h4 class="font-bold text-slate-800"><i class="fa-solid fa-arrow-up-right-dots text-emerald-500 mr-2"></i> Analisis Tren N-Gain (Pre-Test vs Post-Test)</h4></div>
                         <div class="overflow-x-auto w-full max-h-[350px]">
@@ -111,6 +115,7 @@
                         </div>
                     </div>
 
+                    <!-- TABEL LOG DETAIL -->
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-10">
                         <div class="p-5 border-b border-slate-200 bg-slate-50"><h4 class="font-bold text-slate-800"><i class="fa-solid fa-list-ul text-indigo-500 mr-2"></i> Log Aktivitas Historis</h4></div>
                         <div class="overflow-x-auto w-full max-h-[350px]">
@@ -126,14 +131,13 @@
                     </div>
                 </section>
 
+                <!-- 2. TAB MANAJEMEN USER -->
                 <section id="pengguna" class="tab-content">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Data Responden</h2>
-                    
                     <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6 flex gap-3 text-blue-800 text-sm">
                         <i class="fa-solid fa-circle-info mt-1"></i>
                         <p>Catatan: Pengeditan nama, kategori, dan jenis kelamin dapat dilakukan di sini. Namun untuk mengubah <strong>Email</strong> peserta, Anda harus menggunakan Dashboard Supabase (Menu Authentication) demi keamanan sistem.</p>
                     </div>
-
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
                         <table class="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
                             <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-4 px-6 font-bold">Nama Lengkap</th><th class="py-4 px-6 font-bold">Kategori</th><th class="py-4 px-6 font-bold">Gender</th><th class="py-4 px-6 font-bold text-center">Aksi</th></tr></thead>
@@ -142,6 +146,7 @@
                     </div>
                 </section>
 
+                <!-- 3. TAB MANAJEMEN MODUL -->
                 <section id="modul" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <h2 class="text-2xl font-bold text-slate-800">Manajemen Konten & Modul</h2>
@@ -149,20 +154,15 @@
                             <i class="fa-solid fa-plus"></i> Tambah Modul Baru
                         </button>
                     </div>
-
                     <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-6 flex gap-3 text-amber-800 text-sm">
                         <i class="fa-solid fa-circle-info mt-1"></i>
                         <p>Gunakan tombol <strong>Status Modul</strong> untuk mengaktifkan materi di halaman pengguna. Modul baru berstatus <strong>Draft</strong> secara otomatis.</p>
                     </div>
-
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
                         <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
-                                    <th class="py-3 px-6 font-bold w-16">Tipe</th>
-                                    <th class="py-3 px-6 font-bold min-w-[200px]">Judul Konten</th>
-                                    <th class="py-3 px-6 font-bold text-center">Status Modul</th>
-                                    <th class="py-3 px-6 font-bold text-center">Aksi</th>
+                                    <th class="py-3 px-6 font-bold w-16">Tipe</th><th class="py-3 px-6 font-bold min-w-[200px]">Judul Konten</th><th class="py-3 px-6 font-bold text-center">Status Modul</th><th class="py-3 px-6 font-bold text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelModul" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
@@ -170,6 +170,7 @@
                     </div>
                 </section>
 
+                <!-- 4. TAB MANAJEMEN KUIS (SINGLE SELECT MODULE) -->
                 <section id="kuis" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <h2 class="text-2xl font-bold text-slate-800">Instrumen Kuesioner Berbobot</h2>
@@ -185,6 +186,7 @@
                     </div>
                 </section>
 
+                <!-- 5. TAB PENGATURAN -->
                 <section id="pengaturan" class="tab-content">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
                     <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6 max-w-2xl">
@@ -201,6 +203,11 @@
         </main>
     </div>
 
+    <!-- ============================================== -->
+    <!-- MODAL POPUPS -->
+    <!-- ============================================== -->
+
+    <!-- MODAL DETAIL USER -->
     <div id="modalDetailUser" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-user-gear text-blue-500 mr-2"></i> Edit Responden</h3><button onclick="tutupModal('modalDetailUser')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
@@ -217,6 +224,7 @@
         </div>
     </div>
 
+    <!-- MODAL TAMBAH MODUL / PAKET -->
     <div id="modalTambahModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden flex flex-col">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-book-medical text-rose-500 mr-2"></i> Tambah Konten Baru</h3><button onclick="tutupModal('modalTambahModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
@@ -233,7 +241,8 @@
                 <div><label class="block text-sm font-medium mb-1 text-slate-700">Judul Topik / Konten</label><input type="text" id="judulBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" placeholder="Misal: HIV & AIDS Dasar"></div>
                 <div><label class="block text-sm font-medium mb-1 text-slate-700">Kategori</label><select id="kategoriBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi / Ujian</option></select></div>
                 
-                <div id="areaFilePDF_tambah" class="pt-2">
+                <!-- Disembunyikan saat Paket Lengkap atau Hanya Kuis -->
+                <div id="areaFilePDF_tambah" class="pt-2 hidden">
                     <label class="block text-sm font-medium mb-1 text-slate-700">File Modul PDF (Media Belajar)</label>
                     <input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 file:text-slate-700 border border-slate-300 rounded-lg">
                 </div>
@@ -248,41 +257,46 @@
         </div>
     </div>
 
+    <!-- MODAL EDIT MODUL -->
     <div id="modalEditModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-slate-800">Edit Data Konten</h3><button onclick="tutupModal('modalEditModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
             <div class="p-6 space-y-4">
                 <input type="hidden" id="edit-modul-id">
                 <div><label class="block text-sm font-medium mb-1">Tipe Konten</label>
-                    <select id="edit-tipeKonten" onchange="toggleFormModul('edit')" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-rose-50 font-semibold text-rose-700"><option value="Modul PDF">Modul PDF</option><option value="Hanya Kuis">Hanya Kuis (Tanpa PDF)</option></select>
+                    <select id="edit-tipeKonten" onchange="toggleFormModul('edit')" class="w-full p-2 border rounded-lg outline-none bg-rose-50 font-semibold"><option value="Modul PDF">Modul PDF</option><option value="Hanya Kuis">Hanya Kuis (Tanpa PDF)</option></select>
                 </div>
-                <div><label class="block text-sm font-medium mb-1">Judul Konten</label><input type="text" id="edit-modul-judul" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none"></div>
-                <div><label class="block text-sm font-medium mb-1">Kategori</label><select id="edit-modul-kategori" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi</option></select></div>
-                <div id="areaDeskripsi_edit" class="pt-2"><label class="block text-sm font-medium mb-1">Deskripsi Singkat</label><textarea id="edit-deskripsiKonten" rows="3" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500"></textarea></div>
+                <div><label class="block text-sm font-medium mb-1">Judul Konten</label><input type="text" id="edit-modul-judul" class="w-full p-2 border rounded-lg outline-none"></div>
+                <div><label class="block text-sm font-medium mb-1">Kategori</label><select id="edit-modul-kategori" class="w-full p-2 border rounded-lg outline-none"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi</option></select></div>
+                <div class="pt-2"><label class="block text-sm font-medium mb-1">Deskripsi Singkat</label><textarea id="edit-deskripsiKonten" rows="3" class="w-full p-2 border rounded-lg outline-none"></textarea></div>
             </div>
             <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanEditModul(this)" class="w-1/2 bg-rose-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-check"></i> Simpan</button></div>
         </div>
     </div>
 
+    <!-- STUDIO KUIS (BULK INSERT DENGAN SINGLE-SELECT SCROLL) -->
     <div id="modalTambahKuis" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl modal-enter overflow-hidden flex flex-col border border-slate-100 max-h-[95vh]">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-list-ol text-indigo-500 mr-2"></i> Studio Kuesioner Lintas Modul</h3>
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-list-ol text-indigo-500 mr-2"></i> Studio Kuesioner</h3>
                 <button onclick="tutupModalKuisTanya()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 bg-slate-100/50">
                 <div class="flex flex-col lg:flex-row gap-6 h-full">
                     
+                    <!-- KIRI: BUILDER SOAL -->
                     <div class="flex-1 space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                         <div id="editModeNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg text-xs font-bold mb-4">
-                            <i class="fa-solid fa-pen mr-1"></i> Mode Edit Tunggal aktif.
+                            <i class="fa-solid fa-pen mr-1"></i> Mode Edit Tunggal aktif. Fitur Antrean dimatikan.
                         </div>
                         <input type="hidden" id="formKuisId">
                         
                         <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-2">
-                            <label class="block text-sm font-bold mb-2 text-indigo-800"><i class="fa-solid fa-link"></i> Terapkan ke Modul Berikut (Centang bisa lebih dari 1):</label>
-                            <div id="wadahCheckboxModul" class="max-h-32 overflow-y-auto bg-white border border-indigo-100 rounded-lg p-2 space-y-1 draft-scroll">
-                                </div>
+                            <label class="block text-sm font-bold mb-2 text-indigo-800"><i class="fa-solid fa-link"></i> Pilih 1 Induk Konten (Scroll Dropdown):</label>
+                            <!-- KEMBALI KE DROPDOWN TUNGGAL -->
+                            <select id="formKuisBuku" class="w-full p-3 border border-indigo-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 bg-white font-bold text-slate-700 shadow-sm max-h-48 overflow-y-auto">
+                                <!-- Option diload via JS -->
+                            </select>
                         </div>
 
                         <div>
@@ -305,13 +319,16 @@
                         </button>
                     </div>
 
+                    <!-- KANAN: DRAFT ANTREAN -->
                     <div id="panelAntrean" class="w-full lg:w-5/12 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
                         <div class="bg-slate-800 text-white px-4 py-3 border-b flex justify-between items-center shrink-0">
                             <h4 class="font-bold text-sm"><i class="fa-solid fa-layer-group mr-2 text-indigo-400"></i> Antrean (<span id="draftCount">0</span> Soal)</h4>
                             <button onclick="kosongkanDraft()" class="text-xs text-rose-400 hover:text-white transition underline">Reset</button>
                         </div>
                         <div id="draftList" class="flex-1 overflow-y-auto p-4 draft-scroll bg-slate-50 min-h-[250px]">
-                            </div>
+                            <!-- List soal akan dimunculkan di sini -->
+                            <div class="text-center py-10 text-slate-400" id="draftEmptyState"><i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i><p class="text-sm">Antrean kosong.<br>Buat soal di samping lalu masukkan ke sini.</p></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -319,13 +336,13 @@
             <div class="p-6 bg-white border-t flex gap-3 shrink-0">
                 <button onclick="tutupModalKuisTanya()" class="w-1/3 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition hover:bg-slate-300">Batal</button>
                 <button onclick="simpanKuisKeDatabase(this)" id="btnSimpanFinal" class="w-2/3 bg-indigo-600 text-white font-bold py-3 rounded-xl transition hover:bg-indigo-700 shadow-md flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i> Terapkan Semua Soal ke Modul Terpilih
+                    <i class="fa-solid fa-paper-plane"></i> Terapkan Antrean ke Modul
                 </button>
             </div>
         </div>
     </div>
 
-
+    <!-- SCRIPT TUNGGAL BEBAS CRASH -->
     <script>
         let supabaseClient;
         let chartInstances = {};
@@ -486,9 +503,11 @@
         // ==========================================
         function toggleFormModul(mode) {
             const prefix = mode === 'edit' ? 'edit-' : ''; const tipe = document.getElementById(prefix + 'tipeKonten').value;
-            if (tipe === 'Hanya Kuis') { if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.add('hidden'); } 
-            else if (tipe === 'Modul PDF') { if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.remove('hidden'); } 
-            else { if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.remove('hidden'); }
+            if (tipe === 'Hanya Kuis' || tipe === 'Paket Lengkap') { 
+                if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.add('hidden'); 
+            } else { 
+                if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.remove('hidden'); 
+            }
         }
         async function toggleStatusModul(id, currentStatus) { const newStatus = !currentStatus; try { await supabaseClient.from('buku').update({ is_active: newStatus }).eq('id', id); fetchDaftarBukuAdmin(); } catch(e) { alert("Gagal update status!"); } }
 
@@ -498,7 +517,8 @@
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Proses...`; status.className = 'bg-blue-50 text-blue-700 p-3 rounded-lg block mt-4'; status.classList.remove('hidden');
             try {
                 let pdfUrl = null; let coverUrl = null;
-                if (tipe === 'Modul PDF' || tipe === 'Paket Lengkap') {
+                // PDF HANYA UNTUK MODUL PDF SAJA
+                if (tipe === 'Modul PDF') {
                     if (fileInput.files.length === 0) throw new Error("File PDF belum dipilih untuk modul!");
                     status.innerHTML = `Mengekstrak PDF...`; const file = fileInput.files[0]; const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
                     const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.0 }); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: ctx, viewport: viewport }).promise; const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
@@ -506,7 +526,7 @@
                     pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
                 }
                 status.innerHTML = `Menyimpan ke database...`; 
-                if (tipe === 'Paket Lengkap') { await supabaseClient.from('buku').insert([ { judul: 'Pre-Test: ' + judul, kategori, tipe_konten: 'Hanya Kuis', deskripsi: deskripsi, is_active: false }, { judul: 'Post-Test: ' + judul, kategori, tipe_konten: 'Modul PDF', deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, is_active: false } ]); } 
+                if (tipe === 'Paket Lengkap') { await supabaseClient.from('buku').insert([ { judul: 'Pre-Test: ' + judul, kategori, tipe_konten: 'Hanya Kuis', deskripsi: deskripsi, is_active: false }, { judul: 'Post-Test: ' + judul, kategori, tipe_konten: 'Hanya Kuis', deskripsi: deskripsi, is_active: false } ]); } 
                 else { await supabaseClient.from('buku').insert([{ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, is_active: false }]); }
                 status.className = 'bg-green-100 text-green-700 p-3 rounded-lg block mt-4'; status.innerHTML = `Berhasil disimpan!`;
                 setTimeout(() => { document.getElementById('judulBuku').value = ''; fileInput.value = ''; document.getElementById('deskripsiKonten').value = ''; status.classList.add('hidden'); tutupModal('modalTambahModul'); fetchDaftarBukuAdmin(); btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save"></i> Buat Konten`; }, 1500);
@@ -516,16 +536,16 @@
         async function fetchDaftarBukuAdmin() {
             try {
                 const { data } = await supabaseClient.from('buku').select('*').order('created_at', { ascending: false });
-                const tabel = document.getElementById('tabelModul'); const cbContainer = document.getElementById('wadahCheckboxModul');
-                tabel.innerHTML = ''; cbContainer.innerHTML = ''; dbBukuList = data || [];
-                if (!data || data.length === 0) { tabel.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada konten.</td></tr>'; cbContainer.innerHTML = '<p class="text-xs text-slate-400 p-2">Belum ada modul tersedia.</p>'; return; }
+                const tabel = document.getElementById('tabelModul'); const dropdown = document.getElementById('formKuisBuku');
+                tabel.innerHTML = ''; dropdown.innerHTML = '<option value="">-- Pilih Induk Konten --</option>'; dbBukuList = data || [];
+                if (!data || data.length === 0) { tabel.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada konten.</td></tr>'; return; }
                 
                 data.forEach(buku => {
                     const isKuis = buku.tipe_konten === 'Hanya Kuis'; const iconTipe = isKuis ? `<div class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-question"></i> Pre-Test</div>` : `<div class="bg-rose-100 text-rose-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i> Modul/Post</div>`;
                     const bukuString = encodeURIComponent(JSON.stringify(buku)); const isAktif = buku.is_active === true;
                     const toggleHtml = `<label class="flex items-center justify-center cursor-pointer"><div class="relative"><input type="checkbox" class="sr-only toggle-checkbox" ${isAktif ? 'checked' : ''} onchange="toggleStatusModul('${buku.id}', ${isAktif})"><div class="block bg-slate-200 w-10 h-6 rounded-full transition toggle-label"></div><div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${isAktif ? 'translate-x-4' : ''}"></div></div><span class="ml-2 text-xs font-bold ${isAktif ? 'text-emerald-600' : 'text-slate-400'}">${isAktif ? 'Publish' : 'Draft'}</span></label>`;
                     tabel.innerHTML += `<tr class="hover:bg-slate-50 transition-colors border-b border-slate-100"><td class="py-3 px-6">${iconTipe}</td><td class="py-3 px-6 font-medium text-slate-800">${buku.judul}</td><td class="py-3 px-6 text-center">${toggleHtml}</td><td class="py-3 px-6 text-center whitespace-nowrap"><button onclick="bukaModalEditModul('${bukuString}')" class="text-blue-500 bg-blue-50 p-2 rounded hover:bg-blue-500 hover:text-white transition mr-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="hapusModul('${buku.id}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-                    cbContainer.innerHTML += `<label class="flex items-center gap-2 p-1.5 hover:bg-indigo-50 rounded cursor-pointer transition border border-transparent hover:border-indigo-100"><input type="checkbox" value="${buku.id}" class="cb-buku w-4 h-4 accent-indigo-600 rounded"><span class="text-sm font-medium text-slate-700">${isKuis ? '[PRE]' : '[POST]'} ${buku.judul}</span></label>`;
+                    dropdown.innerHTML += `<option value="${buku.id}">${isKuis ? '[KUIS]' : '[MODUL]'} ${buku.judul}</option>`;
                 });
             } catch (err) {}
         }
@@ -535,12 +555,11 @@
         async function hapusModul(id) { if(confirm("Hapus konten ini beserta pertanyaannya?")) { await supabaseClient.from('buku').delete().eq('id', id); fetchDaftarBukuAdmin(); fetchDaftarKuis(); muatDataDasbor(); } }
 
         // ==========================================
-        // 5. STUDIO KUIS (SISTEM DRAFT / LINTAS MODUL)
+        // 5. STUDIO KUIS (SISTEM DRAFT / DROPDOWN SCROLL)
         // ==========================================
         function bukaModalKuisTambah() {
             kosongkanDraft(); document.getElementById('formKuisId').value = ''; document.getElementById('formKuisPertanyaan').value = ''; document.getElementById('formKuisJumlahOpsi').value = '3';
-            isEditMode = false; document.getElementById('editModeNotice').classList.add('hidden'); document.getElementById('panelAntrean').classList.remove('hidden'); document.getElementById('btnTambahAntrean').classList.remove('hidden'); document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Terapkan Semua Soal ke Modul Terpilih`;
-            document.getElementById('wadahCheckboxModul').parentElement.classList.remove('hidden');
+            isEditMode = false; document.getElementById('editModeNotice').classList.add('hidden'); document.getElementById('panelAntrean').classList.remove('hidden'); document.getElementById('btnTambahAntrean').classList.remove('hidden'); document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Terapkan Antrean ke Modul`;
             dataEditSementara = null; renderDynamicOptions(); document.getElementById('modalTambahKuis').classList.remove('hidden');
         }
 
@@ -573,7 +592,6 @@
         function renderDraftList() {
             const list = document.getElementById('draftList'); document.getElementById('draftCount').innerText = draftKuisArray.length;
             if (draftKuisArray.length === 0) { list.innerHTML = `<div class="text-center py-10 text-slate-400" id="draftEmptyState"><i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i><p class="text-sm">Antrean kosong.<br>Buat soal di samping lalu masukkan ke sini.</p></div>`; return; }
-            
             let html = '';
             draftKuisArray.forEach((item, index) => { html += `<div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group"><button onclick="hapusDariDraft(${index})" class="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition"><i class="fa-solid fa-circle-xmark"></i></button><p class="text-xs font-bold text-slate-400 mb-1">Soal ${index + 1}</p><p class="text-sm font-bold text-slate-800 line-clamp-2 mb-2 leading-tight">${item.pertanyaan}</p><p class="text-[10px] text-emerald-600 font-bold bg-emerald-50 inline-block px-1.5 py-0.5 rounded">Skor Maksimal: ${item.poin_reward} XP</p></div>`; });
             list.innerHTML = html; list.scrollTop = list.scrollHeight;
@@ -583,9 +601,11 @@
         function kosongkanDraft() { draftKuisArray = []; renderDraftList(); }
 
         async function simpanKuisKeDatabase(btn) {
+            const idBuku = document.getElementById('formKuisBuku').value;
+            if (!idBuku) return alert("Pilih Induk Konten (Modul) di atas terlebih dahulu!");
+
             if (isEditMode) {
-                const idKuis = document.getElementById('formKuisId').value; const idBuku = document.getElementById('formKuisId').dataset.idBukuAsli;
-                const pertanyaan = document.getElementById('formKuisPertanyaan').value.trim(); const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
+                const idKuis = document.getElementById('formKuisId').value; const pertanyaan = document.getElementById('formKuisPertanyaan').value.trim(); const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
                 if (!pertanyaan) return alert("Pertanyaan kosong!");
                 const opsiJawabanJson = {}; let poinMaksimal = -1; let labelKunciOtomatis = 'A';
                 for (let i = 0; i < jumlah; i++) {
@@ -598,31 +618,25 @@
                 return;
             }
 
-            const checkedBoxes = Array.from(document.querySelectorAll('.cb-buku:checked'));
-            if(checkedBoxes.length === 0) return alert("Pilih minimal 1 modul di daftar centang atas!");
-            
             const cekTeksSisa = document.getElementById('formKuisPertanyaan').value.trim();
             if (cekTeksSisa !== "") { if(confirm("Ada soal belum masuk antrean. Masukkan otomatis?")) { tambahKeDraft(); } }
             if(draftKuisArray.length === 0) return alert("Antrean masih kosong!");
             
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
             try {
-                const payloadFinal = [];
-                checkedBoxes.forEach(cb => { const idModulTujuan = cb.value; draftKuisArray.forEach(soal => { payloadFinal.push({ ...soal, id_buku: idModulTujuan }); }); });
+                const payloadFinal = draftKuisArray.map(soal => { return { ...soal, id_buku: idBuku }; });
                 const { error } = await supabaseClient.from('kuis').insert(payloadFinal);
                 if(error) throw error;
-                checkedBoxes.forEach(cb => cb.checked = false);
-                tutupModal('modalTambahKuis'); fetchDaftarKuis(); kosongkanDraft(); alert(`Berhasil mendistribusikan ${draftKuisArray.length} soal ke ${checkedBoxes.length} modul!`);
+                tutupModal('modalTambahKuis'); fetchDaftarKuis(); kosongkanDraft(); alert(`Berhasil menyimpan ${draftKuisArray.length} soal ke database!`);
             } catch(e) { alert("Gagal menyimpan ke database. Coba lagi."); } 
-            finally { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Terapkan Semua Soal ke Modul Terpilih`; }
+            finally { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Terapkan Antrean ke Modul`; }
         }
 
         function bukaModalEditKuis(qStr) {
             const q = JSON.parse(decodeURIComponent(qStr));
             isEditMode = true; document.getElementById('editModeNotice').classList.remove('hidden'); document.getElementById('panelAntrean').classList.add('hidden'); document.getElementById('btnTambahAntrean').classList.add('hidden'); document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-check"></i> Perbarui Data Soal`;
-            document.getElementById('wadahCheckboxModul').parentElement.classList.add('hidden');
-
-            document.getElementById('formKuisId').value = q.id; document.getElementById('formKuisId').dataset.kunciLama = q.jawaban_benar; document.getElementById('formKuisId').dataset.idBukuAsli = q.id_buku; document.getElementById('formKuisPertanyaan').value = q.pertanyaan;
+            
+            document.getElementById('formKuisId').value = q.id; document.getElementById('formKuisId').dataset.kunciLama = q.jawaban_benar; document.getElementById('formKuisBuku').value = q.id_buku; document.getElementById('formKuisPertanyaan').value = q.pertanyaan;
             const countOpsi = q.opsi_jawaban ? Object.keys(q.opsi_jawaban).length : 3; document.getElementById('formKuisJumlahOpsi').value = countOpsi.toString();
             dataEditSementara = q.opsi_jawaban; renderDynamicOptions(); document.getElementById('modalTambahKuis').classList.remove('hidden');
         }
