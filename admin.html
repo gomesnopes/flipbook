@@ -25,10 +25,16 @@
         .modal-enter { animation: zoomIn 0.3s ease-out forwards; }
         @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         #sidebar { transition: width 0.3s ease, transform 0.3s ease; }
+        
+        /* Custom Scrollbar for Draft List */
+        .draft-scroll::-webkit-scrollbar { width: 6px; }
+        .draft-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .draft-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
 
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-64 md:w-0 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0 transition-all duration-300 shadow-xl md:shadow-none">
         <div class="h-16 flex items-center justify-between px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800 min-w-[256px]">
             <div><i class="fa-solid fa-ribbon text-rose-500 mr-2"></i> Admin SIRASA</div>
@@ -54,6 +60,7 @@
         </nav>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col h-full overflow-hidden relative">
         <header class="bg-white h-16 border-b border-slate-200 flex items-center px-6 shrink-0 z-10 shadow-sm">
             <button onclick="toggleSidebar()" class="text-slate-500 hover:text-rose-600 transition p-2 bg-slate-100 rounded-lg">
@@ -65,6 +72,7 @@
         <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
             <div class="max-w-[1400px] mx-auto">
                 
+                <!-- 1. TAB DASHBOARD -->
                 <section id="dashboard" class="tab-content active">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Penelitian</h2>
                     <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6 flex gap-3 text-blue-800">
@@ -73,6 +81,7 @@
                     </div>
                 </section>
 
+                <!-- 2. TAB MANAJEMEN USER -->
                 <section id="pengguna" class="tab-content">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Data Responden</h2>
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
@@ -90,6 +99,7 @@
                     </div>
                 </section>
 
+                <!-- 3. TAB MANAJEMEN MODUL -->
                 <section id="modul" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <h2 class="text-2xl font-bold text-slate-800">Manajemen Konten & Modul</h2>
@@ -113,19 +123,19 @@
                     </div>
                 </section>
 
+                <!-- 4. TAB MANAJEMEN KUIS -->
                 <section id="kuis" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <h2 class="text-2xl font-bold text-slate-800">Instrumen Kuesioner Berbobot</h2>
                         <button onclick="bukaModalKuisTambah()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-plus"></i> Tambah Pertanyaan
+                            <i class="fa-solid fa-plus"></i> Tambah Pertanyaan Massal
                         </button>
                     </div>
                     
                     <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl mb-6 flex gap-3 text-indigo-800">
                         <i class="fa-solid fa-lightbulb mt-1"></i>
                         <div class="text-sm space-y-1">
-                            <p><strong>Sistem Opsi Dinamis:</strong> Kamu bisa menentukan jumlah pilihan (2 hingga 5) dan menginput nilai spesifik untuk setiap pilihan jawaban.</p>
-                            <p>Cocok untuk <em>Multiple Choice</em> maupun Skala Sikap (Sangat Setuju, Setuju, Ragu, dst).</p>
+                            <p><strong>Fitur Antrean Soal:</strong> Kamu dapat membuat puluhan soal secara berurutan lalu menyimpannya ke database hanya dalam satu kali klik simpan.</p>
                         </div>
                     </div>
 
@@ -143,6 +153,7 @@
                     </div>
                 </section>
 
+                <!-- 5. TAB PENGATURAN -->
                 <section id="pengaturan" class="tab-content">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
                     <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6 max-w-2xl">
@@ -161,6 +172,9 @@
         </main>
     </div>
 
+    <!-- ============================================== -->
+    <!-- MODAL TAMBAH MODUL (TETAP SAMA) -->
+    <!-- ============================================== -->
     <div id="modalTambahModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden flex flex-col border border-slate-100">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
@@ -206,50 +220,90 @@
         </div>
     </div>
 
-    <div id="modalTambahKuis" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl modal-enter overflow-hidden flex flex-col border border-slate-100 max-h-[95vh]">
+    <!-- ============================================== -->
+    <!-- STUDIO KUIS (BULK INSERT / ANTREAN) -->
+    <!-- ============================================== -->
+    <div id="modalTambahKuis" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl modal-enter overflow-hidden flex flex-col border border-slate-100 max-h-[95vh]">
+            
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-list-ol text-indigo-500 mr-2"></i> Tambah Soal / Kuesioner</h3>
-                <button onclick="tutupModal('modalTambahKuis')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-list-ol text-indigo-500 mr-2"></i> Studio Kuesioner (Tambah Massal)</h3>
+                <button onclick="tutupModalKuisTanya()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div class="p-6 overflow-y-auto flex-1 space-y-5">
-                <input type="hidden" id="formKuisId">
-
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-slate-700">Induk Konten / Modul</label>
-                    <select id="formKuisBuku" class="w-full p-3 border border-slate-300 rounded-lg bg-indigo-50 outline-none font-semibold text-indigo-800 focus:ring-2 focus:ring-indigo-500"></select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-slate-700">Pertanyaan / Pernyataan</label>
-                    <textarea id="formKuisPertanyaan" rows="2" class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tuliskan soal atau pernyataan survei..."></textarea>
-                </div>
-                
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-3">
-                        <label class="font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-sliders text-indigo-400"></i> Builder Opsi Jawaban</label>
-                        <select id="formKuisJumlahOpsi" onchange="renderDynamicOptions()" class="p-1.5 border border-slate-300 rounded-lg text-sm outline-none bg-white focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-600">
-                            <option value="2">2 Pilihan</option>
-                            <option value="3" selected>3 Pilihan</option>
-                            <option value="4">4 Pilihan</option>
-                            <option value="5">5 Pilihan</option>
-                        </select>
-                    </div>
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-100/50">
+                <!-- Wrapper Kiri dan Kanan -->
+                <div class="flex flex-col lg:flex-row gap-6 h-full">
                     
-                    <div class="grid grid-cols-12 gap-2 mb-2 px-1 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">
-                        <div class="col-span-1">Opsi</div>
-                        <div class="col-span-8 text-left pl-2">Teks Jawaban</div>
-                        <div class="col-span-3">Poin Skor</div>
+                    <!-- KIRI: BUILDER SOAL -->
+                    <div class="flex-1 space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <!-- Mode Edit Info -->
+                        <div id="editModeNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg text-xs font-bold mb-4">
+                            <i class="fa-solid fa-pen mr-1"></i> Mode Edit: Kamu sedang mengedit 1 soal yang sudah ada. Fitur antrean dimatikan.
+                        </div>
+
+                        <input type="hidden" id="formKuisId">
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-slate-700">Induk Konten (Soal-soal ini akan masuk ke sini)</label>
+                            <select id="formKuisBuku" class="w-full p-2.5 border border-slate-300 rounded-lg bg-indigo-50 outline-none font-semibold text-indigo-800 focus:ring-2 focus:ring-indigo-500"></select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-slate-700">Pertanyaan / Pernyataan</label>
+                            <textarea id="formKuisPertanyaan" rows="2" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ketik soal di sini..."></textarea>
+                        </div>
+                        
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-3">
+                                <label class="font-bold text-slate-700 flex items-center gap-2 text-sm"><i class="fa-solid fa-sliders text-indigo-400"></i> Builder Opsi Jawaban</label>
+                                <select id="formKuisJumlahOpsi" onchange="renderDynamicOptions()" class="p-1 border border-slate-300 rounded-lg text-xs outline-none bg-white focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-600">
+                                    <option value="2">2 Pilihan</option>
+                                    <option value="3" selected>3 Pilihan</option>
+                                    <option value="4">4 Pilihan</option>
+                                    <option value="5">5 Pilihan</option>
+                                </select>
+                            </div>
+                            
+                            <div class="grid grid-cols-12 gap-2 mb-2 px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
+                                <div class="col-span-1">Opt</div>
+                                <div class="col-span-8 text-left pl-2">Teks Jawaban</div>
+                                <div class="col-span-3">Skor</div>
+                            </div>
+                            <div id="wadahDynamicOptions" class="space-y-2"></div>
+                        </div>
+
+                        <!-- Tombol Tambah ke Antrean (Hanya tampil saat Add Mode) -->
+                        <button id="btnTambahAntrean" onclick="tambahKeDraft()" class="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold py-3 rounded-xl transition border border-indigo-200 border-dashed flex items-center justify-center gap-2 mt-4">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i> Masukkan Soal ke Antrean Draft
+                        </button>
                     </div>
 
-                    <div id="wadahDynamicOptions" class="space-y-3"></div>
+                    <!-- KANAN: DRAFT ANTREAN (Hanya tampil saat Add Mode) -->
+                    <div id="panelAntrean" class="w-full lg:w-5/12 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                        <div class="bg-slate-800 text-white px-4 py-3 border-b flex justify-between items-center shrink-0">
+                            <h4 class="font-bold text-sm"><i class="fa-solid fa-layer-group mr-2 text-indigo-400"></i> Antrean (<span id="draftCount">0</span> Soal)</h4>
+                            <button onclick="kosongkanDraft()" class="text-xs text-rose-400 hover:text-white transition underline">Reset</button>
+                        </div>
+                        
+                        <!-- List Item -->
+                        <div id="draftList" class="flex-1 overflow-y-auto p-4 space-y-3 draft-scroll bg-slate-50 min-h-[250px]">
+                            <div class="text-center py-10 text-slate-400" id="draftEmptyState">
+                                <i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i>
+                                <p class="text-sm">Antrean kosong.<br>Buat soal di samping lalu masukkan ke sini.</p>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             
-            <div class="p-6 bg-slate-50 border-t flex gap-3 shrink-0">
-                <button onclick="tutupModal('modalTambahKuis')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 rounded-lg transition hover:bg-slate-300">Batal</button>
-                <button onclick="simpanKuisDinamis(this)" class="w-1/2 bg-indigo-600 text-white font-bold py-3 rounded-lg transition hover:bg-indigo-700 shadow-md flex items-center justify-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> Simpan Pertanyaan</button>
+            <!-- FOOTER BAWAH -->
+            <div class="p-6 bg-white border-t flex gap-3 shrink-0">
+                <button onclick="tutupModalKuisTanya()" class="w-1/3 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition hover:bg-slate-300">Batal</button>
+                <button onclick="simpanKuisKeDatabase(this)" id="btnSimpanFinal" class="w-2/3 bg-indigo-600 text-white font-bold py-3 rounded-xl transition hover:bg-indigo-700 shadow-md flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Simpan Semua ke Database
+                </button>
             </div>
         </div>
     </div>
@@ -258,6 +312,9 @@
     <script>
         let supabaseClient;
         const LABELS = ['A', 'B', 'C', 'D', 'E'];
+
+        // Variabel Penyimpan Antrean (Bulk Insert)
+        let draftKuisArray = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -270,7 +327,7 @@
         });
 
         // ==========================================
-        // KONTROL UI & MODAL
+        // KONTROL UI & MODAL UMUM
         // ==========================================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -293,13 +350,22 @@
         function tutupModal(idModal) { document.getElementById(idModal).classList.add('hidden'); }
         
         window.addEventListener('click', function(event) {
-            ['modalTambahModul', 'modalTambahKuis'].forEach(id => {
-                if (event.target === document.getElementById(id)) tutupModal(id);
-            });
+            if (event.target === document.getElementById('modalTambahModul')) tutupModal('modalTambahModul');
+            // Cegah tutup kuis sembarangan jika klik di luar agar antrean tidak hilang
         });
 
+        function tutupModalKuisTanya() {
+            if(draftKuisArray.length > 0) {
+                if(confirm("Tutup jendela ini? Semua soal di antrean akan HILANG.")) {
+                    tutupModal('modalTambahKuis');
+                }
+            } else {
+                tutupModal('modalTambahKuis');
+            }
+        }
+
         // ==========================================
-        // MANAJEMEN USER
+        // MANAJEMEN USER & MODUL
         // ==========================================
         async function fetchPengguna() {
             try {
@@ -322,9 +388,6 @@
         }
         async function hapusUser(id) { if(confirm("Hapus peserta ini?")) { await supabaseClient.from('profiles').delete().eq('id', id); fetchPengguna(); } }
 
-        // ==========================================
-        // MANAJEMEN KONTEN & MODUL
-        // ==========================================
         function toggleFormModul() {
             const tipe = document.getElementById('tipeKonten').value;
             if (tipe === 'Hanya Kuis') {
@@ -337,39 +400,21 @@
         }
 
         async function simpanKontenBaru() {
-            const tipe = document.getElementById('tipeKonten').value;
-            const judul = document.getElementById('judulBuku').value;
-            const kategori = document.getElementById('kategoriBuku').value;
-            const deskripsi = document.getElementById('deskripsiKonten').value;
-            const fileInput = document.getElementById('filePdf');
-            const btn = document.getElementById('btnUpload');
-            const status = document.getElementById('statusUpload');
-
+            const tipe = document.getElementById('tipeKonten').value; const judul = document.getElementById('judulBuku').value; const kategori = document.getElementById('kategoriBuku').value; const deskripsi = document.getElementById('deskripsiKonten').value; const fileInput = document.getElementById('filePdf'); const btn = document.getElementById('btnUpload'); const status = document.getElementById('statusUpload');
             if (!judul) return alert("Judul konten wajib diisi!");
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Proses...`;
-            status.className = 'bg-blue-50 text-blue-700 p-3 rounded-lg block mt-4';
-            
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Proses...`; status.className = 'bg-blue-50 text-blue-700 p-3 rounded-lg block mt-4';
             try {
                 let pdfUrl = null; let coverUrl = null;
-
                 if (tipe === 'Modul PDF') {
                     if (fileInput.files.length === 0) throw new Error("File PDF belum dipilih!");
-                    status.innerHTML = `Mengekstrak dan mengunggah PDF...`;
-                    const file = fileInput.files[0]; const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
+                    status.innerHTML = `Mengekstrak dan mengunggah PDF...`; const file = fileInput.files[0]; const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
                     const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.0 }); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: ctx, viewport: viewport }).promise; const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
                     await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", file); await supabaseClient.storage.from('pdf-buku').upload(baseFileName + "_cover.jpg", coverBlob);
                     pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
                 }
-
-                status.innerHTML = `Menyimpan ke database...`;
-                await supabaseClient.from('buku').insert([{ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl }]);
+                status.innerHTML = `Menyimpan ke database...`; await supabaseClient.from('buku').insert([{ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl }]);
                 status.className = 'bg-green-100 text-green-700 p-3 rounded-lg block mt-4'; status.innerHTML = `Berhasil disimpan!`;
-                
-                setTimeout(() => { 
-                    document.getElementById('judulBuku').value = ''; fileInput.value = ''; document.getElementById('deskripsiKonten').value = ''; status.classList.add('hidden'); 
-                    tutupModal('modalTambahModul'); fetchDaftarBukuAdmin(); 
-                    btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save"></i> Simpan Konten`; 
-                }, 1000);
+                setTimeout(() => { document.getElementById('judulBuku').value = ''; fileInput.value = ''; document.getElementById('deskripsiKonten').value = ''; status.classList.add('hidden'); tutupModal('modalTambahModul'); fetchDaftarBukuAdmin(); btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save"></i> Simpan Konten`; }, 1000);
             } catch (error) { status.className = 'bg-red-100 text-red-700 p-3 rounded-lg block mt-4'; status.innerHTML = error.message; btn.disabled = false; btn.innerHTML = `Coba Lagi`; }
         }
 
@@ -379,19 +424,15 @@
                 const tabel = document.getElementById('tabelModul'); const dropdown = document.getElementById('formKuisBuku');
                 tabel.innerHTML = ''; dropdown.innerHTML = '<option value="">-- Pilih Induk Konten --</option>';
                 if (!data || data.length === 0) return tabel.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada konten.</td></tr>';
-                
                 data.forEach(buku => {
                     const isKuis = buku.tipe_konten === 'Hanya Kuis';
                     const iconTipe = isKuis ? `<div class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-question"></i> Pre-Test/Kuis</div>` : `<div class="bg-rose-100 text-rose-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i> Modul</div>`;
-                    
                     tabel.innerHTML += `
                         <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
                             <td class="py-3 px-6">${iconTipe}</td>
                             <td class="py-3 px-6 font-medium text-slate-800">${buku.judul}</td>
                             <td class="py-3 px-6 text-slate-500">${buku.kategori}</td>
-                            <td class="py-3 px-6 text-center whitespace-nowrap">
-                                <button onclick="hapusModul('${buku.id}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
-                            </td>
+                            <td class="py-3 px-6 text-center whitespace-nowrap"><button onclick="hapusModul('${buku.id}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash"></i></button></td>
                         </tr>`;
                     dropdown.innerHTML += `<option value="${buku.id}">${isKuis ? '[KUIS]' : '[MODUL]'} ${buku.judul}</option>`;
                 });
@@ -401,20 +442,30 @@
 
 
         // ==========================================
-        // BUILDER KUIS DINAMIS & BERBOBOT
+        // STUDIO KUIS (SISTEM DRAFT / ANTREAN)
         // ==========================================
-        let dataEditSementara = null; // Menyimpan data opsi jika dalam mode edit
+        let dataEditSementara = null; 
+        let isEditMode = false;
 
         function bukaModalKuisTambah() {
+            kosongkanDraft();
             document.getElementById('formKuisId').value = '';
             document.getElementById('formKuisPertanyaan').value = '';
             document.getElementById('formKuisJumlahOpsi').value = '3';
+            
+            // Konfigurasi Tampilan untuk Mode Massal (Bulk)
+            isEditMode = false;
+            document.getElementById('editModeNotice').classList.add('hidden');
+            document.getElementById('panelAntrean').classList.remove('hidden');
+            document.getElementById('btnTambahAntrean').classList.remove('hidden');
+            document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Semua ke Database`;
+
             dataEditSementara = null;
             renderDynamicOptions();
             document.getElementById('modalTambahKuis').classList.remove('hidden');
         }
 
-        // Fungsi mencetak baris input opsi berdasarkan jumlah dropdown
+        // Cetak Baris Opsi Jawaban Dinamis
         function renderDynamicOptions() {
             const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
             const wadah = document.getElementById('wadahDynamicOptions');
@@ -424,20 +475,12 @@
                 const lbl = LABELS[i];
                 let valTeks = ''; let valPoin = 0;
 
-                // Jika sedang edit, ambil data lama
                 if (dataEditSementara && dataEditSementara[lbl]) {
                     const opt = dataEditSementara[lbl];
-                    // Parsing data JSON model baru {teks: "", poin: 0} atau data model lama (hanya string teks)
                     if (typeof opt === 'string') {
-                        valTeks = opt;
-                        // Data lama: Kunci Benar (1), yang lain (0)
-                        valPoin = (lbl === document.getElementById('formKuisId').dataset.kunciLama) ? 1 : 0; 
-                    } else {
-                        valTeks = opt.teks || '';
-                        valPoin = opt.poin || 0;
-                    }
+                        valTeks = opt; valPoin = (lbl === document.getElementById('formKuisId').dataset.kunciLama) ? 1 : 0; 
+                    } else { valTeks = opt.teks || ''; valPoin = opt.poin || 0; }
                 } else if (!dataEditSementara) {
-                    // Saran default jika tambah kuis wawasan standar dengan 3 opsi
                     if(jumlah === 3 && i===0) { valTeks="Benar"; valPoin=1; }
                     else if(jumlah === 3 && i===1) { valTeks="Salah"; valPoin=0; }
                     else if(jumlah === 3 && i===2) { valTeks="Tidak Tahu"; valPoin=0; }
@@ -446,28 +489,26 @@
                 wadah.innerHTML += `
                     <div class="grid grid-cols-12 gap-2 items-center group">
                         <div class="col-span-1 flex justify-center">
-                            <div class="w-8 h-8 shrink-0 bg-slate-200 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white font-black rounded-lg flex items-center justify-center transition-colors shadow-inner">${lbl}</div>
+                            <div class="w-7 h-7 shrink-0 bg-slate-200 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white font-black text-xs rounded border border-slate-300 flex items-center justify-center transition-colors shadow-inner">${lbl}</div>
                         </div>
                         <div class="col-span-8">
-                            <input type="text" id="inputTeks_${lbl}" value="${valTeks}" placeholder="Ketik jawaban opsi ${lbl}..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white transition">
+                            <input type="text" id="inputTeks_${lbl}" value="${valTeks}" placeholder="Teks jawaban opsi ${lbl}..." class="w-full p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white transition">
                         </div>
                         <div class="col-span-3">
-                            <input type="number" id="inputPoin_${lbl}" value="${valPoin}" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-black text-center outline-none focus:ring-2 focus:ring-emerald-500 bg-emerald-50 text-emerald-700 transition" placeholder="Poin">
+                            <input type="number" id="inputPoin_${lbl}" value="${valPoin}" class="w-full p-2 border border-slate-300 rounded-lg text-sm font-black text-center outline-none focus:ring-2 focus:ring-emerald-500 bg-emerald-50 text-emerald-700 transition" placeholder="Poin">
                         </div>
                     </div>
                 `;
             }
         }
 
-        async function simpanKuisDinamis(btn) {
-            const idKuis = document.getElementById('formKuisId').value;
-            const idBuku = document.getElementById('formKuisBuku').value;
-            const pertanyaan = document.getElementById('formKuisPertanyaan').value;
+        // Fungsi Tambah Ke Antrean (Draft)
+        function tambahKeDraft() {
+            const pertanyaan = document.getElementById('formKuisPertanyaan').value.trim();
             const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
 
-            if (!idBuku || !pertanyaan) return alert("Konten & Pertanyaan wajib diisi!");
+            if (!pertanyaan) return alert("Ketikan pertanyaan atau pernyataan soal terlebih dahulu.");
 
-            // 1. Ekstrak data dari Builder Input
             const opsiJawabanJson = {};
             let poinMaksimal = -1;
             let labelKunciOtomatis = 'A';
@@ -476,46 +517,157 @@
                 const lbl = LABELS[i];
                 const teksInput = document.getElementById(`inputTeks_${lbl}`).value.trim();
                 const poinInput = parseInt(document.getElementById(`inputPoin_${lbl}`).value) || 0;
-                
                 if(!teksInput) return alert(`Teks pada Opsi ${lbl} tidak boleh kosong!`);
-
-                opsiJawabanJson[lbl] = { teks: teksInput, poin: poinInput };
                 
-                // Cari opsi mana yang punya poin paling tinggi sebagai Kunci Jawaban
-                if (poinInput > poinMaksimal) {
-                    poinMaksimal = poinInput;
-                    labelKunciOtomatis = lbl;
+                opsiJawabanJson[lbl] = { teks: teksInput, poin: poinInput };
+                if (poinInput > poinMaksimal) { poinMaksimal = poinInput; labelKunciOtomatis = lbl; }
+            }
+
+            // Simpan ke Array Memory
+            draftKuisArray.push({
+                jenis_kuis: 'Kuesioner Berbobot', 
+                pertanyaan: pertanyaan, 
+                opsi_jawaban: opsiJawabanJson,
+                jawaban_benar: labelKunciOtomatis,
+                poin_reward: poinMaksimal
+            });
+
+            // Update UI Draft
+            renderDraftList();
+
+            // Kosongkan Kolom Pertanyaan untuk Soal Berikutnya (Biarkan Dropdown Opsi sama)
+            document.getElementById('formKuisPertanyaan').value = '';
+            document.getElementById('formKuisPertanyaan').focus();
+        }
+
+        function renderDraftList() {
+            const list = document.getElementById('draftList');
+            document.getElementById('draftCount').innerText = draftKuisArray.length;
+
+            if (draftKuisArray.length === 0) {
+                document.getElementById('draftEmptyState').classList.remove('hidden');
+                list.innerHTML = '';
+                return;
+            }
+
+            document.getElementById('draftEmptyState').classList.add('hidden');
+            let html = '';
+            draftKuisArray.forEach((item, index) => {
+                html += `
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group">
+                        <button onclick="hapusDariDraft(${index})" class="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition" title="Hapus soal ini dari antrean"><i class="fa-solid fa-circle-xmark"></i></button>
+                        <p class="text-xs font-bold text-slate-400 mb-1">Soal ${index + 1}</p>
+                        <p class="text-sm font-bold text-slate-800 line-clamp-2 mb-2 leading-tight">${item.pertanyaan}</p>
+                        <p class="text-[10px] text-emerald-600 font-bold bg-emerald-50 inline-block px-1.5 py-0.5 rounded">Skor Maksimal: ${item.poin_reward} XP</p>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+            // Auto scroll to bottom
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function hapusDariDraft(index) {
+            draftKuisArray.splice(index, 1);
+            renderDraftList();
+        }
+
+        function kosongkanDraft() {
+            draftKuisArray = [];
+            renderDraftList();
+            document.getElementById('draftEmptyState').classList.remove('hidden');
+        }
+
+        // Eksekusi Simpan Final (Ke Supabase)
+        async function simpanKuisKeDatabase(btn) {
+            const idBuku = document.getElementById('formKuisBuku').value;
+            if (!idBuku) return alert("Pilih Induk Konten (Modul) di sebelah kiri terlebih dahulu!");
+
+            // Jika dalam Mode Edit Tunggal
+            if (isEditMode) {
+                const idKuis = document.getElementById('formKuisId').value;
+                const pertanyaan = document.getElementById('formKuisPertanyaan').value.trim();
+                const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
+                if (!pertanyaan) return alert("Pertanyaan kosong!");
+
+                const opsiJawabanJson = {};
+                let poinMaksimal = -1; let labelKunciOtomatis = 'A';
+                for (let i = 0; i < jumlah; i++) {
+                    const lbl = LABELS[i]; const teksInput = document.getElementById(`inputTeks_${lbl}`).value.trim(); const poinInput = parseInt(document.getElementById(`inputPoin_${lbl}`).value) || 0;
+                    if(!teksInput) return alert(`Opsi ${lbl} kosong!`);
+                    opsiJawabanJson[lbl] = { teks: teksInput, poin: poinInput };
+                    if (poinInput > poinMaksimal) { poinMaksimal = poinInput; labelKunciOtomatis = lbl; }
+                }
+
+                btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Update...`;
+                try {
+                    await supabaseClient.from('kuis').update({ id_buku: idBuku, pertanyaan, opsi_jawaban: opsiJawabanJson, jawaban_benar: labelKunciOtomatis, poin_reward: poinMaksimal }).eq('id', idKuis);
+                    tutupModal('modalTambahKuis'); fetchDaftarKuis();
+                } catch(e) {} finally { btn.disabled = false; btn.innerHTML = "Selesai"; }
+                return;
+            }
+
+            // Jika Mode Tambah Massal (Bulk Add)
+            const cekTeksSisa = document.getElementById('formKuisPertanyaan').value.trim();
+            if (cekTeksSisa !== "") {
+                if(confirm("Ada soal yang sedang kamu ketik tapi belum dimasukkan ke antrean. Masukkan secara otomatis sebelum menyimpan?")) {
+                    tambahKeDraft();
                 }
             }
 
-            // 2. Kirim ke Supabase
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
-            
-            try { 
-                const dataKirim = {
-                    id_buku: idBuku, 
-                    jenis_kuis: 'Kuesioner Berbobot', 
-                    pertanyaan: pertanyaan, 
-                    opsi_jawaban: opsiJawabanJson,     // Format JSON Baru: { A: {teks:"..", poin:1}, B: {teks:"..", poin:0} }
-                    jawaban_benar: labelKunciOtomatis, // Sebagai penanda saja
-                    poin_reward: poinMaksimal          // Poin maksimum yang bisa didapat dari soal ini
-                };
+            if(draftKuisArray.length === 0) return alert("Antrean masih kosong! Buat soal dan klik 'Masukkan ke Antrean' terlebih dahulu.");
 
-                if (idKuis) {
-                    await supabaseClient.from('kuis').update(dataKirim).eq('id', idKuis);
-                } else {
-                    await supabaseClient.from('kuis').insert([dataKirim]);
-                }
-                
-                tutupModal('modalTambahKuis'); 
-                fetchDaftarKuis(); 
-            } catch (err) { 
-                console.error(err); alert("Gagal menyimpan pertanyaan jaringan."); 
-            } finally { 
-                btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Pertanyaan`; 
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan ${draftKuisArray.length} Soal...`;
+
+            try {
+                // Injeksi idBuku ke seluruh array draft
+                const payloadFinal = draftKuisArray.map(soal => {
+                    return { ...soal, id_buku: idBuku };
+                });
+
+                // Tembak sekaligus ke Supabase (Bulk Insert)
+                const { error } = await supabaseClient.from('kuis').insert(payloadFinal);
+                if(error) throw error;
+
+                tutupModal('modalTambahKuis');
+                fetchDaftarKuis();
+                kosongkanDraft();
+                alert(`Berhasil menyimpan ${payloadFinal.length} soal sekaligus!`);
+            } catch(e) {
+                alert("Gagal menyimpan ke database. Coba lagi.");
+            } finally {
+                btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Semua ke Database`;
             }
         }
 
+        // Load Ulang untuk Mode Edit Tunggal
+        function bukaModalEditKuis(qStr) {
+            const q = JSON.parse(decodeURIComponent(qStr));
+            
+            // Konfigurasi Tampilan untuk Edit Mode
+            isEditMode = true;
+            document.getElementById('editModeNotice').classList.remove('hidden');
+            document.getElementById('panelAntrean').classList.add('hidden'); // Sembunyikan panel kanan
+            document.getElementById('btnTambahAntrean').classList.add('hidden'); // Sembunyikan tombol draft
+            document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-check"></i> Perbarui Data Soal`;
+
+            document.getElementById('formKuisId').value = q.id;
+            document.getElementById('formKuisId').dataset.kunciLama = q.jawaban_benar;
+            document.getElementById('formKuisBuku').value = q.id_buku;
+            document.getElementById('formKuisPertanyaan').value = q.pertanyaan;
+            
+            const countOpsi = q.opsi_jawaban ? Object.keys(q.opsi_jawaban).length : 3;
+            document.getElementById('formKuisJumlahOpsi').value = countOpsi.toString();
+            
+            dataEditSementara = q.opsi_jawaban; 
+            renderDynamicOptions(); 
+            
+            document.getElementById('modalTambahKuis').classList.remove('hidden');
+        }
+
+        // ==========================================
+        // RENDER TABEL BAWAH
+        // ==========================================
         async function fetchDaftarKuis() {
             try {
                 const { data } = await supabaseClient.from('kuis').select('*, buku(judul, tipe_konten)').order('created_at', { ascending: false });
@@ -524,13 +676,10 @@
                 
                 data.forEach(q => {
                     const tipeLable = q.buku && q.buku.tipe_konten === 'Hanya Kuis' ? 'text-indigo-600' : 'text-rose-600';
-                    
-                    // Render Visual Opsi Jawaban beserta poinnya di tabel
                     let badgeOpsi = '';
                     if (q.opsi_jawaban) {
                         Object.keys(q.opsi_jawaban).forEach(k => {
                             const opt = q.opsi_jawaban[k];
-                            // Parsing kompatibilitas data lama vs baru
                             const teks = typeof opt === 'string' ? opt : opt.teks;
                             const poin = typeof opt === 'string' ? (k === q.jawaban_benar ? (q.poin_reward||1) : 0) : opt.poin;
                             
@@ -544,7 +693,6 @@
                     }
 
                     const qString = encodeURIComponent(JSON.stringify(q));
-
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
                             <td class="py-4 px-6 align-top">
@@ -555,30 +703,12 @@
                                 <div class="flex flex-wrap">${badgeOpsi}</div>
                             </td>
                             <td class="py-4 px-6 text-center align-top whitespace-nowrap">
-                                <button onclick="bukaModalEditKuis('${qString}')" class="text-indigo-500 bg-indigo-50 p-2 rounded hover:bg-indigo-500 hover:text-white transition mr-1 shadow-sm"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button onclick="hapusKuis(${q.id})" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="bukaModalEditKuis('${qString}')" class="text-indigo-500 bg-indigo-50 p-2 rounded hover:bg-indigo-500 hover:text-white transition mr-1 shadow-sm" title="Edit Soal"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="hapusKuis(${q.id})" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shadow-sm" title="Hapus Soal"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>`;
                 });
             } catch (err) { console.error(err); }
-        }
-
-        function bukaModalEditKuis(qStr) {
-            const q = JSON.parse(decodeURIComponent(qStr));
-            
-            document.getElementById('formKuisId').value = q.id;
-            document.getElementById('formKuisId').dataset.kunciLama = q.jawaban_benar; // Simpan cache jika format lama
-            document.getElementById('formKuisBuku').value = q.id_buku;
-            document.getElementById('formKuisPertanyaan').value = q.pertanyaan;
-            
-            // Tentukan jumlah dropdown berdasarkan banyaknya key JSON (Misal A, B, C = 3)
-            const countOpsi = q.opsi_jawaban ? Object.keys(q.opsi_jawaban).length : 3;
-            document.getElementById('formKuisJumlahOpsi').value = countOpsi.toString();
-            
-            dataEditSementara = q.opsi_jawaban; // Kirim data lama ke variabel global sebelum render
-            renderDynamicOptions(); // Eksekusi pembuatan kotak input
-            
-            document.getElementById('modalTambahKuis').classList.remove('hidden');
         }
 
         async function hapusKuis(id) { if(confirm("Hapus pertanyaan ini secara permanen?")) { await supabaseClient.from('kuis').delete().eq('id', id); fetchDaftarKuis(); } }
