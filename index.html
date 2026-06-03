@@ -279,8 +279,6 @@
             dataBuku.forEach((book, index) => {
                 const delay = index * 0.05;
                 
-                // CEK STATUS AKTIF / DISABLE DARI DATABASE
-                // Jika is_active false, maka dianggap Terkunci. (Null dianggap false jika baru dibuat)
                 const isLocked = book.is_active === false || book.is_active === null; 
 
                 const cover = book.cover_url 
@@ -294,12 +292,13 @@
                 if (book.kategori === 'Evaluasi') badgeColor = "text-amber-700 bg-white/90";
                 if (book.kategori === 'Panduan Praktik') badgeColor = "text-indigo-700 bg-white/90";
                 
-                if (book.tipe_konten === 'Hanya Kuis' || book.judul.toLowerCase().includes('pre-test')) {
-                    badgeText = "PRE-TEST";
-                    badgeColor = "text-indigo-700 bg-indigo-50 border border-indigo-200 shadow-sm";
-                } else if (book.judul.toLowerCase().includes('post-test')) {
+                // LOGIKA YANG DIPERBAIKI: Cek judul 'post-test' terlebih dahulu!
+                if (book.judul.toLowerCase().includes('post-test')) {
                     badgeText = "POST-TEST";
                     badgeColor = "text-emerald-700 bg-emerald-50 border border-emerald-200 shadow-sm";
+                } else if (book.judul.toLowerCase().includes('pre-test') || book.tipe_konten === 'Hanya Kuis') {
+                    badgeText = "PRE-TEST";
+                    badgeColor = "text-indigo-700 bg-indigo-50 border border-indigo-200 shadow-sm";
                 }
 
                 // Logika Tampilan Berdasarkan Status Kunci
