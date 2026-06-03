@@ -281,10 +281,19 @@
                 
                 const isLocked = book.is_active === false || book.is_active === null; 
 
-                const cover = book.cover_url 
-                    ? `<img src="${book.cover_url}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 ${isLocked ? '' : 'group-hover:scale-110'}">` 
-                    : `<div class="w-full h-full bg-slate-200 flex items-center justify-center"><i class="fa-regular fa-file-pdf text-6xl text-slate-400"></i></div>`;
-                
+                // LOGIKA COVER OTOMATIS YANG KEREN
+                let cover = "";
+                if (book.cover_url) {
+                    cover = `<img src="${book.cover_url}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 ${isLocked ? '' : 'group-hover:scale-110'}">`;
+                } else {
+                    if (book.judul.toLowerCase().includes('pre-test')) {
+                        cover = `<div class="w-full h-full bg-indigo-600 flex flex-col items-center justify-center text-white"><i class="fa-solid fa-clipboard-question text-5xl opacity-30 mb-2"></i><span class="font-black text-xs tracking-widest">PRE-TEST</span></div>`;
+                    } else if (book.judul.toLowerCase().includes('post-test')) {
+                        cover = `<div class="w-full h-full bg-emerald-600 flex flex-col items-center justify-center text-white"><i class="fa-solid fa-clipboard-check text-5xl opacity-30 mb-2"></i><span class="font-black text-xs tracking-widest">POST-TEST</span></div>`;
+                    } else {
+                        cover = `<div class="w-full h-full bg-slate-200 flex items-center justify-center"><i class="fa-regular fa-file-pdf text-6xl text-slate-400"></i></div>`;
+                    }
+                }
                 // Pengaturan Label / Badge
                 let badgeColor = "text-rose-700 bg-white/90";
                 let badgeText = book.kategori;
