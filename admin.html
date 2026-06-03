@@ -28,194 +28,141 @@
         .draft-scroll::-webkit-scrollbar { width: 6px; }
         .draft-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .draft-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Toggle Switch CSS */
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
     </style>
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
 
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-64 md:w-0 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0 transition-all duration-300 shadow-xl md:shadow-none">
         <div class="h-16 flex items-center justify-between px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800 min-w-[256px]">
             <div><i class="fa-solid fa-ribbon text-rose-500 mr-2"></i> Admin SIRASA</div>
             <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        
         <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-w-[256px]">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-rose-600 text-white font-medium transition-colors">
-                <i class="fa-solid fa-chart-pie w-5"></i> Dasbor Penelitian
-            </button>
-            <button onclick="switchTab('pengguna')" id="nav-pengguna" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors">
-                <i class="fa-solid fa-users w-5"></i> Data Responden
-            </button>
-            <button onclick="switchTab('modul')" id="nav-modul" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors">
-                <i class="fa-solid fa-book-medical w-5"></i> Konten & Modul
-            </button>
-            <button onclick="switchTab('kuis')" id="nav-kuis" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors">
-                <i class="fa-solid fa-list-check w-5"></i> Instrumen Kuis
-            </button>
-            <button onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors">
-                <i class="fa-solid fa-sliders w-5"></i> Pengaturan
-            </button>
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-rose-600 text-white font-medium transition-colors"><i class="fa-solid fa-chart-pie w-5"></i> Dasbor Analitik</button>
+            <button onclick="switchTab('pengguna')" id="nav-pengguna" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-users w-5"></i> Data Responden</button>
+            <button onclick="switchTab('modul')" id="nav-modul" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-book-medical w-5"></i> Konten & Modul</button>
+            <button onclick="switchTab('kuis')" id="nav-kuis" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-list-check w-5"></i> Instrumen Kuis</button>
+            <button onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-sliders w-5"></i> Pengaturan</button>
         </nav>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col h-full overflow-hidden relative">
         <header class="bg-white h-16 border-b border-slate-200 flex items-center px-6 shrink-0 z-10 shadow-sm">
-            <button onclick="toggleSidebar()" class="text-slate-500 hover:text-rose-600 transition p-2 bg-slate-100 rounded-lg">
-                <i class="fa-solid fa-bars text-xl"></i>
-            </button>
+            <button onclick="toggleSidebar()" class="text-slate-500 hover:text-rose-600 transition p-2 bg-slate-100 rounded-lg"><i class="fa-solid fa-bars text-xl"></i></button>
             <h1 class="ml-4 font-bold text-slate-700 hidden sm:block">Panel Peneliti - SIRASA</h1>
         </header>
 
         <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
             <div class="max-w-[1400px] mx-auto">
                 
+                <!-- 1. TAB DASHBOARD ANALITIK -->
                 <section id="dashboard" class="tab-content active">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Penelitian Terpadu</h2>
                     
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
-                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-users"></i></div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Peserta Aktif</p>
-                            <h3 id="stat-peserta" class="text-xl font-black text-slate-800">0</h3>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
-                            <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-star"></i></div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Total XP</p>
-                            <h3 id="stat-poin" class="text-xl font-black text-slate-800">0</h3>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
-                            <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-trophy"></i></div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Avg Poin/User</p>
-                            <h3 id="stat-rata" class="text-xl font-black text-slate-800">0</h3>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
-                            <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-bullseye"></i></div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Partisipasi</p>
-                            <h3 id="stat-akurasi" class="text-xl font-black text-slate-800">0%</h3>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
-                            <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-clock"></i></div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Rata-rata Waktu</p>
-                            <h3 id="stat-waktu" class="text-xl font-black text-slate-800">0s</h3>
-                        </div>
-                        <button onclick="muatDataDasbor()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-4 rounded-xl border border-indigo-200 shadow-sm flex flex-col items-center justify-center transition group">
-                            <i class="fa-solid fa-arrows-rotate text-2xl mb-2 group-hover:rotate-180 transition-transform duration-500"></i>
-                            <span class="text-[10px] font-bold uppercase">Refresh Data</span>
-                        </button>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-users"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Peserta Aktif</p><h3 id="stat-peserta" class="text-xl font-black text-slate-800">0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-star"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Total XP</p><h3 id="stat-poin" class="text-xl font-black text-slate-800">0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-trophy"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Avg Poin/User</p><h3 id="stat-rata" class="text-xl font-black text-slate-800">0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-bullseye"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Partisipasi</p><h3 id="stat-akurasi" class="text-xl font-black text-slate-800">0%</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-clock"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Rata-rata Waktu</p><h3 id="stat-waktu" class="text-xl font-black text-slate-800">0s</h3></div>
+                        <button onclick="muatDataDasbor()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-4 rounded-xl border border-indigo-200 shadow-sm flex flex-col items-center justify-center transition group"><i class="fa-solid fa-arrows-rotate text-2xl mb-2 group-hover:rotate-180 transition-transform duration-500"></i><span class="text-[10px] font-bold uppercase">Refresh Data</span></button>
                     </div>
 
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 flex flex-col">
                         <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <h4 class="font-bold text-slate-700"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-2"></i> Tren Partisipasi (7 Hari Terakhir)</h4>
-                                <p class="text-xs text-slate-500 mt-1">Melihat konsistensi interaksi responden berdasarkan penyelesaian instrumen dan perolehan skor dari waktu ke waktu.</p>
-                            </div>
-                            <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold border border-blue-100">
-                                Total Entri: <span id="stat-total-entri">0</span>
-                            </div>
+                            <div><h4 class="font-bold text-slate-700"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-2"></i> Tren Partisipasi (7 Hari Terakhir)</h4></div>
+                            <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold border border-blue-100">Total Entri: <span id="stat-total-entri">0</span></div>
                         </div>
                         <div class="relative h-64 w-full flex-grow"><canvas id="chartTrend"></canvas></div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                            <h4 class="font-bold text-slate-700 mb-1">Distribusi Rentang Usia</h4>
-                            <p class="text-xs text-slate-400 mb-4">Pengelompokan usia responden yang terdaftar.</p>
-                            <div class="relative h-64 w-full flex-grow"><canvas id="chartUsia"></canvas></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
-                            <div class="w-full text-left">
-                                <h4 class="font-bold text-slate-700 mb-1">Komposisi Jenis Kelamin</h4>
-                                <p class="text-xs text-slate-400 mb-4">Perbandingan demografi gender responden.</p>
-                            </div>
-                            <div class="relative h-64 w-full flex justify-center flex-grow"><canvas id="chartGender"></canvas></div>
-                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col"><h4 class="font-bold text-slate-700 mb-4">Distribusi Rentang Usia</h4><div class="relative h-64 w-full flex-grow"><canvas id="chartUsia"></canvas></div></div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col"><h4 class="font-bold text-slate-700 mb-4">Komposisi Jenis Kelamin</h4><div class="relative h-64 w-full flex justify-center flex-grow"><canvas id="chartGender"></canvas></div></div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                            <h4 class="font-bold text-slate-700 mb-1">Perbandingan Skor per Kategori Responden</h4>
-                            <p class="text-xs text-slate-400 mb-4">Rata-rata akumulasi nilai antara Pelajar, Mahasiswa, dan Umum.</p>
-                            <div class="relative h-64 w-full flex-grow"><canvas id="chartKategori"></canvas></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-medal text-amber-500 mr-2"></i> Top 5 Peringkat XP (Leaderboard)</h4>
-                            <div id="papan-peringkat" class="space-y-3 flex-grow overflow-y-auto pr-2">
-                                <p class="text-sm text-slate-400 text-center py-4"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat papan peringkat...</p>
-                            </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col"><h4 class="font-bold text-slate-700 mb-4">Skor Berdasarkan Kategori</h4><div class="relative h-64 w-full flex-grow"><canvas id="chartKategori"></canvas></div></div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col"><h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-medal text-amber-500 mr-2"></i> Top 5 Peringkat XP</h4>
+                            <div id="papan-peringkat" class="space-y-3 flex-grow overflow-y-auto pr-2"></div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                            <h4 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-chart-bar text-emerald-500 mr-2"></i> Rata-rata Skor per Instrumen Modul</h4>
-                            <p class="text-xs text-slate-400 mb-4">Mengukur tingkat pemahaman rata-rata pada tiap materi/tes.</p>
-                            <div class="relative h-64 w-full flex-grow"><canvas id="chartNilaiModul"></canvas></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                            <h4 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-stopwatch text-rose-500 mr-2"></i> Rata-rata Durasi per Modul</h4>
-                            <p class="text-xs text-slate-400 mb-4">Waktu rerata (detik) yang dihabiskan responden pada tiap materi.</p>
-                            <div class="relative h-64 w-full flex-grow"><canvas id="chartWaktuModul"></canvas></div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-10">
-                        <div class="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                            <div>
-                                <h4 class="font-bold text-slate-800"><i class="fa-solid fa-table-list text-indigo-500 mr-2"></i> Rincian Interaksi Individu</h4>
-                                <p class="text-xs text-slate-500">Log riwayat lengkap interaksi setiap pengguna pada setiap modul/kuis.</p>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto w-full flex-grow max-h-[400px]">
+                    <!-- TABEL TREN PRE-TEST vs POST-TEST -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-8">
+                        <div class="p-5 border-b border-slate-200 bg-slate-50"><h4 class="font-bold text-slate-800"><i class="fa-solid fa-arrow-up-right-dots text-emerald-500 mr-2"></i> Analisis Tren N-Gain (Pre-Test vs Post-Test)</h4><p class="text-xs text-slate-500">Melihat peningkatan atau penurunan skor peserta per topik pembelajaran.</p></div>
+                        <div class="overflow-x-auto w-full max-h-[350px]">
                             <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                                 <thead class="sticky top-0 z-10 bg-white shadow-sm">
                                     <tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200">
-                                        <th class="py-3 px-5 font-bold">Waktu & Tanggal</th>
                                         <th class="py-3 px-5 font-bold">Nama Responden</th>
-                                        <th class="py-3 px-5 font-bold">Modul / Instrumen</th>
-                                        <th class="py-3 px-5 font-bold text-center">Durasi</th>
-                                        <th class="py-3 px-5 font-bold text-center">Skor Didapat</th>
+                                        <th class="py-3 px-5 font-bold">Topik Pembelajaran</th>
+                                        <th class="py-3 px-5 font-bold text-center border-l border-slate-200">Pre-Test</th>
+                                        <th class="py-3 px-5 font-bold text-center border-r border-slate-200">Post-Test</th>
+                                        <th class="py-3 px-5 font-bold text-center">Tren Pencapaian</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabelAnalitikDetail" class="text-sm text-slate-700 divide-y divide-slate-100">
-                                    <tr><td colspan="5" class="py-8 text-center text-slate-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat data...</td></tr>
+                                <tbody id="tabelTrendNgain" class="text-sm text-slate-700 divide-y divide-slate-100">
+                                    <tr><td colspan="5" class="py-8 text-center text-slate-400">Memuat analisis tren...</td></tr>
                                 </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TABEL LOG DETAIL -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-10">
+                        <div class="p-5 border-b border-slate-200 bg-slate-50"><h4 class="font-bold text-slate-800"><i class="fa-solid fa-list-ul text-indigo-500 mr-2"></i> Log Aktivitas Historis</h4></div>
+                        <div class="overflow-x-auto w-full max-h-[350px]">
+                            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                                <thead class="sticky top-0 z-10 bg-white shadow-sm">
+                                    <tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200">
+                                        <th class="py-3 px-5 font-bold">Waktu</th><th class="py-3 px-5 font-bold">Responden</th><th class="py-3 px-5 font-bold">Instrumen</th><th class="py-3 px-5 font-bold text-center">Durasi</th><th class="py-3 px-5 font-bold text-center">Skor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelAnalitikDetail" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>
                 </section>
 
+                <!-- 2. TAB MANAJEMEN USER -->
                 <section id="pengguna" class="tab-content">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Data Responden</h2>
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
                         <table class="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
-                                    <th class="py-4 px-6 font-bold">Nama Lengkap</th>
-                                    <th class="py-4 px-6 font-bold">Kategori</th>
-                                    <th class="py-4 px-6 font-bold">Gender</th>
-                                    <th class="py-4 px-6 font-bold text-center">Aksi</th>
-                                </tr>
-                            </thead>
+                            <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-4 px-6 font-bold">Nama Lengkap</th><th class="py-4 px-6 font-bold">Kategori</th><th class="py-4 px-6 font-bold">Gender</th><th class="py-4 px-6 font-bold text-center">Aksi</th></tr></thead>
                             <tbody id="tabelPengguna" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </section>
 
+                <!-- 3. TAB MANAJEMEN MODUL (DENGAN TOGGLE STATUS) -->
                 <section id="modul" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <h2 class="text-2xl font-bold text-slate-800">Manajemen Konten & Modul</h2>
                         <button onclick="document.getElementById('modalTambahModul').classList.remove('hidden')" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-plus"></i> Tambah Konten Baru
+                            <i class="fa-solid fa-plus"></i> Tambah Modul Baru
                         </button>
                     </div>
 
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-6 flex gap-3 text-amber-800 text-sm">
+                        <i class="fa-solid fa-circle-info mt-1"></i>
+                        <p>Gunakan tombol <strong>Status Modul</strong> untuk menyembunyikan atau menampilkan modul di halaman pengguna. Modul yang baru dibuat otomatis berstatus <strong>Draft (Nonaktif)</strong>.</p>
+                    </div>
+
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
-                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
                                     <th class="py-3 px-6 font-bold w-16">Tipe</th>
                                     <th class="py-3 px-6 font-bold min-w-[200px]">Judul Konten</th>
-                                    <th class="py-3 px-6 font-bold">Kategori</th>
+                                    <th class="py-3 px-6 font-bold text-center">Status Modul</th>
                                     <th class="py-3 px-6 font-bold text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -224,6 +171,7 @@
                     </div>
                 </section>
 
+                <!-- 4. TAB MANAJEMEN KUIS (MULTI SELECT) -->
                 <section id="kuis" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <h2 class="text-2xl font-bold text-slate-800">Instrumen Kuesioner Berbobot</h2>
@@ -231,30 +179,23 @@
                             <i class="fa-solid fa-plus"></i> Tambah Pertanyaan Massal
                         </button>
                     </div>
-
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
                         <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
-                                    <th class="py-3 px-6 font-bold w-[20%]">Konten Utama</th>
-                                    <th class="py-3 px-6 font-bold w-[60%]">Pertanyaan & Detail Nilai Opsi</th>
-                                    <th class="py-3 px-6 font-bold text-center w-[20%]">Aksi</th>
-                                </tr>
-                            </thead>
+                            <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-3 px-6 font-bold w-[20%]">Terkait Konten</th><th class="py-3 px-6 font-bold w-[60%]">Pertanyaan & Opsi</th><th class="py-3 px-6 font-bold text-center w-[20%]">Aksi</th></tr></thead>
                             <tbody id="tabelKuis" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </section>
 
+                <!-- 5. TAB PENGATURAN -->
                 <section id="pengaturan" class="tab-content">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
                     <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6 max-w-2xl">
                         <div class="flex flex-col sm:flex-row items-start gap-4">
                             <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
                             <div>
-                                <h3 class="text-lg font-bold text-slate-800 mb-1">Reset Database</h3>
-                                <p class="text-slate-500 text-sm mb-4">Hapus seluruh profil responden, nilai pre-test, dan post-test.</p>
-                                <button onclick="hapusSemuaDataPeserta()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2"><i class="fa-solid fa-trash-can"></i> Kosongkan Data</button>
+                                <h3 class="text-lg font-bold text-slate-800 mb-1">Reset Database</h3><p class="text-slate-500 text-sm mb-4">Hapus seluruh riwayat interaksi, nilai pre-test, post-test, dan data profil peserta.</p>
+                                <button onclick="hapusSemuaDataPeserta()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2"><i class="fa-solid fa-trash-can"></i> Kosongkan Data Peserta</button>
                             </div>
                         </div>
                     </div>
@@ -263,143 +204,110 @@
         </main>
     </div>
 
-    <div id="modalDetailUser" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-user-gear text-blue-500 mr-2"></i> Analisis & Data Responden</h3>
-                <button onclick="tutupModal('modalDetailUser')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1">
-                <input type="hidden" id="edit-user-id">
-                
-                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
-                    <p class="text-xs font-bold text-blue-500 uppercase mb-3">Statistik Keterlibatan</p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><p class="text-xs text-slate-500">Modul Selesai</p><h4 id="analitik-user-modul" class="font-black text-xl text-slate-800">-</h4></div>
-                        <div><p class="text-xs text-slate-500">Rata-rata Waktu</p><h4 id="analitik-user-waktu" class="font-black text-xl text-slate-800">-</h4></div>
-                    </div>
-                </div>
+    <!-- ============================================== -->
+    <!-- MODALS SECTION -->
+    <!-- ============================================== -->
 
-                <div class="space-y-3">
-                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Nama Lengkap</label><input type="text" id="edit-user-nama" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div><label class="block text-xs font-medium text-slate-500 mb-1">Kategori</label><select id="edit-user-kategori" class="w-full p-2 border rounded-lg outline-none"><option value="Pelajar">Pelajar</option><option value="Mahasiswa">Mahasiswa</option><option value="Umum">Umum</option></select></div>
-                        <div><label class="block text-xs font-medium text-slate-500 mb-1">Gender</label><select id="edit-user-gender" class="w-full p-2 border rounded-lg outline-none"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
-                    </div>
-                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Total XP Responden</label><input type="number" id="edit-user-poin" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-emerald-600 bg-emerald-50 border-emerald-200"></div>
+    <!-- MODAL DETAIL USER -->
+    <div id="modalDetailUser" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-user-gear text-blue-500 mr-2"></i> Edit Responden</h3><button onclick="tutupModal('modalDetailUser')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+            <div class="p-6 space-y-3">
+                <input type="hidden" id="edit-user-id">
+                <div><label class="block text-xs text-slate-500 mb-1">Nama Lengkap</label><input type="text" id="edit-user-nama" class="w-full p-2 border rounded-lg outline-none"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs text-slate-500 mb-1">Kategori</label><select id="edit-user-kategori" class="w-full p-2 border rounded-lg outline-none"><option value="Pelajar">Pelajar</option><option value="Mahasiswa">Mahasiswa</option><option value="Umum">Umum</option></select></div>
+                    <div><label class="block text-xs text-slate-500 mb-1">Gender</label><select id="edit-user-gender" class="w-full p-2 border rounded-lg outline-none"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
                 </div>
+                <div><label class="block text-xs text-slate-500 mb-1">Total Poin</label><input type="number" id="edit-user-poin" class="w-full p-2 border rounded-lg outline-none bg-emerald-50 text-emerald-700 font-bold"></div>
             </div>
-            <div class="p-6 bg-slate-50 border-t flex gap-3 shrink-0">
-                <button onclick="tutupModal('modalDetailUser')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
-                <button onclick="simpanEditUser(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-blue-700"><i class="fa-solid fa-save"></i> Perbarui</button>
-            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalDetailUser')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanEditUser(this)" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-save"></i> Perbarui</button></div>
         </div>
     </div>
 
+    <!-- MODAL TAMBAH MODUL / PAKET -->
     <div id="modalTambahModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden flex flex-col border border-slate-100">
-            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-book-medical text-rose-500 mr-2"></i> Tambah Konten Baru</h3>
-                <button onclick="tutupModal('modalTambahModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-book-medical text-rose-500 mr-2"></i> Tambah Konten Baru</h3><button onclick="tutupModal('modalTambahModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
             <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-bold mb-1 text-slate-700">Tipe Konten</label>
-                    <select id="tipeKonten" onchange="toggleFormModul('tambah')" class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-rose-50 font-semibold text-rose-700">
-                        <option value="Modul PDF">Materi Edukasi (Modul PDF)</option>
-                        <option value="Hanya Kuis">Hanya Kuis / Pre-Test (Tanpa PDF)</option>
+                <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl mb-2">
+                    <label class="block text-sm font-bold mb-1 text-rose-800">Pilih Tipe & Alur Pembelajaran</label>
+                    <select id="tipeKonten" onchange="toggleFormModul('tambah')" class="w-full p-2.5 border border-rose-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-white font-bold text-slate-700 shadow-sm">
+                        <option value="Paket Lengkap">🔥 PAKET LENGKAP: Otomatis buat Pre-Test & Post-Test Modul</option>
+                        <option value="Modul PDF">Materi Saja (Modul PDF + Post-Test)</option>
+                        <option value="Hanya Kuis">Hanya Instrumen Survei / Kuesioner (Tanpa PDF)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-slate-700">Judul Konten / Kuis</label>
-                    <input type="text" id="judulBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" placeholder="Misal: Modul HIV 1 atau Pre-Test">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-slate-700">Kategori / Topik</label>
-                    <select id="kategoriBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500">
-                        <option value="Materi Inti">Materi Inti</option>
-                        <option value="Panduan Praktik">Panduan Praktik</option>
-                        <option value="Evaluasi">Evaluasi / Ujian</option>
-                    </select>
-                </div>
+                
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">Judul Topik / Konten</label><input type="text" id="judulBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" placeholder="Misal: HIV & AIDS Dasar"></div>
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">Kategori</label><select id="kategoriBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi / Ujian</option></select></div>
+                
+                <!-- Akan ditutup jika "Hanya Kuis" -->
                 <div id="areaFilePDF_tambah" class="pt-2">
-                    <label class="block text-sm font-medium mb-1 text-slate-700">File Modul PDF</label>
-                    <input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-700 border border-slate-300 rounded-lg">
+                    <label class="block text-sm font-medium mb-1 text-slate-700">File Modul PDF (Media Belajar)</label>
+                    <input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 file:text-slate-700 border border-slate-300 rounded-lg">
                 </div>
-                <div id="areaDeskripsi_tambah" class="pt-2 hidden">
-                    <label class="block text-sm font-medium mb-1 text-slate-700">Deskripsi Singkat</label>
-                    <textarea id="deskripsiKonten" rows="3" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" placeholder="Tuliskan petunjuk pengerjaan di sini..."></textarea>
+                
+                <div id="areaDeskripsi_tambah" class="pt-2">
+                    <label class="block text-sm font-medium mb-1 text-slate-700">Deskripsi / Petunjuk Tes</label>
+                    <textarea id="deskripsiKonten" rows="2" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" placeholder="Tuliskan petunjuk pengerjaan di sini..."></textarea>
                 </div>
                 <div id="statusUpload" class="hidden p-3 rounded-lg text-sm font-medium"></div>
             </div>
-            <div class="p-6 bg-slate-50 border-t flex gap-3">
-                <button onclick="tutupModal('modalTambahModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
-                <button onclick="simpanKontenBaru()" id="btnUpload" class="w-1/2 bg-rose-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-rose-700"><i class="fa-solid fa-save"></i> Simpan Konten</button>
-            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalTambahModul')" class="w-1/3 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanKontenBaru()" id="btnUpload" class="w-2/3 bg-rose-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-save"></i> Buat Konten</button></div>
         </div>
     </div>
 
+    <!-- MODAL EDIT MODUL -->
     <div id="modalEditModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col">
-            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
-                <h3 class="font-bold text-lg text-slate-800">Edit Data Konten/Modul</h3>
-                <button onclick="tutupModal('modalEditModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-slate-800">Edit Data Konten</h3><button onclick="tutupModal('modalEditModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
             <div class="p-6 space-y-4">
                 <input type="hidden" id="edit-modul-id">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Tipe Konten</label>
-                    <select id="edit-tipeKonten" onchange="toggleFormModul('edit')" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-rose-50 font-semibold text-rose-700">
-                        <option value="Modul PDF">Materi Edukasi (Modul PDF)</option>
-                        <option value="Hanya Kuis">Hanya Kuis / Pre-Test (Tanpa PDF)</option>
-                    </select>
+                <div><label class="block text-sm font-medium mb-1">Tipe Konten</label>
+                    <select id="edit-tipeKonten" onchange="toggleFormModul('edit')" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-rose-50 font-semibold text-rose-700"><option value="Modul PDF">Modul PDF</option><option value="Hanya Kuis">Hanya Kuis (Tanpa PDF)</option></select>
                 </div>
                 <div><label class="block text-sm font-medium mb-1">Judul Konten</label><input type="text" id="edit-modul-judul" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none"></div>
-                <div><label class="block text-sm font-medium mb-1">Kategori</label>
-                    <select id="edit-modul-kategori" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi</option></select>
-                </div>
-                <div id="areaDeskripsi_edit" class="pt-2 hidden">
-                    <label class="block text-sm font-medium mb-1 text-slate-700">Deskripsi Singkat</label>
-                    <textarea id="edit-deskripsiKonten" rows="3" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500"></textarea>
-                </div>
+                <div><label class="block text-sm font-medium mb-1">Kategori</label><select id="edit-modul-kategori" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi</option></select></div>
+                <div id="areaDeskripsi_edit" class="pt-2"><label class="block text-sm font-medium mb-1">Deskripsi Singkat</label><textarea id="edit-deskripsiKonten" rows="3" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500"></textarea></div>
             </div>
-            <div class="p-6 bg-slate-50 border-t flex gap-3">
-                <button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition hover:bg-slate-300">Batal</button>
-                <button onclick="simpanEditModul(this)" class="w-1/2 bg-rose-600 text-white font-bold py-2.5 rounded-lg transition hover:bg-rose-700"><i class="fa-solid fa-check"></i> Simpan Perubahan</button>
-            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanEditModul(this)" class="w-1/2 bg-rose-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-check"></i> Simpan</button></div>
         </div>
     </div>
 
+    <!-- STUDIO KUIS (BULK INSERT DENGAN MULTI-SELECT MODUL) -->
     <div id="modalTambahKuis" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl modal-enter overflow-hidden flex flex-col border border-slate-100 max-h-[95vh]">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-list-ol text-indigo-500 mr-2"></i> Studio Kuesioner (Tambah Massal)</h3>
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-list-ol text-indigo-500 mr-2"></i> Studio Kuesioner Lintas Modul</h3>
                 <button onclick="tutupModalKuisTanya()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 bg-slate-100/50">
                 <div class="flex flex-col lg:flex-row gap-6 h-full">
+                    
+                    <!-- KIRI: BUILDER SOAL -->
                     <div class="flex-1 space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                         <div id="editModeNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg text-xs font-bold mb-4">
-                            <i class="fa-solid fa-pen mr-1"></i> Mode Edit: Fitur antrean dimatikan.
+                            <i class="fa-solid fa-pen mr-1"></i> Mode Edit Tunggal aktif.
                         </div>
                         <input type="hidden" id="formKuisId">
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-slate-700">Induk Konten</label>
-                            <select id="formKuisBuku" class="w-full p-2.5 border border-slate-300 rounded-lg bg-indigo-50 outline-none font-semibold text-indigo-800 focus:ring-2 focus:ring-indigo-500"></select>
+                        
+                        <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-2">
+                            <label class="block text-sm font-bold mb-2 text-indigo-800"><i class="fa-solid fa-link"></i> Terapkan ke Modul Berikut (Centang bisa lebih dari 1):</label>
+                            <div id="wadahCheckboxModul" class="max-h-32 overflow-y-auto bg-white border border-indigo-100 rounded-lg p-2 space-y-1 draft-scroll">
+                                <!-- Checkbox modul diload via JS -->
+                            </div>
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium mb-1 text-slate-700">Pertanyaan / Pernyataan</label>
                             <textarea id="formKuisPertanyaan" rows="2" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ketik soal di sini..."></textarea>
                         </div>
+                        
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
                             <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-3">
                                 <label class="font-bold text-slate-700 flex items-center gap-2 text-sm"><i class="fa-solid fa-sliders text-indigo-400"></i> Builder Opsi Jawaban</label>
-                                <select id="formKuisJumlahOpsi" onchange="renderDynamicOptions()" class="p-1 border border-slate-300 rounded-lg text-xs outline-none bg-white focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-600">
-                                    <option value="2">2 Pilihan</option>
-                                    <option value="3" selected>3 Pilihan</option>
-                                    <option value="4">4 Pilihan</option>
-                                    <option value="5">5 Pilihan</option>
-                                </select>
+                                <select id="formKuisJumlahOpsi" onchange="renderDynamicOptions()" class="p-1 border border-slate-300 rounded-lg text-xs outline-none bg-white focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-600"><option value="2">2 Pilihan</option><option value="3" selected>3 Pilihan</option><option value="4">4 Pilihan</option><option value="5">5 Pilihan</option></select>
                             </div>
                             <div class="grid grid-cols-12 gap-2 mb-2 px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
                                 <div class="col-span-1">Opt</div><div class="col-span-8 text-left pl-2">Teks Jawaban</div><div class="col-span-3">Skor</div>
@@ -410,23 +318,24 @@
                             <i class="fa-solid fa-arrow-right-to-bracket"></i> Masukkan Soal ke Antrean Draft
                         </button>
                     </div>
+
+                    <!-- KANAN: DRAFT ANTREAN -->
                     <div id="panelAntrean" class="w-full lg:w-5/12 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
                         <div class="bg-slate-800 text-white px-4 py-3 border-b flex justify-between items-center shrink-0">
                             <h4 class="font-bold text-sm"><i class="fa-solid fa-layer-group mr-2 text-indigo-400"></i> Antrean (<span id="draftCount">0</span> Soal)</h4>
                             <button onclick="kosongkanDraft()" class="text-xs text-rose-400 hover:text-white transition underline">Reset</button>
                         </div>
                         <div id="draftList" class="flex-1 overflow-y-auto p-4 space-y-3 draft-scroll bg-slate-50 min-h-[250px]">
-                            <div class="text-center py-10 text-slate-400" id="draftEmptyState">
-                                <i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i><p class="text-sm">Antrean kosong.<br>Buat soal di samping lalu masukkan ke sini.</p>
-                            </div>
+                            <div class="text-center py-10 text-slate-400" id="draftEmptyState"><i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i><p class="text-sm">Antrean kosong.</p></div>
                         </div>
                     </div>
                 </div>
             </div>
+            
             <div class="p-6 bg-white border-t flex gap-3 shrink-0">
                 <button onclick="tutupModalKuisTanya()" class="w-1/3 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition hover:bg-slate-300">Batal</button>
                 <button onclick="simpanKuisKeDatabase(this)" id="btnSimpanFinal" class="w-2/3 bg-indigo-600 text-white font-bold py-3 rounded-xl transition hover:bg-indigo-700 shadow-md flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Simpan Semua ke Database
+                    <i class="fa-solid fa-paper-plane"></i> Terapkan Semua Soal ke Modul Terpilih
                 </button>
             </div>
         </div>
@@ -440,6 +349,7 @@
         let draftKuisArray = [];
         let dataEditSementara = null; 
         let isEditMode = false;
+        let dbBukuList = []; // Cache untuk list buku
 
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -453,34 +363,23 @@
         });
 
         // ==========================================
-        // FUNGSI DASBOR ANALITIK (DENGAN PENARIKAN DATA AMAN)
+        // FUNGSI DASBOR ANALITIK TERPADU & TREN N-GAIN
         // ==========================================
         async function muatDataDasbor() {
             try {
-                // 1. Ambil 3 data secara terpisah agar kebal dari error relasi (Foreign Key) yang terputus di Supabase
                 const { data: profil } = await supabaseClient.from('profiles').select('*').order('total_poin', { ascending: false });
-                const { data: listBuku } = await supabaseClient.from('buku').select('id, judul');
+                const { data: listBuku } = await supabaseClient.from('buku').select('id, judul, tipe_konten');
                 const { data: riwayat, error } = await supabaseClient.from('riwayat_kuis').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
 
-                if (error) {
-                    console.error("Error mengambil riwayat:", error);
-                    return;
-                }
+                const kamusUser = {}; if (profil) profil.forEach(p => kamusUser[p.id] = p.nama_lengkap);
+                const kamusBuku = {}; if (listBuku) listBuku.forEach(b => kamusBuku[b.id] = { judul: b.judul, tipe: b.tipe_konten });
 
-                // Buat Kamus Referensi (Dictionary) agar lebih cepat dicocokkan
-                const kamusUser = {};
-                if (profil) profil.forEach(p => kamusUser[p.id] = p.nama_lengkap);
-                
-                const kamusBuku = {};
-                if (listBuku) listBuku.forEach(b => kamusBuku[b.id] = b.judul);
-
-                // --- 2. Kalkulasi Ringkasan Top Cards & Demografi ---
                 const totalPeserta = profil ? profil.length : 0;
                 let totalSkor = 0; let totalWaktu = 0;
                 let umurRents = { '< 15 Thn': 0, '16-18 Thn': 0, '19-25 Thn': 0, '> 25 Thn': 0 }; 
                 let genderCount = { 'Laki-laki': 0, 'Perempuan': 0 }; 
                 let katTotal = { 'Pelajar': { p: 0, c: 0 }, 'Mahasiswa': { p: 0, c: 0 }, 'Umum': { p: 0, c: 0 } };
-                
                 const thnIni = new Date().getFullYear();
 
                 if (profil) {
@@ -493,196 +392,121 @@
                         if (katTotal[p.kategori]) { katTotal[p.kategori].p += (p.total_poin || 0); katTotal[p.kategori].c++; }
                     });
                 }
-                
-                const rataKat = [ 
-                    katTotal['Pelajar'].c ? Math.round(katTotal['Pelajar'].p/katTotal['Pelajar'].c) : 0, 
-                    katTotal['Mahasiswa'].c ? Math.round(katTotal['Mahasiswa'].p/katTotal['Mahasiswa'].c) : 0, 
-                    katTotal['Umum'].c ? Math.round(katTotal['Umum'].p/katTotal['Umum'].c) : 0 
-                ];
-
+                const rataKat = [ katTotal['Pelajar'].c ? Math.round(katTotal['Pelajar'].p/katTotal['Pelajar'].c) : 0, katTotal['Mahasiswa'].c ? Math.round(katTotal['Mahasiswa'].p/katTotal['Mahasiswa'].c) : 0, katTotal['Umum'].c ? Math.round(katTotal['Umum'].p/katTotal['Umum'].c) : 0 ];
                 const totalPoinProfil = profil ? profil.reduce((sum, p) => sum + (p.total_poin || 0), 0) : 0;
                 const akurasi = totalPeserta > 0 ? Math.round((profil.filter(p => p.total_poin > 0).length / totalPeserta) * 100) : 0;
 
-                if (riwayat) {
-                    riwayat.forEach(r => { totalSkor += (r.poin_didapat || 0); totalWaktu += (r.durasi_baca_detik || 0); });
-                }
+                if (riwayat) riwayat.forEach(r => { totalSkor += (r.poin_didapat || 0); totalWaktu += (r.durasi_baca_detik || 0); });
                 const avgWaktu = (riwayat && riwayat.length > 0) ? Math.round(totalWaktu / riwayat.length) : 0;
 
-                // Terapkan ke HTML
                 document.getElementById('stat-peserta').innerText = totalPeserta;
                 document.getElementById('stat-poin').innerText = totalPoinProfil.toLocaleString('id-ID');
                 document.getElementById('stat-rata').innerText = totalPeserta > 0 ? Math.round(totalPoinProfil / totalPeserta) : 0;
                 document.getElementById('stat-akurasi').innerText = akurasi + '%';
                 document.getElementById('stat-waktu').innerText = avgWaktu + 's';
                 document.getElementById('stat-total-entri').innerText = riwayat ? riwayat.length : 0;
-                document.getElementById('stat-avg-poin').innerText = (riwayat && riwayat.length > 0) ? Math.round(totalSkor / riwayat.length) : 0;
-                document.getElementById('stat-avg-waktu').innerText = avgWaktu + 's';
 
-
-                // --- 3. Data Trend (7 Hari Terakhir) ---
                 const trendData = { labels: [], dataXP: [], dataKuis: [] };
                 const hariIni = new Date();
-                for(let i=6; i>=0; i--) {
-                    let d = new Date(hariIni); d.setDate(d.getDate() - i);
-                    trendData.labels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }));
-                    trendData.dataXP.push(0); trendData.dataKuis.push(0);
-                }
-                
-                if (riwayat) {
-                    riwayat.forEach(r => {
-                        if(r.created_at) {
-                            let rDate = new Date(r.created_at);
-                            let diffTime = hariIni - rDate;
-                            let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                            if (diffDays >= 0 && diffDays < 7) {
-                                let index = 6 - diffDays;
-                                trendData.dataXP[index] += (r.poin_didapat || 0);
-                                trendData.dataKuis[index] += 1;
-                            }
-                        }
-                    });
-                }
+                for(let i=6; i>=0; i--) { let d = new Date(hariIni); d.setDate(d.getDate() - i); trendData.labels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' })); trendData.dataXP.push(0); trendData.dataKuis.push(0); }
+                if (riwayat) { riwayat.forEach(r => { if(r.created_at) { let rDate = new Date(r.created_at); let diffDays = Math.floor((hariIni - rDate) / (1000 * 60 * 60 * 24)); if (diffDays >= 0 && diffDays < 7) { let index = 6 - diffDays; trendData.dataXP[index] += (r.poin_didapat || 0); trendData.dataKuis[index] += 1; } } }); }
 
-
-                // --- 4. Leaderboard (Top 5) & Tabel Rincian Individu ---
                 const wadahPeringkat = document.getElementById('papan-peringkat');
                 if (wadahPeringkat) {
                     wadahPeringkat.innerHTML = '';
                     const topUsers = profil ? profil.filter(p => p.total_poin > 0).slice(0, 5) : [];
-                    if(topUsers.length === 0) {
-                        wadahPeringkat.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Belum ada skor yang dicetak.</p>';
-                    } else {
+                    if(topUsers.length === 0) { wadahPeringkat.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Belum ada skor yang dicetak.</p>'; } else {
                         topUsers.forEach((p, i) => {
                             const w = ['bg-amber-200 text-amber-700', 'bg-slate-200 text-slate-700', 'bg-amber-100 text-amber-800', 'bg-blue-200 text-blue-700', 'bg-emerald-200 text-emerald-700'][i % 5];
-                            wadahPeringkat.innerHTML += `
-                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border hover:bg-white transition">
-                                    <div class="flex items-center gap-3">
-                                        <span class="font-bold text-slate-400 w-4 text-center">${i+1}</span>
-                                        <div class="w-8 h-8 rounded-full ${w} flex items-center justify-center font-bold text-sm shrink-0">${p.nama_lengkap.charAt(0)}</div>
-                                        <span class="font-bold text-sm truncate max-w-[120px]">${p.nama_lengkap.split(' ')[0]}</span>
-                                    </div>
-                                    <span class="font-bold text-emerald-600">${p.total_poin} XP</span>
-                                </div>`;
+                            wadahPeringkat.innerHTML += `<div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border hover:bg-white transition"><div class="flex items-center gap-3"><span class="font-bold text-slate-400 w-4 text-center">${i+1}</span><div class="w-8 h-8 rounded-full ${w} flex items-center justify-center font-bold text-sm shrink-0">${p.nama_lengkap.charAt(0)}</div><span class="font-bold text-sm truncate max-w-[120px]">${p.nama_lengkap.split(' ')[0]}</span></div><span class="font-bold text-emerald-600">${p.total_poin} XP</span></div>`;
                         });
                     }
                 }
 
-                const tbodyDetail = document.getElementById('tabelAnalitikDetail');
-                if (!riwayat || riwayat.length === 0) {
-                    tbodyDetail.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada data partisipasi dari responden.</td></tr>';
-                } else {
-                    tbodyDetail.innerHTML = '';
-                    riwayat.forEach(r => {
-                        const tgl = new Date(r.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
-                        
-                        // Menarik data dari kamus (TIDAK DARI JOIN SUPABASE)
-                        const nama = kamusUser[r.id_user] || 'User Terhapus';
-                        const modul = kamusBuku[r.id_buku] || 'Modul Terhapus';
-                        
-                        const durasi = r.durasi_baca_detik ? `${r.durasi_baca_detik} detik` : '-';
-                        const skor = r.poin_didapat !== null ? r.poin_didapat : 0;
-                        
-                        // Jika jenis_tes null/undefined di data lama, jadikan Post-Test sebagai default
-                        const jenis = r.jenis_tes || 'Post-Test';
-                        const labelTes = (jenis === 'Post-Test') 
-                            ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">POST</span>` 
-                            : `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">PRE</span>`;
-
-                        tbodyDetail.innerHTML += `
-                            <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                                <td class="py-3 px-5 text-slate-500 text-xs">${tgl}</td>
-                                <td class="py-3 px-5 font-bold text-slate-800">${nama}</td>
-                                <td class="py-3 px-5 text-indigo-600 font-medium text-sm truncate max-w-[200px]">${modul} ${labelTes}</td>
-                                <td class="py-3 px-5 text-center font-mono text-slate-500">${durasi}</td>
-                                <td class="py-3 px-5 text-center font-black text-emerald-600">${skor}</td>
-                            </tr>`;
-                    });
-                }
-
-                // --- 5. Hitung Rata-rata per Modul (Chart) ---
+                // DATA TREN N-GAIN PRE VS POST
+                const mapTrend = {}; 
+                const tbodyDetail = document.getElementById('tabelAnalitikDetail'); tbodyDetail.innerHTML = '';
                 const modulStat = {};
+
                 if (riwayat) {
                     riwayat.forEach(r => {
-                        const judul = kamusBuku[r.id_buku] || 'Unknown';
-                        if (!modulStat[judul]) { modulStat[judul] = { totalPoin: 0, totalWaktu: 0, count: 0 }; }
-                        modulStat[judul].totalPoin += (r.poin_didapat || 0); modulStat[judul].totalWaktu += (r.durasi_baca_detik || 0); modulStat[judul].count += 1;
+                        const namaUser = kamusUser[r.id_user] || 'User Terhapus';
+                        const bukuMeta = kamusBuku[r.id_buku] || { judul: 'Modul Terhapus', tipe: '' };
+                        const judulAsli = bukuMeta.judul;
+                        
+                        // Ekstrak Topik Dasar (Menghapus tulisan Pre-Test / Post-Test)
+                        const topikDasar = judulAsli.replace(/^(Pre-Test:\s*|Post-Test:\s*)/i, '').trim();
+                        const jenis = r.jenis_tes || (bukuMeta.tipe === 'Hanya Kuis' ? 'Pre-Test' : 'Post-Test');
+
+                        // Susun Key untuk User per Topik
+                        const trendKey = r.id_user + "|||" + topikDasar;
+                        if (!mapTrend[trendKey]) mapTrend[trendKey] = { nama: namaUser, topik: topikDasar, pre: null, post: null };
+                        
+                        if (jenis === 'Pre-Test' || judulAsli.toLowerCase().includes('pre')) {
+                            mapTrend[trendKey].pre = r.poin_didapat;
+                        } else {
+                            mapTrend[trendKey].post = r.poin_didapat;
+                        }
+
+                        // Isi Tabel Log Detail
+                        const tgl = new Date(r.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+                        const labelTes = (jenis === 'Post-Test') ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">POST</span>` : `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">PRE</span>`;
+                        tbodyDetail.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-5 text-slate-500 text-xs">${tgl}</td><td class="py-3 px-5 font-bold text-slate-800">${namaUser}</td><td class="py-3 px-5 text-indigo-600 font-medium text-sm truncate max-w-[200px]">${judulAsli} ${labelTes}</td><td class="py-3 px-5 text-center font-mono text-slate-500">${r.durasi_baca_detik ? r.durasi_baca_detik+'s' : '-'}</td><td class="py-3 px-5 text-center font-black text-emerald-600">${r.poin_didapat||0}</td></tr>`;
+
+                        // Rekap Modul untuk Bar Chart
+                        if (!modulStat[judulAsli]) { modulStat[judulAsli] = { totalPoin: 0, totalWaktu: 0, count: 0 }; }
+                        modulStat[judulAsli].totalPoin += (r.poin_didapat || 0); modulStat[judulAsli].totalWaktu += (r.durasi_baca_detik || 0); modulStat[judulAsli].count += 1;
                     });
                 }
+
+                // Render Tabel N-Gain
+                const tbodyNgain = document.getElementById('tabelTrendNgain'); tbodyNgain.innerHTML = '';
+                let hasTrend = false;
+                Object.values(mapTrend).forEach(t => {
+                    hasTrend = true;
+                    let pPre = t.pre !== null ? t.pre : '-';
+                    let pPost = t.post !== null ? t.post : '-';
+                    let selisihHtml = '<span class="text-slate-400 italic text-xs">Belum Lengkap</span>';
+                    
+                    if(t.pre !== null && t.post !== null) {
+                        let diff = t.post - t.pre;
+                        if(diff > 0) selisihHtml = `<span class="bg-emerald-100 text-emerald-700 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-arrow-trend-up"></i> +${diff} Poin</span>`;
+                        else if(diff < 0) selisihHtml = `<span class="bg-rose-100 text-rose-700 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-arrow-trend-down"></i> ${diff} Poin</span>`;
+                        else selisihHtml = `<span class="bg-slate-100 text-slate-600 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-minus"></i> Tetap</span>`;
+                    }
+
+                    tbodyNgain.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-5 font-bold text-slate-800">${t.nama}</td><td class="py-3 px-5 text-indigo-600 font-medium text-sm">${t.topik}</td><td class="py-3 px-5 text-center font-bold text-amber-600 bg-amber-50/30 border-l border-slate-200">${pPre}</td><td class="py-3 px-5 text-center font-bold text-emerald-600 bg-emerald-50/30 border-r border-slate-200">${pPost}</td><td class="py-3 px-5 text-center">${selisihHtml}</td></tr>`;
+                });
+                if(!hasTrend) tbodyNgain.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada riwayat pre/post-test.</td></tr>';
 
                 const labelModul = []; const avgPoinData = []; const avgWaktuData = [];
                 Object.keys(modulStat).forEach(judul => {
                     labelModul.push(judul.length > 15 ? judul.substring(0, 15) + '...' : judul);
-                    avgPoinData.push(Math.round(modulStat[judul].totalPoin / modulStat[judul].count));
-                    avgWaktuData.push(Math.round(modulStat[judul].totalWaktu / modulStat[judul].count));
+                    avgPoinData.push(Math.round(modulStat[judul].totalPoin / modulStat[judul].count)); avgWaktuData.push(Math.round(modulStat[judul].totalWaktu / modulStat[judul].count));
                 });
 
-
-                // --- 6. Eksekusi Tampilan Grafik (Chart.js) ---
                 const arrCharts = ['trend', 'usia', 'gender', 'kategori', 'nilai', 'waktu'];
                 arrCharts.forEach(c => { if(chartInstances[c]) chartInstances[c].destroy(); });
-
                 const opsiGrafik = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
 
-                chartInstances.trend = new Chart(document.getElementById('chartTrend').getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels: trendData.labels,
-                        datasets: [
-                            { label: 'Skor Total Didapat', data: trendData.dataXP, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 },
-                            { label: 'Total Tes Selesai', data: trendData.dataKuis, borderColor: '#10b981', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.4 }
-                        ]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
-                });
-
+                chartInstances.trend = new Chart(document.getElementById('chartTrend').getContext('2d'), { type: 'line', data: { labels: trendData.labels, datasets: [{ label: 'Skor Total', data: trendData.dataXP, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 }, { label: 'Tes Selesai', data: trendData.dataKuis, borderColor: '#10b981', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } } });
                 chartInstances.usia = new Chart(document.getElementById('chartUsia').getContext('2d'), { type: 'bar', data: { labels: Object.keys(umurRents), datasets: [{ data: Object.values(umurRents), backgroundColor: '#3b82f6', borderRadius: 4 }] }, options: opsiGrafik });
                 chartInstances.gender = new Chart(document.getElementById('chartGender').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(genderCount), datasets: [{ data: Object.values(genderCount), backgroundColor: ['#3b82f6', '#ec4899'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' } });
                 chartInstances.kategori = new Chart(document.getElementById('chartKategori').getContext('2d'), { type: 'bar', data: { labels: ['Pelajar', 'Mahasiswa', 'Umum'], datasets: [{ data: rataKat, backgroundColor: ['#10b981', '#f59e0b', '#6366f1'], borderRadius: 6 }] }, options: opsiGrafik });
+                chartInstances.nilai = new Chart(document.getElementById('chartNilaiModul').getContext('2d'), { type: 'bar', data: { labels: labelModul, datasets: [{ data: avgPoinData, backgroundColor: '#10b981', borderRadius: 6 }] }, options: { ...opsiGrafik, scales: { y: { beginAtZero: true } } } });
+                chartInstances.waktu = new Chart(document.getElementById('chartWaktuModul').getContext('2d'), { type: 'bar', data: { labels: labelModul, datasets: [{ data: avgWaktuData, backgroundColor: '#f43f5e', borderRadius: 6 }] }, options: { ...opsiGrafik, scales: { y: { beginAtZero: true } } } });
 
-                chartInstances.nilai = new Chart(document.getElementById('chartNilaiModul').getContext('2d'), { type: 'bar', data: { labels: labelModul, datasets: [{ data: avgPoinData, backgroundColor: '#10b981', borderRadius: 6 }] }, options: { ...opsiGrafik, scales: { y: { beginAtZero: true, title: { display: true, text: 'Rata-rata Skor' } } } } });
-                chartInstances.waktu = new Chart(document.getElementById('chartWaktuModul').getContext('2d'), { type: 'bar', data: { labels: labelModul, datasets: [{ data: avgWaktuData, backgroundColor: '#f43f5e', borderRadius: 6 }] }, options: { ...opsiGrafik, scales: { y: { beginAtZero: true, title: { display: true, text: 'Waktu (Detik)' } } } } });
-
-            } catch (err) { console.error("Gagal memuat analitik dasbor:", err); }
+            } catch (err) { console.error(err); }
         }
-
 
         // ==========================================
-        // KONTROL UI & MODAL UMUM
+        // UI, MODAL, USER MANAGE (Standard)
         // ==========================================
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            if (window.innerWidth < 768) { sidebar.classList.toggle('-translate-x-full'); } 
-            else { sidebar.classList.toggle('md:w-0'); sidebar.classList.toggle('md:w-64'); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 350); }
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('bg-rose-600', 'text-white'); el.classList.add('hover:bg-slate-800', 'hover:text-white', 'text-slate-300');
-            });
-            document.getElementById(tabId).classList.add('active');
-            const activeBtn = document.getElementById('nav-' + tabId);
-            activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300'); activeBtn.classList.add('bg-rose-600', 'text-white');
-            if(tabId === 'dashboard') { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100); }
-        }
-
+        function toggleSidebar() { const sidebar = document.getElementById('sidebar'); if (window.innerWidth < 768) { sidebar.classList.toggle('-translate-x-full'); } else { sidebar.classList.toggle('md:w-0'); sidebar.classList.toggle('md:w-64'); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 350); } }
+        function switchTab(tabId) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('bg-rose-600', 'text-white'); el.classList.add('hover:bg-slate-800', 'hover:text-white', 'text-slate-300'); }); document.getElementById(tabId).classList.add('active'); const activeBtn = document.getElementById('nav-' + tabId); activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300'); activeBtn.classList.add('bg-rose-600', 'text-white'); if(tabId === 'dashboard') { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100); } }
         function tutupModal(idModal) { document.getElementById(idModal).classList.add('hidden'); }
-        
-        window.addEventListener('click', function(event) {
-            ['modalTambahModul', 'modalDetailUser', 'modalEditModul'].forEach(id => {
-                if (event.target === document.getElementById(id)) tutupModal(id);
-            });
-        });
+        function tutupModalKuisTanya() { if(draftKuisArray.length > 0) { if(confirm("Tutup jendela ini? Semua soal di antrean akan HILANG.")) { tutupModal('modalTambahKuis'); } } else { tutupModal('modalTambahKuis'); } }
 
-        function tutupModalKuisTanya() {
-            if(draftKuisArray.length > 0) {
-                if(confirm("Tutup jendela ini? Semua soal di antrean akan HILANG.")) { tutupModal('modalTambahKuis'); }
-            } else { tutupModal('modalTambahKuis'); }
-        }
-
-        // ==========================================
-        // MANAJEMEN USER & MODUL
-        // ==========================================
         async function fetchPengguna() {
             try {
                 const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
@@ -691,139 +515,154 @@
                 data.forEach(user => {
                     const avatar = `<div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs mr-3 shrink-0">${user.nama_lengkap.charAt(0)}</div>`;
                     const userString = encodeURIComponent(JSON.stringify(user));
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                            <td class="py-3 px-6 cursor-pointer" onclick="bukaModalDetailUser('${userString}')">
-                                <div class="flex items-center group">${avatar} <span class="font-medium group-hover:text-blue-600">${user.nama_lengkap}</span></div>
-                            </td>
-                            <td class="py-3 px-6"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-bold">${user.kategori}</span></td>
-                            <td class="py-3 px-6 text-slate-500">${user.jenis_kelamin}</td>
-                            <td class="py-3 px-6 text-center whitespace-nowrap">
-                                <button onclick="bukaModalDetailUser('${userString}')" class="text-blue-500 bg-blue-50 p-2 rounded hover:bg-blue-500 hover:text-white transition mr-1"><i class="fa-solid fa-user-pen"></i></button>
-                                <button onclick="hapusUser('${user.id}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>`;
+                    tbody.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition"><td class="py-3 px-6 cursor-pointer" onclick="bukaModalDetailUser('${userString}')"><div class="flex items-center group">${avatar} <span class="font-medium group-hover:text-blue-600">${user.nama_lengkap}</span></div></td><td class="py-3 px-6"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-bold">${user.kategori}</span></td><td class="py-3 px-6 text-slate-500">${user.jenis_kelamin}</td><td class="py-3 px-6 text-center whitespace-nowrap"><button onclick="bukaModalDetailUser('${userString}')" class="text-blue-500 bg-blue-50 p-2 rounded hover:bg-blue-500 hover:text-white transition mr-1"><i class="fa-solid fa-user-pen"></i></button><button onclick="hapusUser('${user.id}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 });
             } catch (err) {}
         }
-
+        async function hapusUser(id) { if(confirm("Hapus peserta ini?")) { await supabaseClient.from('profiles').delete().eq('id', id); fetchPengguna(); muatDataDasbor(); } }
         async function bukaModalDetailUser(userStringEncoded) {
             const user = JSON.parse(decodeURIComponent(userStringEncoded));
-            document.getElementById('edit-user-id').value = user.id;
-            document.getElementById('edit-user-nama').value = user.nama_lengkap;
-            document.getElementById('edit-user-kategori').value = user.kategori;
-            document.getElementById('edit-user-gender').value = user.jenis_kelamin;
-            document.getElementById('edit-user-poin').value = user.total_poin;
-            document.getElementById('analitik-user-modul').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-sm"></i>`; 
-            document.getElementById('analitik-user-waktu').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-sm"></i>`;
-            document.getElementById('modalDetailUser').classList.remove('hidden');
-
-            try {
-                const { data: riwayat } = await supabaseClient.from('riwayat_kuis').select('durasi_baca_detik').eq('id_user', user.id);
-                if(riwayat && riwayat.length > 0) {
-                    const totalDurasi = riwayat.reduce((sum, r) => sum + (r.durasi_baca_detik || 0), 0);
-                    document.getElementById('analitik-user-modul').innerText = riwayat.length; 
-                    document.getElementById('analitik-user-waktu').innerText = Math.round(totalDurasi / riwayat.length) + 's';
-                } else { 
-                    document.getElementById('analitik-user-modul').innerText = '0'; document.getElementById('analitik-user-waktu').innerText = '0s'; 
-                }
-            } catch(e) {}
+            document.getElementById('edit-user-id').value = user.id; document.getElementById('edit-user-nama').value = user.nama_lengkap; document.getElementById('edit-user-kategori').value = user.kategori; document.getElementById('edit-user-gender').value = user.jenis_kelamin; document.getElementById('edit-user-poin').value = user.total_poin; document.getElementById('modalDetailUser').classList.remove('hidden');
         }
-
         async function simpanEditUser(btn) {
             const id = document.getElementById('edit-user-id').value; const nama_lengkap = document.getElementById('edit-user-nama').value; const kategori = document.getElementById('edit-user-kategori').value; const jenis_kelamin = document.getElementById('edit-user-gender').value; const total_poin = document.getElementById('edit-user-poin').value;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`; btn.disabled = true;
             try { await supabaseClient.from('profiles').update({ nama_lengkap, kategori, jenis_kelamin, total_poin }).eq('id', id); tutupModal('modalDetailUser'); fetchPengguna(); muatDataDasbor(); } catch(e) {} finally { btn.innerHTML = `<i class="fa-solid fa-save"></i> Perbarui`; btn.disabled = false; }
         }
 
-        async function hapusUser(id) { if(confirm("Hapus peserta ini?")) { await supabaseClient.from('profiles').delete().eq('id', id); fetchPengguna(); muatDataDasbor(); } }
-
+        // ==========================================
+        // MANAJEMEN MODUL (DENGAN PAKET LENGKAP & TOGGLE)
+        // ==========================================
         function toggleFormModul(mode) {
             const prefix = mode === 'edit' ? 'edit-' : '';
             const tipe = document.getElementById(prefix + 'tipeKonten').value;
-            
             if (tipe === 'Hanya Kuis') {
                 if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.add('hidden');
-                document.getElementById('areaDeskripsi_'+mode).classList.remove('hidden');
-            } else {
+            } else if (tipe === 'Modul PDF') {
                 if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.remove('hidden');
-                document.getElementById('areaDeskripsi_'+mode).classList.add('hidden');
+            } else { // Paket Lengkap
+                if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.remove('hidden');
             }
+        }
+
+        async function toggleStatusModul(id, currentStatus) {
+            const newStatus = !currentStatus;
+            try {
+                await supabaseClient.from('buku').update({ is_active: newStatus }).eq('id', id);
+                fetchDaftarBukuAdmin(); // Refresh tabel
+            } catch(e) { alert("Gagal update status!"); }
         }
 
         async function simpanKontenBaru() {
             const tipe = document.getElementById('tipeKonten').value; const judul = document.getElementById('judulBuku').value; const kategori = document.getElementById('kategoriBuku').value; const deskripsi = document.getElementById('deskripsiKonten').value; const fileInput = document.getElementById('filePdf'); const btn = document.getElementById('btnUpload'); const status = document.getElementById('statusUpload');
             if (!judul) return alert("Judul konten wajib diisi!");
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Proses...`; status.className = 'bg-blue-50 text-blue-700 p-3 rounded-lg block mt-4';
+            status.classList.remove('hidden');
+
             try {
                 let pdfUrl = null; let coverUrl = null;
-                if (tipe === 'Modul PDF') {
-                    if (fileInput.files.length === 0) throw new Error("File PDF belum dipilih!");
+                if (tipe === 'Modul PDF' || tipe === 'Paket Lengkap') {
+                    if (fileInput.files.length === 0) throw new Error("File PDF belum dipilih untuk modul!");
                     status.innerHTML = `Mengekstrak dan mengunggah PDF...`; const file = fileInput.files[0]; const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
                     const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.0 }); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: ctx, viewport: viewport }).promise; const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
                     await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", file); await supabaseClient.storage.from('pdf-buku').upload(baseFileName + "_cover.jpg", coverBlob);
                     pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
                 }
-                status.innerHTML = `Menyimpan ke database...`; await supabaseClient.from('buku').insert([{ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl }]);
+                
+                status.innerHTML = `Menyimpan ke database...`; 
+                
+                // Jika Paket Lengkap, Buat 2 Entry Database
+                if (tipe === 'Paket Lengkap') {
+                    await supabaseClient.from('buku').insert([
+                        { judul: 'Pre-Test: ' + judul, kategori, tipe_konten: 'Hanya Kuis', deskripsi: deskripsi, is_active: false },
+                        { judul: 'Post-Test: ' + judul, kategori, tipe_konten: 'Modul PDF', deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, is_active: false }
+                    ]);
+                } else {
+                    await supabaseClient.from('buku').insert([{ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, is_active: false }]);
+                }
+
                 status.className = 'bg-green-100 text-green-700 p-3 rounded-lg block mt-4'; status.innerHTML = `Berhasil disimpan!`;
-                setTimeout(() => { document.getElementById('judulBuku').value = ''; fileInput.value = ''; document.getElementById('deskripsiKonten').value = ''; status.classList.add('hidden'); tutupModal('modalTambahModul'); fetchDaftarBukuAdmin(); btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save"></i> Simpan Konten`; }, 1000);
+                setTimeout(() => { document.getElementById('judulBuku').value = ''; fileInput.value = ''; document.getElementById('deskripsiKonten').value = ''; status.classList.add('hidden'); tutupModal('modalTambahModul'); fetchDaftarBukuAdmin(); btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save"></i> Buat Konten`; }, 1500);
             } catch (error) { status.className = 'bg-red-100 text-red-700 p-3 rounded-lg block mt-4'; status.innerHTML = error.message; btn.disabled = false; btn.innerHTML = `Coba Lagi`; }
         }
 
         async function fetchDaftarBukuAdmin() {
             try {
                 const { data } = await supabaseClient.from('buku').select('*').order('created_at', { ascending: false });
-                const tabel = document.getElementById('tabelModul'); const dropdown = document.getElementById('formKuisBuku');
-                tabel.innerHTML = ''; dropdown.innerHTML = '<option value="">-- Pilih Induk Konten --</option>';
-                if (!data || data.length === 0) return tabel.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada konten.</td></tr>';
+                const tabel = document.getElementById('tabelModul'); 
+                const cbContainer = document.getElementById('wadahCheckboxModul');
+                
+                tabel.innerHTML = ''; cbContainer.innerHTML = ''; dbBukuList = data || [];
+                if (!data || data.length === 0) {
+                    tabel.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada konten.</td></tr>';
+                    cbContainer.innerHTML = '<p class="text-xs text-slate-400 p-2">Belum ada modul tersedia.</p>';
+                    return;
+                }
+                
                 data.forEach(buku => {
                     const isKuis = buku.tipe_konten === 'Hanya Kuis';
-                    const iconTipe = isKuis ? `<div class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-question"></i> Pre-Test/Kuis</div>` : `<div class="bg-rose-100 text-rose-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i> Modul</div>`;
+                    const iconTipe = isKuis ? `<div class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-question"></i> Pre-Test</div>` : `<div class="bg-rose-100 text-rose-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i> Modul/Post</div>`;
                     const bukuString = encodeURIComponent(JSON.stringify(buku));
                     
+                    // Toggle Switch UI
+                    const isAktif = buku.is_active === true;
+                    const toggleHtml = `
+                        <label class="flex items-center justify-center cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" class="sr-only toggle-checkbox" ${isAktif ? 'checked' : ''} onchange="toggleStatusModul('${buku.id}', ${isAktif})">
+                                <div class="block bg-slate-200 w-10 h-6 rounded-full transition toggle-label"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${isAktif ? 'translate-x-4' : ''}"></div>
+                            </div>
+                            <span class="ml-2 text-xs font-bold ${isAktif ? 'text-emerald-600' : 'text-slate-400'}">${isAktif ? 'Publish' : 'Draft'}</span>
+                        </label>
+                    `;
+
                     tabel.innerHTML += `
                         <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
                             <td class="py-3 px-6">${iconTipe}</td>
                             <td class="py-3 px-6 font-medium text-slate-800">${buku.judul}</td>
-                            <td class="py-3 px-6 text-slate-500">${buku.kategori}</td>
+                            <td class="py-3 px-6 text-center">${toggleHtml}</td>
                             <td class="py-3 px-6 text-center whitespace-nowrap">
                                 <button onclick="bukaModalEditModul('${bukuString}')" class="text-blue-500 bg-blue-50 p-2 rounded hover:bg-blue-500 hover:text-white transition mr-1"><i class="fa-solid fa-pen-to-square"></i></button>
                                 <button onclick="hapusModul('${buku.id}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>`;
-                    dropdown.innerHTML += `<option value="${buku.id}">${isKuis ? '[KUIS]' : '[MODUL]'} ${buku.judul}</option>`;
+
+                    // Tambahkan ke Checkbox List untuk Multi-Select Kuis
+                    cbContainer.innerHTML += `
+                        <label class="flex items-center gap-2 p-1.5 hover:bg-indigo-50 rounded cursor-pointer transition border border-transparent hover:border-indigo-100">
+                            <input type="checkbox" value="${buku.id}" class="cb-buku w-4 h-4 accent-indigo-600 rounded">
+                            <span class="text-sm font-medium text-slate-700">${isKuis ? '[PRE]' : '[POST]'} ${buku.judul}</span>
+                        </label>
+                    `;
                 });
             } catch (err) {}
         }
 
         function bukaModalEditModul(bukuStringEncoded) { 
             const buku = JSON.parse(decodeURIComponent(bukuStringEncoded));
-            document.getElementById('edit-modul-id').value = buku.id; 
-            document.getElementById('edit-modul-judul').value = buku.judul; 
-            document.getElementById('edit-modul-kategori').value = buku.kategori; 
-            document.getElementById('edit-tipeKonten').value = buku.tipe_konten || 'Modul PDF';
-            document.getElementById('edit-deskripsiKonten').value = buku.deskripsi || '';
+            document.getElementById('edit-modul-id').value = buku.id; document.getElementById('edit-modul-judul').value = buku.judul; document.getElementById('edit-modul-kategori').value = buku.kategori; document.getElementById('edit-tipeKonten').value = buku.tipe_konten || 'Modul PDF'; document.getElementById('edit-deskripsiKonten').value = buku.deskripsi || '';
             toggleFormModul('edit'); document.getElementById('modalEditModul').classList.remove('hidden'); 
         }
 
         async function simpanEditModul(btn) { 
             const id = document.getElementById('edit-modul-id').value; const judul = document.getElementById('edit-modul-judul').value; const kategori = document.getElementById('edit-modul-kategori').value; const tipe = document.getElementById('edit-tipeKonten').value; const deskripsi = document.getElementById('edit-deskripsiKonten').value;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`; btn.disabled = true; 
-            try { 
-                await supabaseClient.from('buku').update({ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi }).eq('id', id); 
-                tutupModal('modalEditModul'); fetchDaftarBukuAdmin(); muatDataDasbor();
-            } catch(e) {} finally { btn.innerHTML = `<i class="fa-solid fa-check"></i> Simpan Perubahan`; btn.disabled = false; } 
+            try { await supabaseClient.from('buku').update({ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi }).eq('id', id); tutupModal('modalEditModul'); fetchDaftarBukuAdmin(); muatDataDasbor(); } catch(e) {} finally { btn.innerHTML = `<i class="fa-solid fa-check"></i> Simpan`; btn.disabled = false; } 
         }
 
         async function hapusModul(id) { if(confirm("Hapus konten ini beserta pertanyaannya?")) { await supabaseClient.from('buku').delete().eq('id', id); fetchDaftarBukuAdmin(); fetchDaftarKuis(); muatDataDasbor(); } }
 
         // ==========================================
-        // STUDIO KUIS (SISTEM DRAFT / ANTREAN)
+        // STUDIO KUIS (SISTEM DRAFT / LINTAS MODUL)
         // ==========================================
         function bukaModalKuisTambah() {
-            kosongkanDraft();
-            document.getElementById('formKuisId').value = ''; document.getElementById('formKuisPertanyaan').value = ''; document.getElementById('formKuisJumlahOpsi').value = '3';
-            isEditMode = false; document.getElementById('editModeNotice').classList.add('hidden'); document.getElementById('panelAntrean').classList.remove('hidden'); document.getElementById('btnTambahAntrean').classList.remove('hidden'); document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Semua ke Database`;
+            kosongkanDraft(); document.getElementById('formKuisId').value = ''; document.getElementById('formKuisPertanyaan').value = ''; document.getElementById('formKuisJumlahOpsi').value = '3';
+            isEditMode = false; document.getElementById('editModeNotice').classList.add('hidden'); document.getElementById('panelAntrean').classList.remove('hidden'); document.getElementById('btnTambahAntrean').classList.remove('hidden'); document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Terapkan Semua Soal ke Modul Terpilih`;
+            
+            // Show Checkbox container, hide select dropdown if it exists
+            document.getElementById('wadahCheckboxModul').parentElement.classList.remove('hidden');
+            
             dataEditSementara = null; renderDynamicOptions(); document.getElementById('modalTambahKuis').classList.remove('hidden');
         }
 
@@ -832,17 +671,11 @@
             for (let i = 0; i < jumlah; i++) {
                 const lbl = LABELS[i]; let valTeks = ''; let valPoin = 0;
                 if (dataEditSementara && dataEditSementara[lbl]) {
-                    const opt = dataEditSementara[lbl];
-                    if (typeof opt === 'string') { valTeks = opt; valPoin = (lbl === document.getElementById('formKuisId').dataset.kunciLama) ? 1 : 0; } else { valTeks = opt.teks || ''; valPoin = opt.poin || 0; }
+                    const opt = dataEditSementara[lbl]; if (typeof opt === 'string') { valTeks = opt; valPoin = (lbl === document.getElementById('formKuisId').dataset.kunciLama) ? 1 : 0; } else { valTeks = opt.teks || ''; valPoin = opt.poin || 0; }
                 } else if (!dataEditSementara) {
                     if(jumlah === 3 && i===0) { valTeks="Benar"; valPoin=1; } else if(jumlah === 3 && i===1) { valTeks="Salah"; valPoin=0; } else if(jumlah === 3 && i===2) { valTeks="Tidak Tahu"; valPoin=0; }
                 }
-                wadah.innerHTML += `
-                    <div class="grid grid-cols-12 gap-2 items-center group">
-                        <div class="col-span-1 flex justify-center"><div class="w-7 h-7 shrink-0 bg-slate-200 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white font-black text-xs rounded border border-slate-300 flex items-center justify-center transition-colors shadow-inner">${lbl}</div></div>
-                        <div class="col-span-8"><input type="text" id="inputTeks_${lbl}" value="${valTeks}" placeholder="Teks jawaban opsi ${lbl}..." class="w-full p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white transition"></div>
-                        <div class="col-span-3"><input type="number" id="inputPoin_${lbl}" value="${valPoin}" class="w-full p-2 border border-slate-300 rounded-lg text-sm font-black text-center outline-none focus:ring-2 focus:ring-emerald-500 bg-emerald-50 text-emerald-700 transition" placeholder="Poin"></div>
-                    </div>`;
+                wadah.innerHTML += `<div class="grid grid-cols-12 gap-2 items-center group"><div class="col-span-1 flex justify-center"><div class="w-7 h-7 shrink-0 bg-slate-200 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white font-black text-xs rounded border border-slate-300 flex items-center justify-center transition-colors shadow-inner">${lbl}</div></div><div class="col-span-8"><input type="text" id="inputTeks_${lbl}" value="${valTeks}" placeholder="Teks jawaban opsi ${lbl}..." class="w-full p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white transition"></div><div class="col-span-3"><input type="number" id="inputPoin_${lbl}" value="${valPoin}" class="w-full p-2 border border-slate-300 rounded-lg text-sm font-black text-center outline-none focus:ring-2 focus:ring-emerald-500 bg-emerald-50 text-emerald-700 transition" placeholder="Poin"></div></div>`;
             }
         }
 
@@ -853,8 +686,7 @@
             for (let i = 0; i < jumlah; i++) {
                 const lbl = LABELS[i]; const teksInput = document.getElementById(`inputTeks_${lbl}`).value.trim(); const poinInput = parseInt(document.getElementById(`inputPoin_${lbl}`).value) || 0;
                 if(!teksInput) return alert(`Teks pada Opsi ${lbl} tidak boleh kosong!`);
-                opsiJawabanJson[lbl] = { teks: teksInput, poin: poinInput };
-                if (poinInput > poinMaksimal) { poinMaksimal = poinInput; labelKunciOtomatis = lbl; }
+                opsiJawabanJson[lbl] = { teks: teksInput, poin: poinInput }; if (poinInput > poinMaksimal) { poinMaksimal = poinInput; labelKunciOtomatis = lbl; }
             }
             draftKuisArray.push({ jenis_kuis: 'Kuesioner Berbobot', pertanyaan: pertanyaan, opsi_jawaban: opsiJawabanJson, jawaban_benar: labelKunciOtomatis, poin_reward: poinMaksimal });
             renderDraftList(); document.getElementById('formKuisPertanyaan').value = ''; document.getElementById('formKuisPertanyaan').focus();
@@ -864,15 +696,7 @@
             const list = document.getElementById('draftList'); document.getElementById('draftCount').innerText = draftKuisArray.length;
             if (draftKuisArray.length === 0) { document.getElementById('draftEmptyState').classList.remove('hidden'); list.innerHTML = ''; return; }
             document.getElementById('draftEmptyState').classList.add('hidden'); let html = '';
-            draftKuisArray.forEach((item, index) => {
-                html += `
-                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group">
-                        <button onclick="hapusDariDraft(${index})" class="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition"><i class="fa-solid fa-circle-xmark"></i></button>
-                        <p class="text-xs font-bold text-slate-400 mb-1">Soal ${index + 1}</p>
-                        <p class="text-sm font-bold text-slate-800 line-clamp-2 mb-2 leading-tight">${item.pertanyaan}</p>
-                        <p class="text-[10px] text-emerald-600 font-bold bg-emerald-50 inline-block px-1.5 py-0.5 rounded">Skor Maksimal: ${item.poin_reward} XP</p>
-                    </div>`;
-            });
+            draftKuisArray.forEach((item, index) => { html += `<div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group"><button onclick="hapusDariDraft(${index})" class="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition"><i class="fa-solid fa-circle-xmark"></i></button><p class="text-xs font-bold text-slate-400 mb-1">Soal ${index + 1}</p><p class="text-sm font-bold text-slate-800 line-clamp-2 mb-2 leading-tight">${item.pertanyaan}</p><p class="text-[10px] text-emerald-600 font-bold bg-emerald-50 inline-block px-1.5 py-0.5 rounded">Skor Maksimal: ${item.poin_reward} XP</p></div>`; });
             list.innerHTML = html; list.scrollTop = list.scrollHeight;
         }
 
@@ -880,45 +704,63 @@
         function kosongkanDraft() { draftKuisArray = []; renderDraftList(); document.getElementById('draftEmptyState').classList.remove('hidden'); }
 
         async function simpanKuisKeDatabase(btn) {
-            const idBuku = document.getElementById('formKuisBuku').value;
-            if (!idBuku) return alert("Pilih Induk Konten (Modul) di sebelah kiri terlebih dahulu!");
-
             if (isEditMode) {
-                const idKuis = document.getElementById('formKuisId').value; const pertanyaan = document.getElementById('formKuisPertanyaan').value.trim(); const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
+                const idKuis = document.getElementById('formKuisId').value; const idBuku = document.getElementById('formKuisId').dataset.idBukuAsli;
+                const pertanyaan = document.getElementById('formKuisPertanyaan').value.trim(); const jumlah = parseInt(document.getElementById('formKuisJumlahOpsi').value);
                 if (!pertanyaan) return alert("Pertanyaan kosong!");
                 const opsiJawabanJson = {}; let poinMaksimal = -1; let labelKunciOtomatis = 'A';
                 for (let i = 0; i < jumlah; i++) {
                     const lbl = LABELS[i]; const teksInput = document.getElementById(`inputTeks_${lbl}`).value.trim(); const poinInput = parseInt(document.getElementById(`inputPoin_${lbl}`).value) || 0;
                     if(!teksInput) return alert(`Opsi ${lbl} kosong!`);
-                    opsiJawabanJson[lbl] = { teks: teksInput, poin: poinInput };
-                    if (poinInput > poinMaksimal) { poinMaksimal = poinInput; labelKunciOtomatis = lbl; }
+                    opsiJawabanJson[lbl] = { teks: teksInput, poin: poinInput }; if (poinInput > poinMaksimal) { poinMaksimal = poinInput; labelKunciOtomatis = lbl; }
                 }
                 btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Update...`;
-                try {
-                    await supabaseClient.from('kuis').update({ id_buku: idBuku, pertanyaan, opsi_jawaban: opsiJawabanJson, jawaban_benar: labelKunciOtomatis, poin_reward: poinMaksimal }).eq('id', idKuis);
-                    tutupModal('modalTambahKuis'); fetchDaftarKuis();
-                } catch(e) {} finally { btn.disabled = false; btn.innerHTML = "Selesai"; }
+                try { await supabaseClient.from('kuis').update({ id_buku: idBuku, pertanyaan, opsi_jawaban: opsiJawabanJson, jawaban_benar: labelKunciOtomatis, poin_reward: poinMaksimal }).eq('id', idKuis); tutupModal('modalTambahKuis'); fetchDaftarKuis(); } catch(e) {} finally { btn.disabled = false; btn.innerHTML = "Selesai"; }
                 return;
             }
 
+            // MODE MULTI-SELECT (ANTREAN)
+            const checkedBoxes = Array.from(document.querySelectorAll('.cb-buku:checked'));
+            if(checkedBoxes.length === 0) return alert("Pilih minimal 1 modul di daftar centang atas!");
+            
             const cekTeksSisa = document.getElementById('formKuisPertanyaan').value.trim();
-            if (cekTeksSisa !== "") { if(confirm("Ada soal belum dimasukkan ke antrean. Masukkan secara otomatis?")) { tambahKeDraft(); } }
+            if (cekTeksSisa !== "") { if(confirm("Ada soal belum masuk antrean. Masukkan otomatis?")) { tambahKeDraft(); } }
             if(draftKuisArray.length === 0) return alert("Antrean masih kosong!");
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan ${draftKuisArray.length} Soal...`;
+            
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
 
             try {
-                const payloadFinal = draftKuisArray.map(soal => { return { ...soal, id_buku: idBuku }; });
+                const payloadFinal = [];
+                // Looping Lintas Modul: Gandakan setiap soal ke setiap modul yang dicentang
+                checkedBoxes.forEach(cb => {
+                    const idModulTujuan = cb.value;
+                    draftKuisArray.forEach(soal => {
+                        payloadFinal.push({ ...soal, id_buku: idModulTujuan });
+                    });
+                });
+
                 const { error } = await supabaseClient.from('kuis').insert(payloadFinal);
                 if(error) throw error;
-                tutupModal('modalTambahKuis'); fetchDaftarKuis(); kosongkanDraft(); alert(`Berhasil menyimpan ${payloadFinal.length} soal sekaligus!`);
+                
+                // Uncheck semua box
+                checkedBoxes.forEach(cb => cb.checked = false);
+                
+                tutupModal('modalTambahKuis'); fetchDaftarKuis(); kosongkanDraft(); alert(`Berhasil mendistribusikan ${draftKuisArray.length} soal ke ${checkedBoxes.length} modul!`);
             } catch(e) { alert("Gagal menyimpan ke database. Coba lagi."); } 
-            finally { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Semua ke Database`; }
+            finally { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Terapkan Semua Soal ke Modul Terpilih`; }
         }
 
         function bukaModalEditKuis(qStr) {
             const q = JSON.parse(decodeURIComponent(qStr));
             isEditMode = true; document.getElementById('editModeNotice').classList.remove('hidden'); document.getElementById('panelAntrean').classList.add('hidden'); document.getElementById('btnTambahAntrean').classList.add('hidden'); document.getElementById('btnSimpanFinal').innerHTML = `<i class="fa-solid fa-check"></i> Perbarui Data Soal`;
-            document.getElementById('formKuisId').value = q.id; document.getElementById('formKuisId').dataset.kunciLama = q.jawaban_benar; document.getElementById('formKuisBuku').value = q.id_buku; document.getElementById('formKuisPertanyaan').value = q.pertanyaan;
+            
+            // Hide Multiple Checkbox Container for Edit Mode
+            document.getElementById('wadahCheckboxModul').parentElement.classList.add('hidden');
+
+            document.getElementById('formKuisId').value = q.id; document.getElementById('formKuisId').dataset.kunciLama = q.jawaban_benar; 
+            document.getElementById('formKuisId').dataset.idBukuAsli = q.id_buku; // Simpan cache
+            document.getElementById('formKuisPertanyaan').value = q.pertanyaan;
+            
             const countOpsi = q.opsi_jawaban ? Object.keys(q.opsi_jawaban).length : 3; document.getElementById('formKuisJumlahOpsi').value = countOpsi.toString();
             dataEditSementara = q.opsi_jawaban; renderDynamicOptions(); document.getElementById('modalTambahKuis').classList.remove('hidden');
         }
@@ -938,22 +780,13 @@
                         });
                     }
                     const qString = encodeURIComponent(JSON.stringify(q));
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
-                            <td class="py-4 px-6 align-top"><div class="line-clamp-2 font-bold text-sm ${tipeLable}">${q.buku ? q.buku.judul : 'Modul Terhapus'}</div></td>
-                            <td class="py-4 px-6"><div class="text-slate-800 font-bold mb-2 text-base">${q.pertanyaan}</div><div class="flex flex-wrap">${badgeOpsi}</div></td>
-                            <td class="py-4 px-6 text-center align-top whitespace-nowrap"><button onclick="bukaModalEditKuis('${qString}')" class="text-indigo-500 bg-indigo-50 p-2 rounded hover:bg-indigo-500 hover:text-white transition mr-1 shadow-sm" title="Edit Soal"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="hapusKuis(${q.id})" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shadow-sm" title="Hapus Soal"><i class="fa-solid fa-trash"></i></button></td>
-                        </tr>`;
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-100 transition"><td class="py-4 px-6 align-top"><div class="line-clamp-2 font-bold text-sm ${tipeLable}">${q.buku ? q.buku.judul : 'Modul Terhapus'}</div></td><td class="py-4 px-6"><div class="text-slate-800 font-bold mb-2 text-base">${q.pertanyaan}</div><div class="flex flex-wrap">${badgeOpsi}</div></td><td class="py-4 px-6 text-center align-top whitespace-nowrap"><button onclick="bukaModalEditKuis('${qString}')" class="text-indigo-500 bg-indigo-50 p-2 rounded hover:bg-indigo-500 hover:text-white transition mr-1 shadow-sm" title="Edit Soal"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="hapusKuis(${q.id})" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shadow-sm" title="Hapus Soal"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 });
             } catch (err) { console.error(err); }
         }
 
         async function hapusKuis(id) { if(confirm("Hapus pertanyaan ini secara permanen?")) { await supabaseClient.from('kuis').delete().eq('id', id); fetchDaftarKuis(); } }
-
-        async function hapusSemuaDataPeserta() {
-            if(!confirm("PERINGATAN: Yakin menghapus seluruh riwayat Pre-Test, Post-Test, dan nilai peserta?")) return;
-            try { await supabaseClient.from('riwayat_kuis').delete().neq('id', 0); await supabaseClient.from('profiles').delete().neq('total_poin', -1); window.location.reload(); } catch(e){} 
-        }
+        async function hapusSemuaDataPeserta() { if(!confirm("PERINGATAN: Yakin menghapus seluruh riwayat Pre-Test, Post-Test, dan nilai peserta?")) return; try { await supabaseClient.from('riwayat_kuis').delete().neq('id', 0); await supabaseClient.from('profiles').delete().neq('total_poin', -1); window.location.reload(); } catch(e){} }
 
     </script>
 </body>
