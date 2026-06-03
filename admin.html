@@ -575,12 +575,22 @@
                 let dropdownIndividual = '';
 
                 data.forEach(buku => {
-                    const isKuis = buku.tipe_konten === 'Hanya Kuis'; const iconTipe = isKuis ? `<div class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-question"></i> Pre-Test</div>` : `<div class="bg-rose-100 text-rose-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i> Modul/Post</div>`;
+                    // LOGIKA LABEL BARU (Lebih Cerdas Mengecek Judul)
+                    let iconTipe = '';
+                    if (buku.judul.toLowerCase().includes('post-test')) {
+                        iconTipe = `<div class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-check"></i> Post-Test</div>`;
+                    } else if (buku.judul.toLowerCase().includes('pre-test') || buku.tipe_konten === 'Hanya Kuis') {
+                        iconTipe = `<div class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-question"></i> Pre-Test</div>`;
+                    } else {
+                        iconTipe = `<div class="bg-rose-100 text-rose-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i> Modul PDF</div>`;
+                    }
+
                     const bukuString = encodeURIComponent(JSON.stringify(buku)); const isAktif = buku.is_active === true;
                     const toggleHtml = `<label class="flex items-center justify-center cursor-pointer"><div class="relative"><input type="checkbox" class="sr-only toggle-checkbox" ${isAktif ? 'checked' : ''} onchange="toggleStatusModul('${buku.id}', ${isAktif})"><div class="block bg-slate-200 w-10 h-6 rounded-full transition toggle-label"></div><div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${isAktif ? 'translate-x-4' : ''}"></div></div><span class="ml-2 text-xs font-bold ${isAktif ? 'text-emerald-600' : 'text-slate-400'}">${isAktif ? 'Publish' : 'Draft'}</span></label>`;
                     tabel.innerHTML += `<tr class="hover:bg-slate-50 transition-colors border-b border-slate-100"><td class="py-3 px-6">${iconTipe}</td><td class="py-3 px-6 font-medium text-slate-800">${buku.judul}</td><td class="py-3 px-6 text-center">${toggleHtml}</td><td class="py-3 px-6 text-center whitespace-nowrap"><button onclick="bukaModalEditModul('${bukuString}')" class="text-blue-500 bg-blue-50 p-2 rounded hover:bg-blue-500 hover:text-white transition mr-1 shadow-sm"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="hapusModul('${buku.id}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                     
-                    dropdownIndividual += `<option value="${buku.id}">${isKuis ? '[PRE]' : '[POST]'} ${buku.judul}</option>`;
+                    const badgeDropdown = buku.judul.toLowerCase().includes('pre-test') ? '[PRE]' : (buku.judul.toLowerCase().includes('post-test') ? '[POST]' : '[MODUL]');
+                    dropdownIndividual += `<option value="${buku.id}">${badgeDropdown} ${buku.judul}</option>`;
 
                     const isPre = buku.judul.toLowerCase().startsWith('pre-test:');
                     const isPost = buku.judul.toLowerCase().startsWith('post-test:');
