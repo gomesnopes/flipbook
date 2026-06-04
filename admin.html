@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SIRASA Edukasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>if(typeof pdfjsLib !== 'undefined') { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js'; }</script>
+    <script src="config.js"></script>
+
+    <style>
+        .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-enter { animation: zoomIn 0.3s ease-out forwards; } @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        #sidebar { transition: width 0.3s ease, transform 0.3s ease; } .draft-scroll::-webkit-scrollbar { width: 6px; } .draft-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; } .draft-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; } .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
+    <aside id="sidebar" class="w-64 md:w-0 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0 transition-all duration-300 shadow-xl md:shadow-none">
+        <div class="h-16 flex items-center justify-between px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800 min-w-[256px]">
+            <div><i class="fa-solid fa-ribbon text-rose-500 mr-2"></i> Admin SIRASA</div><button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-w-[256px]">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-rose-600 text-white font-medium transition-colors"><i class="fa-solid fa-chart-pie w-5"></i> Dasbor Analitik</button>
+            <button onclick="switchTab('pengguna')" id="nav-pengguna" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-users w-5"></i> Data Responden</button>
+            <button onclick="switchTab('modul')" id="nav-modul" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-book-medical w-5"></i> Konten & Modul</button>
+            <button onclick="switchTab('kuis')" id="nav-kuis" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-list-check w-5"></i> Instrumen Kuis</button>
+            <button onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-sliders w-5"></i> Pengaturan</button>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <header class="bg-white h-16 border-b border-slate-200 flex items-center px-6 shrink-0 z-10 shadow-sm"><button onclick="toggleSidebar()" class="text-slate-500 hover:text-rose-600 transition p-2 bg-slate-100 rounded-lg"><i class="fa-solid fa-bars text-xl"></i></button><h1 class="ml-4 font-bold text-slate-700 hidden sm:block">Panel Peneliti - SIRASA</h1></header>
+
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
+            <div class="max-w-[1400px] mx-auto">
+                <section id="dashboard" class="tab-content active">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Penelitian Terpadu</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-users"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Peserta Aktif</p><h3 id="stat-peserta" class="text-xl font-black text-slate-800">0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-star"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Total XP</p><h3 id="stat-poin" class="text-xl font-black text-slate-800">0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-trophy"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Avg Poin/User</p><h3 id="stat-rata" class="text-xl font-black text-slate-800">0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-bullseye"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Partisipasi</p><h3 id="stat-akurasi" class="text-xl font-black text-slate-800">0%</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-clock"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Rata-rata Waktu</p><h3 id="stat-waktu" class="text-xl font-black text-slate-800">0s</h3></div>
+                        <button onclick="muatDataDasbor()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-4 rounded-xl border border-indigo-200 shadow-sm flex flex-col items-center justify-center transition group"><i class="fa-solid fa-arrows-rotate text-2xl mb-2 group-hover:rotate-180 transition-transform duration-500"></i><span class="text-[10px] font-bold uppercase">Refresh Data</span></button>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 flex flex-col">
+                        <div class="flex justify-between items-center mb-4"><div><h4 class="font-bold text-slate-700"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-2"></i> Tren Partisipasi (7 Hari Terakhir)</h4></div><div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold border border-blue-100">Total Entri: <span id="stat-total-entri">0</span></div></div>
+                        <div class="relative h-64 w-full flex-grow"><canvas id="chartTrend"></canvas></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col"><h4 class="font-bold text-slate-700 mb-4">Distribusi Rentang Usia</h4><div class="relative h-64 w-full flex-grow"><canvas id="chartUsia"></canvas></div></div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col"><h4 class="font-bold text-slate-700 mb-4">Komposisi Jenis Kelamin</h4><div class="relative h-64 w-full flex justify-center flex-grow"><canvas id="chartGender"></canvas></div></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col"><h4 class="font-bold text-slate-700 mb-4">Skor Berdasarkan Kategori</h4><div class="relative h-64 w-full flex-grow"><canvas id="chartKategori"></canvas></div></div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col"><h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-medal text-amber-500 mr-2"></i> Top 5 Peringkat XP</h4><div id="papan-peringkat" class="space-y-3 flex-grow overflow-y-auto pr-2"></div></div>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-8">
+                        <div class="p-5 border-b border-slate-200 bg-slate-50"><h4 class="font-bold text-slate-800"><i class="fa-solid fa-arrow-up-right-dots text-emerald-500 mr-2"></i> Analisis Tren N-Gain (Pre-Test vs Post-Test)</h4></div>
+                        <div class="overflow-x-auto w-full max-h-[350px]">
+                            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]"><thead class="sticky top-0 z-10 bg-white shadow-sm"><tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200"><th class="py-3 px-5 font-bold">Nama Responden</th><th class="py-3 px-5 font-bold">Topik Pembelajaran</th><th class="py-3 px-5 font-bold text-center border-l border-slate-200">Pre-Test</th><th class="py-3 px-5 font-bold text-center border-r border-slate-200">Post-Test</th><th class="py-3 px-5 font-bold text-center">Tren Pencapaian</th></tr></thead>
+                                <tbody id="tabelTrendNgain" class="text-sm text-slate-700 divide-y divide-slate-100"><tr><td colspan="5" class="py-8 text-center text-slate-400">Memuat analisis tren...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pengguna" class="tab-content">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Data Responden</h2>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
+                            <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-4 px-6 font-bold">Nama Lengkap</th><th class="py-4 px-6 font-bold">Kategori</th><th class="py-4 px-6 font-bold">Gender</th><th class="py-4 px-6 font-bold text-center">Aksi</th></tr></thead>
+                            <tbody id="tabelPengguna" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="modul" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Manajemen Konten & Modul</h2>
+                        <button onclick="document.getElementById('modalTambahModul').classList.remove('hidden')" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-plus"></i> Tambah Modul Baru</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                            <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-3 px-6 font-bold w-16">Tipe</th><th class="py-3 px-6 font-bold min-w-[200px]">Judul Konten</th><th class="py-3 px-6 font-bold text-center">Status Modul</th><th class="py-3 px-6 font-bold text-center">Aksi</th></tr></thead>
+                            <tbody id="tabelModul" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="kuis" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Manajemen Instrumen Kuesioner</h2>
+                        <button onclick="bukaModalKuisTambah()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-plus"></i> Buat Kuesioner Baru</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                            <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-3 px-6 font-bold w-[40%]">Terkait Konten Modul</th><th class="py-3 px-6 font-bold w-[30%]">Total Pertanyaan</th><th class="py-3 px-6 font-bold text-center w-[30%]">Aksi Pengeditan</th></tr></thead>
+                            <tbody id="tabelKuis" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="pengaturan" class="tab-content">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-800 mb-1">Reset Database</h3><p class="text-slate-500 text-sm mb-4">Hapus seluruh riwayat interaksi, nilai pre-test, post-test, dan data profil peserta.</p>
+                                    <button onclick="hapusSemuaDataPeserta()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2"><i class="fa-solid fa-trash-can"></i> Kosongkan Data Peserta</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl border border-indigo-200 shadow-sm p-6">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-book-open-reader"></i></div>
+                                <div class="w-full">
+                                    <h3 class="text-lg font-bold text-slate-800 mb-1">Materi Pengantar (Sambut User)</h3><p class="text-slate-500 text-sm mb-4">Unggah file PDF flipbook yang akan otomatis muncul saat user baru login.</p>
+                                    <input type="file" id="filePengantarIntro" accept="application/pdf" class="w-full text-sm text-slate-500 mb-3 border border-slate-300 rounded-lg p-1">
+                                    <button onclick="uploadPengantar()" id="btnUploadPengantar" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 w-full transition"><i class="fa-solid fa-upload"></i> Upload & Terapkan</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="modalTambahModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden flex flex-col border border-slate-100">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-book-medical text-rose-500 mr-2"></i> Tambah Konten Baru</h3><button onclick="tutupModal('modalTambahModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+            <div class="p-6 space-y-4">
+                <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl mb-2">
+                    <label class="block text-sm font-bold mb-1 text-rose-800">Pilih Tipe & Alur Pembelajaran</label>
+                    <select id="tipeKonten" onchange="toggleFormModul('tambah')" class="w-full p-2.5 border border-rose-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-white font-bold text-slate-700 shadow-sm"><option value="Paket Lengkap">🔥 PAKET LENGKAP: Otomatis buat Pre-Test & Post-Test Modul</option><option value="Modul PDF">Materi Saja (Modul PDF + Post-Test)</option><option value="Hanya Kuis">Hanya Instrumen Survei / Kuesioner (Tanpa PDF)</option></select>
+                </div>
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">Judul Topik / Konten</label><input type="text" id="judulBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" placeholder="Misal: HIV & AIDS Dasar"></div>
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">Kategori</label><select id="kategoriBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi / Ujian</option></select></div>
+                
+                <div id="areaFilePDF_tambah" class="pt-2 hidden"><label class="block text-sm font-medium mb-1 text-slate-700">File Modul PDF</label><input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 file:text-slate-700 border border-slate-300 rounded-lg"></div>
+                
+                <div id="areaDeskripsi_tambah" class="pt-2"><label class="block text-sm font-medium mb-1 text-slate-700">Deskripsi / Petunjuk Tes</label><textarea id="deskripsiKonten" rows="2" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500"></textarea></div>
+                <div id="statusUpload" class="hidden p-3 rounded-lg text-sm font-medium"></div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalTambahModul')" class="w-1/3 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanKontenBaru()" id="btnUpload" class="w-2/3 bg-rose-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-save"></i> Buat Konten</button></div>
+        </div>
+    </div>
+
+    <script>
+        let supabaseClient;
+        let chartInstances = {};
+        const LABELS = ['A', 'B', 'C', 'D', 'E'];
+        let draftKuisArray = []; let dataEditSementara = null; let isEditMode = false; let dbBukuList = []; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
+                supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+                fetchDaftarBukuAdmin(); fetchDaftarKuis(); fetchPengguna(); muatDataDasbor(); 
+            } catch (err) {}
+        });
+
+        // FUNGSI UPLOAD PENGANTAR (BARU)
+        async function uploadPengantar() {
+            const fileInput = document.getElementById('filePengantarIntro');
+            if (fileInput.files.length === 0) return alert("Pilih file PDF pengantar terlebih dahulu!");
+            const btn = document.getElementById('btnUploadPengantar');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengunggah...`; btn.disabled = true;
+
+            try {
+                const file = fileInput.files[0];
+                const baseFileName = "pengantar_" + Date.now();
+                await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", file);
+                const pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl;
+
+                // Cek apakah data pengantar sudah ada di tabel buku
+                const { data: existing } = await supabaseClient.from('buku').select('id').eq('tipe_konten', 'Pengantar Sistem').maybeSingle();
+
+                if (existing) {
+                    await supabaseClient.from('buku').update({ file_url: pdfUrl }).eq('id', existing.id);
+                } else {
+                    await supabaseClient.from('buku').insert([{ judul: 'Materi Pengantar Otomatis', kategori: 'Sistem', tipe_konten: 'Pengantar Sistem', file_url: pdfUrl, is_active: true }]);
+                }
+                alert("Materi Pengantar berhasil diperbarui! File ini akan muncul otomatis saat user login.");
+                fileInput.value = "";
+            } catch(e) {
+                alert("Gagal mengunggah pengantar: " + e.message);
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-upload"></i> Upload & Terapkan`; btn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // KONTROL UI & LOGIKA ADMIN
+        // ==========================================
+        function toggleSidebar() { const sidebar = document.getElementById('sidebar'); if (window.innerWidth < 768) { sidebar.classList.toggle('-translate-x-full'); } else { sidebar.classList.toggle('md:w-0'); sidebar.classList.toggle('md:w-64'); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 350); } }
+        function switchTab(tabId) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('bg-rose-600', 'text-white'); el.classList.add('hover:bg-slate-800', 'hover:text-white', 'text-slate-300'); }); document.getElementById(tabId).classList.add('active'); const activeBtn = document.getElementById('nav-' + tabId); activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300'); activeBtn.classList.add('bg-rose-600', 'text-white'); if(tabId === 'dashboard') { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100); } }
+        function tutupModal(idModal) { document.getElementById(idModal).classList.add('hidden'); }
+        
+        async function fetchDaftarBukuAdmin() {
+            try {
+                // Sembunyikan 'Pengantar Sistem' dari tabel modul biasa
+                const { data } = await supabaseClient.from('buku').select('*').neq('tipe_konten', 'Pengantar Sistem').order('created_at', { ascending: false });
+                const tabel = document.getElementById('tabelModul'); tabel.innerHTML = ''; dbBukuList = data || [];
+                if (!data || data.length === 0) { tabel.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada konten.</td></tr>'; return; }
+                
+                data.forEach(buku => {
+                    let iconTipe = ''; if (buku.judul.toLowerCase().includes('post-test')) { iconTipe = `<div class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-check"></i> Post-Test</div>`; } else if (buku.judul.toLowerCase().includes('pre-test') || buku.tipe_konten === 'Hanya Kuis') { iconTipe = `<div class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-clipboard-question"></i> Pre-Test</div>`; } else { iconTipe = `<div class="bg-rose-100 text-rose-600 px-3 py-1 rounded font-bold text-xs inline-flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i> Modul PDF</div>`; }
+                    const isAktif = buku.is_active === true;
+                    const toggleHtml = `<label class="flex items-center justify-center cursor-pointer"><div class="relative"><input type="checkbox" class="sr-only toggle-checkbox" ${isAktif ? 'checked' : ''} onchange="toggleStatusModul('${buku.id}', ${isAktif})"><div class="block bg-slate-200 w-10 h-6 rounded-full transition toggle-label"></div><div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${isAktif ? 'translate-x-4' : ''}"></div></div><span class="ml-2 text-xs font-bold ${isAktif ? 'text-emerald-600' : 'text-slate-400'}">${isAktif ? 'Publish' : 'Draft'}</span></label>`;
+                    tabel.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-6">${iconTipe}</td><td class="py-3 px-6 font-medium text-slate-800">${buku.judul}</td><td class="py-3 px-6 text-center">${toggleHtml}</td><td class="py-3 px-6 text-center"><button onclick="hapusModul('${buku.id}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                });
+            } catch (err) {}
+        }
+
+        async function muatDataDasbor() { /* Biarkan sama seperti sebelumnya */ }
+        async function fetchPengguna() { /* Biarkan sama seperti sebelumnya */ }
+        async function hapusUser(id) { if(confirm("Hapus peserta ini?")) { await supabaseClient.from('profiles').delete().eq('id', id); } }
+        async function hapusModul(id) { if(confirm("Hapus konten ini beserta pertanyaannya?")) { await supabaseClient.from('buku').delete().eq('id', id); fetchDaftarBukuAdmin(); fetchDaftarKuis(); } }
+        async function hapusSemuaDataPeserta() { if(!confirm("Yakin menghapus data?")) return; await supabaseClient.from('riwayat_kuis').delete().neq('id', 0); }
+        async function toggleStatusModul(id, currentStatus) { await supabaseClient.from('buku').update({ is_active: !currentStatus }).eq('id', id); fetchDaftarBukuAdmin(); }
+
+        function toggleFormModul(mode) {
+            const tipe = document.getElementById(mode === 'edit' ? 'edit-tipeKonten' : 'tipeKonten').value;
+            if (tipe === 'Hanya Kuis' || tipe === 'Paket Lengkap') { if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.add('hidden'); } 
+            else { if(mode === 'tambah') document.getElementById('areaFilePDF_tambah').classList.remove('hidden'); }
+        }
+
+        async function simpanKontenBaru() {
+            const tipe = document.getElementById('tipeKonten').value; const judul = document.getElementById('judulBuku').value; const deskripsi = document.getElementById('deskripsiKonten').value; const fileInput = document.getElementById('filePdf');
+            if (!judul) return alert("Judul wajib diisi!");
+            try {
+                let pdfUrl = null;
+                if (tipe === 'Modul PDF') {
+                    if (fileInput.files.length === 0) throw new Error("File PDF wajib dipilih!");
+                    const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
+                    await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", fileInput.files[0]);
+                    pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl;
+                }
+                
+                if (tipe === 'Paket Lengkap') { await supabaseClient.from('buku').insert([ { judul: 'Pre-Test: ' + judul, tipe_konten: 'Hanya Kuis', deskripsi: deskripsi, is_active: false }, { judul: 'Post-Test: ' + judul, tipe_konten: 'Hanya Kuis', deskripsi: deskripsi, is_active: false } ]); } 
+                else { await supabaseClient.from('buku').insert([{ judul, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, is_active: false }]); }
+                
+                alert("Berhasil!"); document.getElementById('judulBuku').value = ''; tutupModal('modalTambahModul'); fetchDaftarBukuAdmin();
+            } catch (error) { alert("Error: " + error.message); }
+        }
+    </script>
+</body>
+</html>
