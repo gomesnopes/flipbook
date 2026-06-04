@@ -24,6 +24,7 @@
 </head>
 <body class="bg-white text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
+    <!-- Navbar -->
     <nav class="glass-nav shadow-sm border-b border-slate-200 px-4 md:px-8 py-3 flex justify-between items-center sticky top-0 z-40 transition-all">
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-3 cursor-pointer group" onclick="window.location.reload()">
@@ -31,6 +32,7 @@
                 <h1 class="text-2xl font-black text-slate-800 tracking-tight">SIRASA</h1>
             </div>
             <div class="hidden md:flex items-center gap-4 pl-6 border-l border-slate-300">
+                <!-- Anda bisa mengganti URL src ini dengan Logo Kampus -->
                 <i class="fa-solid fa-graduation-cap text-slate-400 text-2xl" title="Logo Kampus"></i>
                 <i class="fa-solid fa-building-columns text-slate-400 text-2xl" title="Logo Instansi"></i>
             </div>
@@ -40,6 +42,7 @@
         </div>
     </nav>
 
+    <!-- Guest Hero Section -->
     <div class="relative bg-white overflow-hidden border-b border-slate-200">
         <div class="absolute inset-0 z-0 opacity-10" style="background-image: radial-gradient(#cbd5e1 2px, transparent 2px); background-size: 30px 30px;"></div>
         <div class="absolute top-10 right-20 w-72 h-72 bg-rose-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -69,6 +72,7 @@
         </div>
     </div>
 
+    <!-- FITUR HIGHLIGHT -->
     <section class="max-w-[1100px] mx-auto px-6 py-20 md:py-28">
         <h2 class="text-3xl md:text-5xl font-black text-center text-indigo-800 mb-16 tracking-tight">Mengapa Belajar di <span class="text-rose-600">SIRASA?</span></h2>
         
@@ -92,10 +96,12 @@
         </div>
     </section>
 
+    <!-- Footer -->
     <footer class="bg-slate-50 border-t border-slate-200 py-10 text-center mt-auto">
         <p class="text-slate-500 text-sm font-medium">© 2026 SIRASA. Dibangun untuk mengedukasi generasi peduli kesehatan.</p>
     </footer>
 
+    <!-- MODAL AUTENTIKASI -->
     <div id="modalAuth" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col relative border border-slate-100/50">
             <button onclick="tutupModalAuth()" class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition z-20"><i class="fa-solid fa-xmark"></i></button>
@@ -109,18 +115,21 @@
                     <button onclick="switchTabAuth('daftar')" id="tab-daftar" class="flex-1 pb-2 text-sm text-center transition border-b-2 border-transparent text-slate-500 font-medium hover:text-slate-700">Daftar Baru</button>
                 </div>
                 
+                <!-- Form Login -->
                 <div id="form-login" class="space-y-4">
                     <input type="email" id="login-email" class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl outline-none" placeholder="Email">
                     <input type="password" id="login-password" class="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl outline-none" placeholder="Password">
                     <button onclick="prosesLogin()" id="btn-login" class="w-full bg-rose-600 text-white font-bold py-3.5 rounded-xl shadow-md transition mt-2 text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-right-to-bracket"></i> Masuk ke Akun</button>
                 </div>
                 
+                <!-- Form Daftar -->
                 <div id="form-daftar" class="hidden space-y-3">
                     <input type="text" id="reg-nama" class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl outline-none" placeholder="Nama Lengkap">
                     <div class="grid grid-cols-2 gap-2">
                         <select id="reg-gender" class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl outline-none"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select>
                         <select id="reg-kategori" class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl outline-none"><option value="Pelajar">Pelajar</option><option value="Mahasiswa">Mahasiswa</option><option value="Umum">Umum</option></select>
                     </div>
+                    <!-- Pilihan Kota Baru -->
                     <select id="reg-kota" class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl outline-none font-bold text-slate-700">
                         <option value="">-- Pilih Asal Daerah/Kota --</option>
                         <option value="Ternate">Ternate</option>
@@ -135,29 +144,34 @@
         </div>
     </div>
 
+    <!-- MODAL INTRO SLIDE (PENGGANTI PDF - DATA DITARIK DARI ADMIN) -->
     <div id="modalIntroSystem" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[200] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden relative modal-enter flex flex-col">
             
             <div class="p-8 md:p-12 relative overflow-hidden h-[450px] md:h-[400px]">
+                <!-- Slide 1 -->
                 <div class="intro-slide absolute inset-0 p-8 md:p-12 flex flex-col items-center justify-center text-center slide-content opacity-100 z-10 bg-white">
                     <div class="w-24 h-24 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner"><i class="fa-solid fa-hand-holding-heart"></i></div>
-                    <h3 class="text-3xl font-black text-slate-800 mb-3">Selamat Datang di SIRASA!</h3>
-                    <p class="text-slate-500 text-base md:text-lg leading-relaxed max-w-md">Platform interaktif untuk memperkaya wawasan kesehatan reproduksimu secara menyenangkan dan menantang.</p>
+                    <h3 id="teks-slide1-judul" class="text-3xl font-black text-slate-800 mb-3">Memuat...</h3>
+                    <p id="teks-slide1-desc" class="text-slate-500 text-base md:text-lg leading-relaxed max-w-md">Harap tunggu sebentar.</p>
                 </div>
                 
+                <!-- Slide 2 -->
                 <div class="intro-slide absolute inset-0 p-8 md:p-12 flex flex-col items-center justify-center text-center slide-content opacity-0 translate-x-full z-0 bg-white hidden">
                     <div class="w-24 h-24 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner"><i class="fa-solid fa-book-open-reader"></i></div>
-                    <h3 class="text-3xl font-black text-slate-800 mb-3">Alur Belajar Pintar</h3>
-                    <p class="text-slate-500 text-base md:text-lg leading-relaxed max-w-md">Setiap topik dirancang dengan alur: <strong class="text-indigo-600">Pre-Test ➔ Baca Modul 3D ➔ Post-Test</strong>. Ini akan membuktikan seberapa hebat peningkatan wawasanmu!</p>
+                    <h3 id="teks-slide2-judul" class="text-3xl font-black text-slate-800 mb-3">Memuat...</h3>
+                    <p id="teks-slide2-desc" class="text-slate-500 text-base md:text-lg leading-relaxed max-w-md">Harap tunggu sebentar.</p>
                 </div>
 
+                <!-- Slide 3 -->
                 <div class="intro-slide absolute inset-0 p-8 md:p-12 flex flex-col items-center justify-center text-center slide-content opacity-0 translate-x-full z-0 bg-white hidden">
                     <div class="w-24 h-24 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner"><i class="fa-solid fa-ranking-star"></i></div>
-                    <h3 class="text-3xl font-black text-slate-800 mb-3">Kumpulkan Poin (XP)</h3>
-                    <p class="text-slate-500 text-base md:text-lg leading-relaxed max-w-md">Jawab pertanyaan kuis dengan benar untuk mendapatkan XP. Jadilah <strong class="text-amber-500">Agen Peduli Top 5</strong> di papan peringkat global kami!</p>
+                    <h3 id="teks-slide3-judul" class="text-3xl font-black text-slate-800 mb-3">Memuat...</h3>
+                    <p id="teks-slide3-desc" class="text-slate-500 text-base md:text-lg leading-relaxed max-w-md">Harap tunggu sebentar.</p>
                 </div>
             </div>
 
+            <!-- Kontrol Slide Bawah -->
             <div class="bg-slate-50 px-8 py-5 border-t border-slate-200 flex justify-between items-center z-20">
                 <div class="flex gap-2">
                     <div class="intro-dot w-2.5 h-2.5 rounded-full bg-rose-600 transition-colors"></div>
@@ -181,70 +195,66 @@
         async function cekStatusLogin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) { 
-                // JIKA LOGIN BERHASIL: Cek apakah user sudah melihat intro di sesi ini
                 if (!sessionStorage.getItem('introSudahDilihat')) {
-                    // Munculkan Slide Intro HTML
-                    document.getElementById('modalIntroSystem').classList.remove('hidden');
-                    sessionStorage.setItem('introSudahDilihat', 'true');
+                    // Cek di Database apakah Pengaturan Slide Intro diaktifkan oleh Admin
+                    const { data: introData } = await supabaseClient.from('buku').select('is_active, deskripsi').eq('tipe_konten', 'Pengantar Sistem').maybeSingle();
+                    
+                    if(introData && introData.is_active) {
+                        try {
+                            const slideData = JSON.parse(introData.deskripsi);
+                            if(slideData && slideData.length === 3) {
+                                document.getElementById('teks-slide1-judul').innerText = slideData[0].judul;
+                                document.getElementById('teks-slide1-desc').innerText = slideData[0].desc;
+                                document.getElementById('teks-slide2-judul').innerText = slideData[1].judul;
+                                document.getElementById('teks-slide2-desc').innerText = slideData[1].desc;
+                                document.getElementById('teks-slide3-judul').innerText = slideData[2].judul;
+                                document.getElementById('teks-slide3-desc').innerText = slideData[2].desc;
+                            }
+                        } catch(e) {}
+                        
+                        document.getElementById('modalIntroSystem').classList.remove('hidden');
+                        sessionStorage.setItem('introSudahDilihat', 'true');
+                    } else {
+                        // Jika Slide dimatikan oleh admin (Toggle OFF), langsung ke dashboard
+                        window.location.href = 'dashboard.html';
+                    }
                 } else {
-                    // Jika sudah lihat, langsung lempar ke dashboard
                     window.location.href = 'dashboard.html';
                 }
             }
         }
 
-        // ==========================================
-        // LOGIKA SLIDE NATIVE JS (TANPA LOADING)
-        // ==========================================
-        let currentSlideIndex = 0;
-        const slides = document.querySelectorAll('.intro-slide');
-        const dots = document.querySelectorAll('.intro-dot');
+        // LOGIKA SLIDE NATIVE JS
+        let currentSlideIndex = 0; const slides = document.querySelectorAll('.intro-slide'); const dots = document.querySelectorAll('.intro-dot');
 
         function updateSlideUI() {
             slides.forEach((slide, index) => {
                 if (index === currentSlideIndex) {
-                    slide.classList.remove('hidden', 'opacity-0', 'translate-x-full', '-translate-x-full');
-                    slide.classList.add('opacity-100', 'z-10');
+                    slide.classList.remove('hidden', 'opacity-0', 'translate-x-full', '-translate-x-full'); slide.classList.add('opacity-100', 'z-10');
                     dots[index].classList.add('bg-rose-600'); dots[index].classList.remove('bg-slate-300');
                 } else {
-                    slide.classList.add('opacity-0', index < currentSlideIndex ? '-translate-x-full' : 'translate-x-full');
-                    slide.classList.remove('opacity-100', 'z-10');
-                    setTimeout(() => slide.classList.add('hidden'), 400); // Sembunyikan setelah animasi selesai
+                    slide.classList.add('opacity-0', index < currentSlideIndex ? '-translate-x-full' : 'translate-x-full'); slide.classList.remove('opacity-100', 'z-10');
+                    setTimeout(() => slide.classList.add('hidden'), 400); 
                     dots[index].classList.remove('bg-rose-600'); dots[index].classList.add('bg-slate-300');
                 }
             });
 
-            // Atur tombol
             if (currentSlideIndex === slides.length - 1) {
-                document.getElementById('btn-next-slide').classList.add('hidden');
-                document.getElementById('btn-skip-intro').classList.add('hidden');
-                document.getElementById('btn-start-app').classList.remove('hidden');
-                document.getElementById('btn-start-app').classList.add('flex');
+                document.getElementById('btn-next-slide').classList.add('hidden'); document.getElementById('btn-skip-intro').classList.add('hidden');
+                document.getElementById('btn-start-app').classList.remove('hidden'); document.getElementById('btn-start-app').classList.add('flex');
             } else {
-                document.getElementById('btn-next-slide').classList.remove('hidden');
-                document.getElementById('btn-skip-intro').classList.remove('hidden');
-                document.getElementById('btn-start-app').classList.add('hidden');
-                document.getElementById('btn-start-app').classList.remove('flex');
+                document.getElementById('btn-next-slide').classList.remove('hidden'); document.getElementById('btn-skip-intro').classList.remove('hidden');
+                document.getElementById('btn-start-app').classList.add('hidden'); document.getElementById('btn-start-app').classList.remove('flex');
             }
         }
 
-        function nextSlide() {
-            if (currentSlideIndex < slides.length - 1) {
-                currentSlideIndex++;
-                updateSlideUI();
-            }
-        }
-
-        function tutupModalIntro() {
-            document.getElementById('modalIntroSystem').classList.add('hidden');
-            window.location.href = 'dashboard.html'; // Pindah ke ruang belajar setelah intro ditutup!
-        }
+        function nextSlide() { if (currentSlideIndex < slides.length - 1) { currentSlideIndex++; updateSlideUI(); } }
+        function tutupModalIntro() { document.getElementById('modalIntroSystem').classList.add('hidden'); window.location.href = 'dashboard.html'; }
 
         // FUNGSI AUTH
         function bukaModalAuth() { document.getElementById('modalAuth').classList.remove('hidden'); }
         function tutupModalAuth() { document.getElementById('modalAuth').classList.add('hidden'); }
         window.addEventListener('click', function(e) { const modal = document.getElementById('modalAuth'); if (e.target === modal) tutupModalAuth(); });
-
         function switchTabAuth(tab) { const isLogin = tab === 'login'; document.getElementById('form-login').classList.toggle('hidden', !isLogin); document.getElementById('form-daftar').classList.toggle('hidden', isLogin); document.getElementById('tab-login').className = `flex-1 pb-2 text-sm text-center transition border-b-2 ${isLogin ? 'border-rose-600 text-rose-600 font-bold' : 'border-transparent text-slate-500 font-medium hover:text-slate-700'}`; document.getElementById('tab-daftar').className = `flex-1 pb-2 text-sm text-center transition border-b-2 ${isLogin ? 'border-transparent text-slate-500 font-medium hover:text-slate-700' : 'border-rose-600 text-rose-600 font-bold'}`; }
 
         async function prosesLogin() { 
@@ -257,9 +267,7 @@
 
         async function prosesDaftar() { 
             const email = document.getElementById('reg-email').value; const password = document.getElementById('reg-password').value; const nama = document.getElementById('reg-nama').value; const gender = document.getElementById('reg-gender').value; const kategori = document.getElementById('reg-kategori').value; 
-            const kota = document.getElementById('reg-kota').value; 
-            const btn = document.getElementById('btn-daftar'); 
-            
+            const kota = document.getElementById('reg-kota').value; const btn = document.getElementById('btn-daftar'); 
             if(!email || !password || !nama || !kota) return alert("Mohon lengkapi semua kolom, termasuk Kota!"); 
             
             btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Memproses..."; 
