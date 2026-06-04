@@ -177,9 +177,11 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             const menuContainer = document.getElementById('user-menu-container');
 
-            if (session) {
-                loggedInUser = session.user;
-                const { data: profil } = await supabaseClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
+            // Di dalam dashboard.html
+if (!session) {
+    window.location.href = 'index.html'; // Usir ke landing page jika belum login
+    return;
+}
                 
                 if (profil) {
                     menuContainer.innerHTML = `
