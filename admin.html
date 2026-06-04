@@ -41,8 +41,31 @@
         <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
             <div class="max-w-[1400px] mx-auto">
                 
-                <section id="dashboard" class="tab-content active">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Dasbor Analitik Penelitian Terpadu</h2>
+              <section id="dashboard" class="tab-content active">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 class="text-2xl font-bold text-slate-800">Dasbor Analitik Penelitian Terpadu</h2>
+                        
+                        <div class="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto z-20 relative">
+                            <div class="flex items-center px-3 border-r border-slate-100">
+                                <i class="fa-solid fa-location-dot text-slate-400 mr-2"></i>
+                                <select id="filter-kota" class="bg-transparent text-sm font-bold text-slate-700 outline-none cursor-pointer">
+                                    <option value="Semua">Semua Daerah</option>
+                                    <option value="Ternate">Ternate</option>
+                                    <option value="Palembang">Palembang</option>
+                                    <option value="Surabaya">Surabaya</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center px-2">
+                                <input type="date" id="filter-start" class="bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium px-2 py-1.5 outline-none text-slate-600 cursor-pointer" title="Dari Tanggal">
+                                <span class="text-slate-400 mx-2 text-xs font-bold">-</span>
+                                <input type="date" id="filter-end" class="bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium px-2 py-1.5 outline-none text-slate-600 cursor-pointer" title="Sampai Tanggal">
+                            </div>
+                            <button onclick="muatDataDasbor()" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 w-full sm:w-10 rounded-lg flex items-center justify-center transition" title="Terapkan Filter">
+                                <i class="fa-solid fa-filter"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
                         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-users"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Peserta Aktif</p><h3 id="stat-peserta" class="text-xl font-black text-slate-800">0</h3></div>
                         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-star"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Total XP</p><h3 id="stat-poin" class="text-xl font-black text-slate-800">0</h3></div>
@@ -352,51 +375,87 @@
 
         async function muatDataDasbor() {
             try {
-                const { data: profil } = await supabaseClient.from('profiles').select('*').order('total_poin', { ascending: false });
-                const { data: riwayat } = await supabaseClient.from('riwayat_kuis').select('*').order('created_at', { ascending: false });
-                
-                const kamusUser = {}; if (profil) profil.forEach(p => kamusUser[p.id] = p.nama_lengkap);
-                const kamusBuku = {}; if (dbBukuList) dbBukuList.forEach(b => kamusBuku[b.id] = { judul: b.judul, tipe: b.tipe_konten });
+                // Ambil filter UI
+                const filterKota = document.getElementById('filter-kota').value;
+                const filterStart = document.getElementById('filter-start').value;
+                const filterEnd = document.getElementById('filter-end').value;
 
-                const totalPeserta = profil ? profil.length : 0; let totalSkor = 0; let totalWaktu = 0;
+                const { data: profilAsli } = await supabaseClient.from('profiles').select('*').order('total_poin', { ascending: false });
+                const { data: listBuku } = await supabaseClient.from('buku').select('id, judul, tipe_konten');
+                const { data: riwayatAsli, error } = await supabaseClient.from('riwayat_kuis').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+
+                // Proses Mapping
+                const kamusUser = {}; const userKotaMap = {};
+                if (profilAsli) profilAsli.forEach(p => { kamusUser[p.id] = p.nama_lengkap; userKotaMap[p.id] = p.kota || 'Lainnya'; });
+                const kamusBuku = {}; if (listBuku) listBuku.forEach(b => kamusBuku[b.id] = { judul: b.judul, tipe: b.tipe_konten });
+
+                // TERAPKAN FILTER KE DATA PROFIL
+                let profil = profilAsli || [];
+                if (filterKota !== 'Semua') {
+                    profil = profil.filter(p => p.kota === filterKota);
+                }
+
+                // TERAPKAN FILTER KE DATA RIWAYAT (Kota & Tanggal)
+                let riwayat = riwayatAsli || [];
+                riwayat = riwayat.filter(r => {
+                    let rDate = new Date(r.created_at); rDate.setHours(0,0,0,0);
+                    let passKota = filterKota === 'Semua' || userKotaMap[r.id_user] === filterKota;
+                    let passDate = true;
+                    if (filterStart) { let sDate = new Date(filterStart); sDate.setHours(0,0,0,0); if (rDate < sDate) passDate = false; }
+                    if (filterEnd) { let eDate = new Date(filterEnd); eDate.setHours(23,59,59,999); if (rDate > eDate) passDate = false; }
+                    return passKota && passDate;
+                });
+
+                // Perhitungan Statistik
+                const totalPeserta = profil.length;
+                let totalSkor = 0; let totalWaktu = 0;
                 let umurRents = { '< 15 Thn': 0, '16-18 Thn': 0, '19-25 Thn': 0, '> 25 Thn': 0 }; let genderCount = { 'Laki-laki': 0, 'Perempuan': 0 }; let katTotal = { 'Pelajar': { p: 0, c: 0 }, 'Mahasiswa': { p: 0, c: 0 }, 'Umum': { p: 0, c: 0 } };
                 const thnIni = new Date().getFullYear();
 
-                if (profil) {
-                    profil.forEach(p => {
-                        if(p.tanggal_lahir) { const u = thnIni - new Date(p.tanggal_lahir).getFullYear(); if (u < 15) umurRents['< 15 Thn']++; else if (u <= 18) umurRents['16-18 Thn']++; else if (u <= 25) umurRents['19-25 Thn']++; else umurRents['> 25 Thn']++; }
-                        if (genderCount[p.jenis_kelamin] !== undefined) genderCount[p.jenis_kelamin]++; if (katTotal[p.kategori]) { katTotal[p.kategori].p += (p.total_poin || 0); katTotal[p.kategori].c++; }
-                    });
-                }
+                profil.forEach(p => {
+                    if(p.tanggal_lahir) { const u = thnIni - new Date(p.tanggal_lahir).getFullYear(); if (u < 15) umurRents['< 15 Thn']++; else if (u <= 18) umurRents['16-18 Thn']++; else if (u <= 25) umurRents['19-25 Thn']++; else umurRents['> 25 Thn']++; }
+                    if (genderCount[p.jenis_kelamin] !== undefined) genderCount[p.jenis_kelamin]++; if (katTotal[p.kategori]) { katTotal[p.kategori].p += (p.total_poin || 0); katTotal[p.kategori].c++; }
+                });
+                
                 const rataKat = [ katTotal['Pelajar'].c ? Math.round(katTotal['Pelajar'].p/katTotal['Pelajar'].c) : 0, katTotal['Mahasiswa'].c ? Math.round(katTotal['Mahasiswa'].p/katTotal['Mahasiswa'].c) : 0, katTotal['Umum'].c ? Math.round(katTotal['Umum'].p/katTotal['Umum'].c) : 0 ];
-                const totalPoinProfil = profil ? profil.reduce((sum, p) => sum + (p.total_poin || 0), 0) : 0; const akurasi = totalPeserta > 0 ? Math.round((profil.filter(p => p.total_poin > 0).length / totalPeserta) * 100) : 0;
-                if (riwayat) riwayat.forEach(r => { totalSkor += (r.poin_didapat || 0); totalWaktu += (r.durasi_baca_detik || 0); }); const avgWaktu = (riwayat && riwayat.length > 0) ? Math.round(totalWaktu / riwayat.length) : 0;
+                const totalPoinProfil = profil.reduce((sum, p) => sum + (p.total_poin || 0), 0);
+                const akurasi = totalPeserta > 0 ? Math.round((profil.filter(p => p.total_poin > 0).length / totalPeserta) * 100) : 0;
 
-                document.getElementById('stat-peserta').innerText = totalPeserta; document.getElementById('stat-poin').innerText = totalPoinProfil.toLocaleString('id-ID'); document.getElementById('stat-rata').innerText = totalPeserta > 0 ? Math.round(totalPoinProfil / totalPeserta) : 0; document.getElementById('stat-akurasi').innerText = akurasi + '%'; document.getElementById('stat-waktu').innerText = avgWaktu + 's'; document.getElementById('stat-total-entri').innerText = riwayat ? riwayat.length : 0;
+                riwayat.forEach(r => { totalSkor += (r.poin_didapat || 0); totalWaktu += (r.durasi_baca_detik || 0); });
+                const avgWaktu = (riwayat.length > 0) ? Math.round(totalWaktu / riwayat.length) : 0;
 
+                document.getElementById('stat-peserta').innerText = totalPeserta; document.getElementById('stat-poin').innerText = totalPoinProfil.toLocaleString('id-ID'); document.getElementById('stat-rata').innerText = totalPeserta > 0 ? Math.round(totalPoinProfil / totalPeserta) : 0; document.getElementById('stat-akurasi').innerText = akurasi + '%'; document.getElementById('stat-waktu').innerText = avgWaktu + 's'; document.getElementById('stat-total-entri').innerText = riwayat.length;
+
+                // Tren Data (Tetap pakai 7 hari terakhir dari data yang sudah difilter)
                 const trendData = { labels: [], dataXP: [], dataKuis: [] }; const hariIni = new Date();
                 for(let i=6; i>=0; i--) { let d = new Date(hariIni); d.setDate(d.getDate() - i); trendData.labels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' })); trendData.dataXP.push(0); trendData.dataKuis.push(0); }
-                if (riwayat) { riwayat.forEach(r => { if(r.created_at) { let rDate = new Date(r.created_at); let diffDays = Math.floor((hariIni - rDate) / (1000 * 60 * 60 * 24)); if (diffDays >= 0 && diffDays < 7) { let index = 6 - diffDays; trendData.dataXP[index] += (r.poin_didapat || 0); trendData.dataKuis[index] += 1; } } }); }
+                riwayat.forEach(r => { if(r.created_at) { let rDate = new Date(r.created_at); let diffDays = Math.floor((hariIni - rDate) / (1000 * 60 * 60 * 24)); if (diffDays >= 0 && diffDays < 7) { let index = 6 - diffDays; trendData.dataXP[index] += (r.poin_didapat || 0); trendData.dataKuis[index] += 1; } } });
 
-                const wadahPeringkat = document.getElementById('papan-peringkat');
-                if (wadahPeringkat) {
-                    wadahPeringkat.innerHTML = ''; const topUsers = profil ? profil.filter(p => p.total_poin > 0).slice(0, 5) : [];
-                    if(topUsers.length === 0) { wadahPeringkat.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Belum ada skor yang dicetak.</p>'; } else {
-                        topUsers.forEach((p, i) => { const w = ['bg-amber-200 text-amber-700', 'bg-slate-200 text-slate-700', 'bg-amber-100 text-amber-800', 'bg-blue-200 text-blue-700', 'bg-emerald-200 text-emerald-700'][i % 5]; wadahPeringkat.innerHTML += `<div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border hover:bg-white transition"><div class="flex items-center gap-3"><span class="font-bold text-slate-400 w-4 text-center">${i+1}</span><div class="w-8 h-8 rounded-full ${w} flex items-center justify-center font-bold text-sm shrink-0">${p.nama_lengkap.charAt(0)}</div><span class="font-bold text-sm truncate max-w-[120px]">${p.nama_lengkap.split(' ')[0]}</span></div><span class="font-bold text-emerald-600">${p.total_poin} XP</span></div>`; });
-                    }
+                // Leaderboard
+                const wadahPeringkat = document.getElementById('papan-peringkat'); wadahPeringkat.innerHTML = '';
+                const topUsers = profil.filter(p => p.total_poin > 0).slice(0, 5);
+                if(topUsers.length === 0) { wadahPeringkat.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Belum ada skor yang dicetak pada filter ini.</p>'; } else {
+                    topUsers.forEach((p, i) => { const w = ['bg-amber-200 text-amber-700', 'bg-slate-200 text-slate-700', 'bg-amber-100 text-amber-800', 'bg-blue-200 text-blue-700', 'bg-emerald-200 text-emerald-700'][i % 5]; wadahPeringkat.innerHTML += `<div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border hover:bg-white transition"><div class="flex items-center gap-3"><span class="font-bold text-slate-400 w-4 text-center">${i+1}</span><div class="w-8 h-8 rounded-full ${w} flex items-center justify-center font-bold text-sm shrink-0">${p.nama_lengkap.charAt(0)}</div><span class="font-bold text-sm truncate max-w-[120px]">${p.nama_lengkap.split(' ')[0]}</span></div><span class="font-bold text-emerald-600">${p.total_poin} XP</span></div>`; });
                 }
 
+                // Tabel Analitik & N-Gain
                 const mapTrend = {}; const tbodyDetail = document.getElementById('tabelAnalitikDetail'); tbodyDetail.innerHTML = ''; const modulStat = {};
-                if (riwayat && riwayat.length > 0) {
+
+                if (riwayat.length > 0) {
                     riwayat.forEach(r => {
                         const namaUser = kamusUser[r.id_user] || 'User Terhapus'; const bukuMeta = kamusBuku[r.id_buku] || { judul: 'Modul Terhapus', tipe: '' }; const judulAsli = bukuMeta.judul; const topikDasar = judulAsli.replace(/^(Pre-Test:\s*|Post-Test:\s*)/i, '').trim(); const jenis = r.jenis_tes || (bukuMeta.tipe === 'Hanya Kuis' ? 'Pre-Test' : 'Post-Test');
                         const trendKey = r.id_user + "|||" + topikDasar; if (!mapTrend[trendKey]) mapTrend[trendKey] = { nama: namaUser, topik: topikDasar, pre: null, post: null };
                         if (jenis === 'Pre-Test' || judulAsli.toLowerCase().includes('pre')) { mapTrend[trendKey].pre = r.poin_didapat; } else { mapTrend[trendKey].post = r.poin_didapat; }
-                        const tgl = new Date(r.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); const labelTes = (jenis === 'Post-Test') ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">POST</span>` : `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">PRE</span>`;
-                        tbodyDetail.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-5 text-slate-500 text-xs">${tgl}</td><td class="py-3 px-5 font-bold text-slate-800">${namaUser}</td><td class="py-3 px-5 text-indigo-600 font-medium text-sm truncate max-w-[200px]">${judulAsli} ${labelTes}</td><td class="py-3 px-5 text-center font-mono text-slate-500">${r.durasi_baca_detik ? r.durasi_baca_detik+'s' : '-'}</td><td class="py-3 px-5 text-center font-black text-emerald-600">${r.poin_didapat||0}</td></tr>`;
+
+                        const tgl = new Date(r.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+                        const labelTes = (jenis === 'Post-Test') ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">POST</span>` : `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">PRE</span>`;
+                        const userKota = userKotaMap[r.id_user]; // Ambil data kota user
+                        tbodyDetail.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-5 text-slate-500 text-xs">${tgl}</td><td class="py-3 px-5 font-bold text-slate-800 flex flex-col"><span>${namaUser}</span><span class="text-[9px] text-slate-400 font-bold uppercase"><i class="fa-solid fa-location-dot"></i> ${userKota}</span></td><td class="py-3 px-5 text-indigo-600 font-medium text-sm truncate max-w-[200px]">${judulAsli} ${labelTes}</td><td class="py-3 px-5 text-center font-mono text-slate-500">${r.durasi_baca_detik ? r.durasi_baca_detik+'s' : '-'}</td><td class="py-3 px-5 text-center font-black text-emerald-600">${r.poin_didapat||0}</td></tr>`;
+
                         if (!modulStat[judulAsli]) { modulStat[judulAsli] = { totalPoin: 0, totalWaktu: 0, count: 0 }; } modulStat[judulAsli].totalPoin += (r.poin_didapat || 0); modulStat[judulAsli].totalWaktu += (r.durasi_baca_detik || 0); modulStat[judulAsli].count += 1;
                     });
-                } else { tbodyDetail.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada data partisipasi dari responden.</td></tr>'; }
+                } else { tbodyDetail.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada data partisipasi pada rentang dan wilayah ini.</td></tr>'; }
 
                 const tbodyNgain = document.getElementById('tabelTrendNgain'); tbodyNgain.innerHTML = ''; let hasTrend = false;
                 Object.values(mapTrend).forEach(t => {
@@ -406,6 +465,7 @@
                 });
                 if(!hasTrend) tbodyNgain.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada riwayat pre/post-test.</td></tr>';
 
+                // Render Chart 
                 const labelModul = []; const avgPoinData = []; const avgWaktuData = [];
                 Object.keys(modulStat).forEach(judul => { labelModul.push(judul.length > 15 ? judul.substring(0, 15) + '...' : judul); avgPoinData.push(Math.round(modulStat[judul].totalPoin / modulStat[judul].count)); avgWaktuData.push(Math.round(modulStat[judul].totalWaktu / modulStat[judul].count)); });
 
