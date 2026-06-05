@@ -177,39 +177,60 @@
             }
         }
 
-        async function tarikDataKuis() {
+       async function tarikDataKuis() {
             try {
-                const { data: riwayat } = await supabaseClient.from('riwayat_kuis').select('id').eq('id_user', loggedInUser.id).eq('id_buku', bookId).maybeSingle();
+                // 1. Cek Riwayat agar tidak bisa spam XP
+                const { data: riwayat } = await supabaseClient.from('riwayat_kuis').select('id').eq('id_user', loggedInUser.id).eq('id_buku', bookId).limit(1).maybeSingle();
                 if (riwayat) {
                     sudahPernahSelesai = true;
                     document.getElementById('info-latihan').classList.remove('hidden'); document.getElementById('info-latihan').classList.add('flex');
                 }
 
-                // PERUBAHAN: Tarik soal berdasarkan tipe konten
-                let query = supabaseClient.from('kuis').select('*, buku!inner(is_active, tipe_konten)');
-                if (dataBuku.tipe_konten === 'Evaluasi Global') {
-                    // Tarik semua soal dari modul yang aktif, KECUALI soal dari evaluasi global lainnya
-                    query = query.neq('buku.tipe_konten', 'Evaluasi Global').eq('buku.is_active', true);
-                } else {
-                    query = query.eq('id_buku', bookId).order('created_at', { ascending: true });
-                }
+                let kuisYangDidapat = [];
 
-                const { data, error } = await query;
+                // 2. Tarik Soal Berdasarkan Tipe (LOGIKA ANTI-GAGAL)
+                if (dataBuku.tipe_konten === 'Evaluasi Global') {
+                    // Tahap A: Cari semua modul yang sudah berstatus PUBLISH (is_active = true)
+                    const { data: modulAktif } = await supabaseClient.from('buku')
+                        .select('id')
+                        .eq('is_active', true)
+                        .neq('tipe_konten', 'Evaluasi Global');
+                    
+                    if (modulAktif && modulAktif.length > 0) {
+                        const kumpulanIdModul = modulAktif.map(m => m.id);
+                        
+                        // Tahap B: Tarik semua soal yang bernaung di bawah modul-modul aktif tersebut
+                        const { data } = await supabaseClient.from('kuis')
+                            .select('*')
+                            .in('id_buku', kumpulanIdModul);
+                            
+                        kuisYangDidapat = data || [];
+                    }
+                } else {
+                    // Jika Kuis Modul Biasa, tarik berdasarkan ID bukunya langsung
+                    const { data } = await supabaseClient.from('kuis')
+                        .select('*')
+                        .eq('id_buku', bookId)
+                        .order('created_at', { ascending: true });
+                        
+                    kuisYangDidapat = data || [];
+                }
                 
-                if (error || !data || data.length === 0) {
+                // 3. Jika benar-benar kosong
+                if (kuisYangDidapat.length === 0) {
                     document.getElementById('quiz-header').classList.add('hidden');
                     document.getElementById('quiz-content').innerHTML = `
                         <div class="text-center py-12"><i class="fa-solid fa-face-smile text-6xl text-slate-300 mb-6"></i>
-                        <h4 class="text-xl font-bold text-slate-700">Tidak Ada Kuesioner</h4><p class="text-slate-500 mt-2">Belum ada evaluasi yang disiapkan untuk konten ini.</p>
+                        <h4 class="text-xl font-bold text-slate-700">Tidak Ada Kuesioner</h4><p class="text-slate-500 mt-2">Pastikan Modul yang berisi soal-soal kuis sudah berstatus "Publish" (Aktif) di panel Admin.</p>
                         <button onclick="keluarKeBeranda()" class="mt-8 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-8 rounded-xl transition">Kembali ke Galeri</button></div>`;
                     return;
                 }
 
-                currentQuizData = data;
+                currentQuizData = kuisYangDidapat;
                 document.getElementById('quiz-header').classList.remove('hidden');
                 document.getElementById('quiz-footer').classList.remove('hidden');
                 
-                // PERUBAHAN: Cek metode render
+                // 4. Render ke Layar
                 if (dataBuku.tipe_konten === 'Evaluasi Global') {
                     renderSoalGabunganGlobal();
                 } else {
