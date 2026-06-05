@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruang Belajar SIRASA</title>
+    <title>Ruang Belajar KITA SEBAYA</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -76,7 +76,7 @@
                 <button onclick="tutupQuiz()" id="btn-tutup-kuis" class="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark text-xl"></i></button>
 
                 <div id="quiz-header" class="mb-6">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-ribbon text-rose-500"></i> <span id="label-jenis-tes">Evaluasi SIRASA</span></h2>
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-ribbon text-rose-500"></i> <span id="label-jenis-tes">Evaluasi KITA SEBAYA</span></h2>
                     <div id="info-latihan" class="hidden mt-3 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-xl text-xs font-semibold items-center gap-2"><i class="fa-solid fa-circle-info text-amber-500"></i> Kamu sudah pernah menyelesaikan instrumen ini. Poin tidak akan dihitung ulang.</div>
                 </div>
 
@@ -113,7 +113,7 @@
 
         async function inisialisasiHalaman() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
+            if (!session) { window.location.href = 'dashboard'; return; }
             loggedInUser = session.user;
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -158,7 +158,7 @@
             }
         }
 
-        function keluarKeBeranda() { window.location.href = 'index.html'; }
+        function keluarKeBeranda() { window.location.href = 'dashboard'; }
         function tampilkanKonfirmasiSelesai() { document.getElementById('modalSelesai').classList.remove('hidden'); }
         function tutupModalSelesai() { document.getElementById('modalSelesai').classList.add('hidden'); kuisSudahDipicu = false; }
 
