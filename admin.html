@@ -208,7 +208,11 @@
             <div class="p-6 space-y-4">
                 <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl mb-2">
                     <label class="block text-sm font-bold mb-1 text-rose-800">Pilih Tipe & Alur Pembelajaran</label>
-                    <select id="tipeKonten" onchange="toggleFormModul('tambah')" class="w-full p-2.5 border border-rose-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-white font-bold text-slate-700 shadow-sm"><option value="Paket Lengkap">🔥 PAKET LENGKAP: Otomatis buat Pre-Test & Post-Test Modul</option><option value="Modul PDF">Materi Saja (Modul PDF + Post-Test)</option><option value="Hanya Kuis">Hanya Instrumen Survei / Kuesioner (Tanpa PDF)</option></select>
+                    <select id="tipeKonten" onchange="toggleFormModul('tambah')" class="w-full p-2.5 border border-rose-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-white font-bold text-slate-700 shadow-sm">
+    <option value="Modul PDF">📖 Modul Edukasi (Hanya PDF)</option>
+    <option value="Hanya Kuis">📝 Kuis Spesifik/Latihan Modul (Tanpa PDF)</option>
+    <option value="Evaluasi Global">🌟 EVALUASI GLOBAL (Wadah Pre-Test / Post-Test Gabungan)</option>
+</select>
                 </div>
                 <div><label class="block text-sm font-medium mb-1 text-slate-700">Judul Topik / Konten</label><input type="text" id="judulBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" placeholder="Misal: HIV & AIDS Dasar"></div>
                 <div><label class="block text-sm font-medium mb-1 text-slate-700">Kategori</label><select id="kategoriBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi / Ujian</option></select></div>
@@ -519,9 +523,18 @@
                     pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
                 }
                 status.innerHTML = `Menyimpan ke database...`; 
-                if (tipe === 'Paket Lengkap') { await supabaseClient.from('buku').insert([ { judul: 'Pre-Test: ' + judul, kategori, tipe_konten: 'Hanya Kuis', deskripsi: deskripsi, is_active: false }, { judul: 'Post-Test: ' + judul, kategori, tipe_konten: 'Hanya Kuis', deskripsi: deskripsi, is_active: false } ]); } 
-                else { await supabaseClient.from('buku').insert([{ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, is_active: false }]); }
-                status.className = 'bg-green-100 text-green-700 p-3 rounded-lg block mt-4'; status.innerHTML = `Berhasil disimpan!`;
+                // Logika Baru: Simpan langsung sesuai tipe, tanpa membelah jadi 2
+                await supabaseClient.from('buku').insert([{ 
+                    judul: judul, 
+                    kategori: kategori, 
+                    tipe_konten: tipe, 
+                    deskripsi: deskripsi, 
+                    file_url: pdfUrl, 
+                    cover_url: coverUrl, 
+                    is_active: false 
+                }]);
+                status.className = 'bg-green-100 text-green-700 p-3 rounded-lg block mt-4'; 
+                status.innerHTML = `Berhasil disimpan!`;
                 setTimeout(() => { document.getElementById('judulBuku').value = ''; if(fileInput) fileInput.value = ''; document.getElementById('deskripsiKonten').value = ''; status.classList.add('hidden'); tutupModal('modalTambahModul'); fetchDaftarBukuAdmin(); btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save"></i> Buat Konten`; }, 1500);
             } catch (error) { status.className = 'bg-red-100 text-red-700 p-3 rounded-lg block mt-4'; status.innerHTML = error.message; btn.disabled = false; btn.innerHTML = `Coba Lagi`; }
         }
