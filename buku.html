@@ -93,255 +93,357 @@
     </main>
 
     <script>
-        let supabaseClient;
-        let currentUser = null;
-        let metaBuku = null;
-        let dataKuisAsli = [];
-        let dimGroups = {}; // Wadah Pengelompokan Dimensi
+       let supabaseClient;
+        let loggedInUser = null;
+        let dataBuku = null;
+        let bookId = null;
+        
+        let kuisSudahDipicu = false;
+        let waktuMulaiMembaca = Date.now(); 
+        
+        let currentQuizData = [];
+        let dimGroups = {}; // Wadah Pengelompokan Dimensi Evaluasi Global
+        let sudahPernahSelesai = false;
+        
+        // State CAT System (Hanya untuk Kuis Latihan Modul)
+        let indexSoalSaatIni = 0;
+        let jawabanPeserta = []; 
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof CONFIG === 'undefined') { alert("config.js tidak terbaca!"); return; }
+        try {
+            if (typeof CONFIG === 'undefined') throw new Error("config.js tidak terbaca!");
             supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
             inisialisasiHalaman();
-        });
+        } catch (err) { console.error(err); }
 
         async function inisialisasiHalaman() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
-            
-            currentUser = session.user;
-            const { data: profil } = await supabaseClient.from('profiles').select('nama_lengkap').eq('id', currentUser.id).single();
-            if(profil) document.getElementById('nav-nama-user').innerText = profil.nama_lengkap.split(' ')[0];
+            if (!session) { window.location.href = 'dashboard.html'; return; }
+            loggedInUser = session.user;
 
             const urlParams = new URLSearchParams(window.location.search);
-            const idBuku = urlParams.get('id');
-            if(!idBuku) { alert("ID Konten tidak valid!"); window.location.href = 'dashboard.html'; return; }
+            bookId = urlParams.get('id');
+            const fileUrl = urlParams.get('file');
 
-            await tarikDataKonten(idBuku);
-        }
+            if (!bookId) return keluarKeBeranda();
 
-        async function tarikDataKonten(id) {
-            try {
-                // 1. Tarik Info Buku/Modul
-                const { data: buku, error } = await supabaseClient.from('buku').select('*').eq('id', id).single();
-                if(error || !buku) throw new Error("Data tidak ditemukan.");
-                metaBuku = buku;
+            // 1. Ambil Metadata Konten untuk mengecek Tipe Konten
+            const { data: bukuInfo, error } = await supabaseClient.from('buku').select('*').eq('id', bookId).single();
+            if (error || !bukuInfo) return keluarKeBeranda();
+            dataBuku = bukuInfo;
 
-                document.getElementById('judul-buku').innerText = buku.judul;
-                document.getElementById('desc-buku').innerText = buku.deskripsi || "Silakan baca petunjuk pengerjaan dan jawab dengan teliti.";
+            // 2. Tentukan Alur (Pre-Test vs Modul)
+            if (dataBuku.tipe_konten === 'Hanya Kuis' || dataBuku.tipe_konten === 'Evaluasi Global') {
+                document.getElementById('wadah-pretest').classList.remove('hidden');
+                document.getElementById('wadah-pretest').classList.add('flex');
+                document.getElementById('judul-pretest').innerText = dataBuku.judul;
+                document.getElementById('deskripsi-pretest').innerText = dataBuku.deskripsi || "Silakan selesaikan kuesioner ini dengan jujur.";
+                document.getElementById('label-jenis-tes').innerText = "Instrumen " + dataBuku.judul;
+            } else {
+                // Alur Modul PDF Biasa
+                document.getElementById('wadah-buku').classList.remove('hidden');
+                document.getElementById('label-jenis-tes').innerText = "Post-Test: " + dataBuku.judul;
                 
-                let badge = buku.kategori;
-                if(buku.tipe_konten === 'Evaluasi Global') { badge = "EVALUASI GLOBAL (GABUNGAN)"; document.getElementById('badge-kategori').className = "bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-2 inline-block"; }
-                else if (buku.judul.toLowerCase().includes('pre')) { badge = "PRE-TEST"; document.getElementById('badge-kategori').className = "bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-2 inline-block"; }
-                document.getElementById('badge-kategori').innerText = badge;
+                const pdfBersih = decodeURIComponent(fileUrl);
+                document.getElementById('wadah-buku').innerHTML = `<div class="_df_book" source="${pdfBersih}"></div>`;
 
-                // 2. Tentukan Tampilan UI
-                const areaPdf = document.getElementById('area-pdf');
-                const areaKuis = document.getElementById('area-kuis');
+                window.DFLIP.defaults.onFlip = function(flipbook) {
+                    let halamanSaatIni = flipbook.target._activePage || flipbook.target.page;
+                    let totalHalaman = flipbook.target.pageCount || flipbook.options.pageCount;
+                    let tombolSelesai = document.getElementById('btn-selesai');
 
-                if (buku.tipe_konten === 'Modul PDF' && buku.file_url) {
-                    areaPdf.classList.remove('hidden'); areaPdf.classList.add('flex');
-                    document.getElementById('frame-pdf').src = buku.file_url;
-                    document.getElementById('btn-download-pdf').href = buku.file_url;
-                } else {
-                    // Jika Evaluasi Global / Kuis, area Kuis dibuat Full Width (Lebar penuh)
-                    areaKuis.classList.remove('lg:w-5/12'); areaKuis.classList.add('w-full');
-                }
-
-                // 3. Tarik Data Kuis berdasarkan "Otak Baru"
-                await tarikSoalKuis(buku);
-
-            } catch(e) {
-                alert("Gagal memuat halaman: " + e.message);
-                window.location.href = 'dashboard.html';
+                    if (halamanSaatIni && totalHalaman && halamanSaatIni >= totalHalaman) {
+                        tombolSelesai.classList.remove('hidden'); tombolSelesai.classList.add('flex');
+                        if (!kuisSudahDipicu) { kuisSudahDipicu = true; setTimeout(() => { tampilkanKonfirmasiSelesai(); }, 800); }
+                    } else {
+                        tombolSelesai.classList.add('hidden'); tombolSelesai.classList.remove('flex'); kuisSudahDipicu = false; 
+                    }
+                };
+                if(window.DFLIP && window.DFLIP.parseBooks) window.DFLIP.parseBooks();
             }
         }
 
-        async function tarikSoalKuis(buku) {
+        function keluarKeBeranda() { window.location.href = 'dashboard.html'; }
+        function tampilkanKonfirmasiSelesai() { document.getElementById('modalSelesai').classList.remove('hidden'); }
+        function tutupModalSelesai() { document.getElementById('modalSelesai').classList.add('hidden'); kuisSudahDipicu = false; }
+
+        function lanjutKuis() {
+            tutupModalSelesai(); 
+            document.getElementById('modalQuiz').classList.remove('hidden'); 
+            indexSoalSaatIni = 0; jawabanPeserta = [];
+            document.getElementById('progress-bar').style.width = '0%';
+            tarikDataKuis(); 
+        }
+
+        function tutupQuiz() {
+            if(confirm("Yakin ingin menutup tes? Progres akan hilang.")) {
+                document.getElementById('modalQuiz').classList.add('hidden');
+                document.getElementById('quiz-content').innerHTML = `<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-rose-500 mb-4"></i><p class="text-slate-500">Memuat instrumen...</p></div>`;
+                document.getElementById('quiz-footer').classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // SISTEM TARIK DATA KUIS
+        // ==========================================
+        async function tarikDataKuis() {
             try {
-                let query = supabaseClient.from('kuis').select('*, buku!inner(is_active, tipe_konten)');
-                
-                if (buku.tipe_konten === 'Evaluasi Global') {
-                    // JIKA EVALUASI GLOBAL: Sedot SEMUA soal yang nempel di modul-modul aktif (Kecuali dari evaluasi global lain untuk hindari infinite loop)
-                    query = query.neq('buku.tipe_konten', 'Evaluasi Global').eq('buku.is_active', true);
-                } else {
-                    // JIKA MODUL BIASA: Hanya sedot soal miliknya sendiri
-                    query = query.eq('id_buku', buku.id);
+                // 1. Cek Riwayat agar tidak bisa spam XP
+                const { data: riwayat } = await supabaseClient.from('riwayat_kuis').select('id').eq('id_user', loggedInUser.id).eq('id_buku', bookId).limit(1).maybeSingle();
+                if (riwayat) {
+                    sudahPernahSelesai = true;
+                    document.getElementById('info-latihan').classList.remove('hidden'); document.getElementById('info-latihan').classList.add('flex');
                 }
 
-                const { data: soal, error } = await query;
-                if(error) throw error;
+                // 2. Tarik Soal Berdasarkan Tipe
+                let query = supabaseClient.from('kuis').select('*, buku!inner(is_active, tipe_konten)');
+                if (dataBuku.tipe_konten === 'Evaluasi Global') {
+                    // Evaluasi Global: Tarik semua soal dari modul yg aktif (kecuali evaluasi global lainnya)
+                    query = query.neq('buku.tipe_konten', 'Evaluasi Global').eq('buku.is_active', true);
+                } else {
+                    query = query.eq('id_buku', bookId).order('created_at', { ascending: true });
+                }
 
-                dataKuisAsli = soal || [];
-                const wadah = document.getElementById('wadah-pertanyaan');
+                const { data, error } = await query;
                 
-                if (dataKuisAsli.length === 0) {
-                    wadah.innerHTML = `<div class="text-center py-10 bg-white rounded-2xl border"><i class="fa-solid fa-mug-hot text-4xl mb-3 text-slate-300"></i><p class="text-slate-500 font-medium">Belum ada instrumen kuesioner yang tersedia.</p></div>`;
-                    document.getElementById('info-kuis').classList.add('hidden');
+                if (error || !data || data.length === 0) {
+                    document.getElementById('quiz-header').classList.add('hidden');
+                    document.getElementById('quiz-content').innerHTML = `
+                        <div class="text-center py-12"><i class="fa-solid fa-face-smile text-6xl text-slate-300 mb-6"></i>
+                        <h4 class="text-xl font-bold text-slate-700">Tidak Ada Kuesioner</h4><p class="text-slate-500 mt-2">Belum ada evaluasi yang disiapkan untuk konten ini.</p>
+                        <button onclick="keluarKeBeranda()" class="mt-8 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-8 rounded-xl transition">Kembali ke Galeri</button></div>`;
                     return;
                 }
 
-                document.getElementById('info-kuis').classList.remove('hidden');
-                document.getElementById('total-soal').innerText = dataKuisAsli.length;
-                document.getElementById('wadah-tombol-kirim').classList.remove('hidden');
-                area-kuis.classList.remove('hidden'); area-kuis.classList.add('flex');
-
-                wadah.innerHTML = '';
-                dimGroups = {}; // Reset
-
-                // MESIN PENGELOMPOKKAN SOAL (GROUP BY DIMENSI)
-                if (buku.tipe_konten === 'Evaluasi Global') {
-                    dataKuisAsli.forEach(q => {
-                        const dim = q.dimensi || 'Umum';
-                        if(!dimGroups[dim]) dimGroups[dim] = [];
-                        dimGroups[dim].push(q);
-                    });
-
-                    let nomorGlobal = 1;
-                    Object.keys(dimGroups).forEach((namaDimensi, idx) => {
-                        // Header Dimensi
-                        let htmlBagian = `
-                        <div class="mb-10 bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-2 h-full bg-indigo-500"></div>
-                            <h3 class="text-lg md:text-xl font-black text-indigo-800 border-b border-indigo-100 pb-3 mb-5 flex items-center gap-2">
-                                <i class="fa-solid fa-tags text-indigo-400"></i> Bagian ${idx + 1}: Dimensi ${namaDimensi}
-                            </h3>
-                            <div class="space-y-6">
-                        `;
-                        // Render Soal dalam Dimensi
-                        dimGroups[namaDimensi].forEach(q => {
-                            htmlBagian += renderTemplateSoal(q, nomorGlobal);
-                            nomorGlobal++;
-                        });
-                        htmlBagian += `</div></div>`;
-                        wadah.innerHTML += htmlBagian;
-                    });
-
+                currentQuizData = data;
+                document.getElementById('quiz-header').classList.remove('hidden');
+                document.getElementById('quiz-footer').classList.remove('hidden');
+                
+                // 3. Tentukan Metode Render: SATUAN (Modul Biasa) atau GABUNGAN (Evaluasi Global)
+                if (dataBuku.tipe_konten === 'Evaluasi Global') {
+                    renderSoalGabunganGlobal();
                 } else {
-                    // JIKA MODUL BIASA (TIDAK DIPISAH DIMENSI)
-                    let htmlBagian = `<div class="bg-white p-5 rounded-2xl border shadow-sm space-y-6">`;
-                    dataKuisAsli.forEach((q, i) => { htmlBagian += renderTemplateSoal(q, i + 1); });
-                    htmlBagian += `</div>`;
-                    wadah.innerHTML = htmlBagian;
+                    renderSoalCAT(); // Sistem soal muncul 1-per-1 bawaan Anda
                 }
 
-            } catch(e) { console.error(e); }
+            } catch (err) { console.error(err); }
         }
 
-        // FUNGSI RENDER SATUAN SOAL
-        function renderTemplateSoal(q, nomor) {
-            let opsiHtml = '';
-            if (q.opsi_jawaban) {
-                Object.keys(q.opsi_jawaban).forEach(k => {
-                    const opt = q.opsi_jawaban[k]; const teks = typeof opt === 'string' ? opt : opt.teks;
-                    opsiHtml += `
-                    <label class="relative flex cursor-pointer">
-                        <input type="radio" name="jawaban_${q.id}" value="${k}" class="kuis-radio sr-only" required>
-                        <div class="w-full flex items-start gap-3 p-4 border border-slate-200 rounded-xl transition hover:bg-slate-50 bg-white">
-                            <div class="radio-dot w-5 h-5 rounded-full border-2 border-slate-300 mt-0.5 shrink-0 transition flex items-center justify-center">
-                                <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
-                            </div>
-                            <span class="text-sm md:text-base font-medium text-slate-700 leading-snug">${teks}</span>
-                        </div>
-                    </label>
-                    `;
+        // ==========================================
+        // RENDER 1: SISTEM CAT (MUNCUL SATU-SATU UNTUK MODUL)
+        // ==========================================
+        function renderSoalCAT() {
+            const container = document.getElementById('quiz-content');
+            const soal = currentQuizData[indexSoalSaatIni];
+            const progress = ((indexSoalSaatIni) / currentQuizData.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+
+            let htmlOpsi = '';
+            if (soal.opsi_jawaban) {
+                const keys = Object.keys(soal.opsi_jawaban);
+                const layoutGrid = keys.length <= 2 ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2';
+                htmlOpsi = `<div class="grid ${layoutGrid} gap-3 mt-5">`;
+                keys.forEach(k => {
+                    const opt = soal.opsi_jawaban[k];
+                    const teks = typeof opt === 'string' ? opt : opt.teks;
+                    const poinVal = typeof opt === 'string' ? (k === soal.jawaban_benar ? (soal.poin_reward||1) : 0) : opt.poin;
+                    htmlOpsi += `
+                        <label class="radio-card flex items-center gap-3 p-4 border-2 border-slate-200 rounded-xl cursor-pointer transition bg-white">
+                            <input type="radio" name="jawaban" value="${k}" data-poin="${poinVal}" class="mt-0.5 w-4 h-4 accent-rose-600 shrink-0">
+                            <span class="text-slate-700 font-medium text-sm md:text-base leading-snug break-words w-full">${teks}</span>
+                        </label>`;
                 });
+                htmlOpsi += `</div>`;
             }
-            return `
-            <div class="soal-item">
-                <p class="font-bold text-slate-800 text-sm md:text-base mb-3 leading-relaxed">
-                    <span class="text-indigo-500 mr-1">${nomor}.</span> ${q.pertanyaan}
-                </p>
-                <div class="space-y-2.5 pl-2 md:pl-6">${opsiHtml}</div>
-            </div>`;
+
+            container.innerHTML = `
+                <div class="modal-enter">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide">Pernyataan ${indexSoalSaatIni + 1} dari ${currentQuizData.length}</span>
+                    </div>
+                    <p class="font-bold text-slate-800 text-lg md:text-xl leading-relaxed">${soal.pertanyaan}</p>
+                    ${htmlOpsi}
+                </div>
+            `;
+
+            const footer = document.getElementById('quiz-footer');
+            if (indexSoalSaatIni === currentQuizData.length - 1) {
+                footer.innerHTML = `<button onclick="prosesKirimTerakhirCAT()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg"><i class="fa-solid fa-cloud-arrow-up"></i> Kirim Jawaban Akhir</button>`;
+            } else {
+                footer.innerHTML = `<button onclick="nextSoal()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg">Lanjut Soal Berikutnya <i class="fa-solid fa-arrow-right"></i></button>`;
+            }
         }
 
-        // FUNGSI MESIN PENILAIAN & SUBMIT SPSS
-        async function prosesKirimKuis() {
-            const form = document.getElementById('form-lembar-kuis');
+        function nextSoal() {
+            const terpilih = document.querySelector('input[name="jawaban"]:checked');
+            if (!terpilih) return alert("Pilih salah satu tanggapan terlebih dahulu!");
+            jawabanPeserta[indexSoalSaatIni] = { label: terpilih.value, poin: parseInt(terpilih.dataset.poin) || 0 };
+            indexSoalSaatIni++; renderSoalCAT();
+        }
+
+        async function prosesKirimTerakhirCAT() {
+            const terpilih = document.querySelector('input[name="jawaban"]:checked');
+            if (!terpilih) return alert("Tentukan tanggapan untuk soal terakhir ini!");
+            jawabanPeserta[indexSoalSaatIni] = { label: terpilih.value, poin: parseInt(terpilih.dataset.poin) || 0 };
+
+            if(!confirm("Yakin ingin menyelesaikan evaluasi ini?")) return;
+
+            const btn = document.querySelector('#quiz-footer button');
+            btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Memproses Hasil...";
+
+            let totalPoinDapat = 0; jawabanPeserta.forEach(ans => { totalPoinDapat += ans.poin; });
+            
+            // Format Pengiriman ke Database (Modul Biasa: Disatukan jadi 1 baris)
+            let jenisTes = dataBuku.tipe_konten === 'Hanya Kuis' ? 'Pre-Test' : 'Post-Test';
+            let payloadRiwayat = [{ id_user: loggedInUser.id, id_buku: bookId, poin_didapat: totalPoinDapat, durasi_baca_detik: Math.floor((Date.now() - waktuMulaiMembaca) / 1000), jenis_tes: jenisTes }];
+            
+            eksekusiKirimKeDatabase(totalPoinDapat, payloadRiwayat, btn);
+        }
+
+        // ==========================================
+        // RENDER 2: SISTEM EVALUASI GLOBAL (TAMPIL SEMUA DIPISAH DIMENSI)
+        // ==========================================
+        function renderSoalGabunganGlobal() {
+            const container = document.getElementById('quiz-content');
+            document.getElementById('progress-bar').style.width = '100%';
+            dimGroups = {};
+
+            // 1. Pengelompokan Berdasarkan Dimensi (dari db kuis)
+            currentQuizData.forEach(q => {
+                const dim = q.dimensi || 'Umum';
+                if(!dimGroups[dim]) dimGroups[dim] = [];
+                dimGroups[dim].push(q);
+            });
+
+            // 2. Render Form Kuesioner Panjang
+            let htmlKuisLong = `<form id="form-evaluasi-global" onsubmit="event.preventDefault(); prosesKirimEvaluasiGlobal();">`;
+            let nomorGlobal = 1;
+
+            Object.keys(dimGroups).forEach((namaDimensi, idx) => {
+                htmlKuisLong += `
+                <div class="mb-8 border border-rose-100 bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="bg-rose-50 px-5 py-3 border-b border-rose-100 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-rose-500"></i>
+                        <h3 class="font-black text-rose-800 uppercase tracking-wide text-sm">Bagian ${idx + 1}: ${namaDimensi}</h3>
+                    </div>
+                    <div class="p-5 space-y-6">
+                `;
+
+                dimGroups[namaDimensi].forEach(soal => {
+                    let htmlOpsi = '';
+                    if (soal.opsi_jawaban) {
+                        const keys = Object.keys(soal.opsi_jawaban);
+                        htmlOpsi = `<div class="grid grid-cols-1 gap-2 mt-3 pl-4">`;
+                        keys.forEach(k => {
+                            const opt = soal.opsi_jawaban[k];
+                            const teks = typeof opt === 'string' ? opt : opt.teks;
+                            const poinVal = typeof opt === 'string' ? (k === soal.jawaban_benar ? (soal.poin_reward||1) : 0) : opt.poin;
+                            htmlOpsi += `
+                                <label class="radio-card flex items-start gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer transition">
+                                    <input type="radio" name="jawaban_${soal.id}" value="${k}" data-poin="${poinVal}" class="mt-1 w-4 h-4 accent-rose-600 shrink-0" required>
+                                    <span class="text-slate-700 font-medium text-sm leading-snug">${teks}</span>
+                                </label>`;
+                        });
+                        htmlOpsi += `</div>`;
+                    }
+                    htmlKuisLong += `
+                    <div>
+                        <p class="font-bold text-slate-800 leading-relaxed"><span class="text-rose-500 mr-1">${nomorGlobal}.</span> ${soal.pertanyaan}</p>
+                        ${htmlOpsi}
+                    </div>`;
+                    nomorGlobal++;
+                });
+                htmlKuisLong += `</div></div>`;
+            });
+
+            htmlKuisLong += `</form>`;
+            container.innerHTML = htmlKuisLong;
+
+            const footer = document.getElementById('quiz-footer');
+            footer.innerHTML = `<button type="submit" form="form-evaluasi-global" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg"><i class="fa-solid fa-paper-plane"></i> Kirim Semua Jawaban Evaluasi</button>`;
+        }
+
+        async function prosesKirimEvaluasiGlobal() {
+            const form = document.getElementById('form-evaluasi-global');
             if(!form.checkValidity()) { form.reportValidity(); return; }
-            if(!confirm("Yakin ingin mengirim jawaban? Pastikan semua soal telah terisi.")) return;
+            if(!confirm("Yakin ingin mengirim evaluasi? Periksa kembali kelengkapan jawabanmu.")) return;
 
-            const btn = document.getElementById('btn-kirim');
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses Nilai...`;
+            const btn = document.querySelector('#quiz-footer button');
+            btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Menghitung Nilai Per Dimensi...";
 
+            const formData = new FormData(form);
+            const labelTesInduk = dataBuku.judul.toLowerCase().includes('pre') ? 'Pre-Test' : 'Post-Test';
+            
+            let totalPoinDiDapat = 0;
+            const payloadRiwayat = [];
+
+            // HITUNG NILAI PER DIMENSI! (Untuk SPSS)
+            Object.keys(dimGroups).forEach(namaDimensi => {
+                let skorDimensi = 0;
+                dimGroups[namaDimensi].forEach(q => {
+                    const jwbUser = formData.get(`jawaban_${q.id}`);
+                    if (q.opsi_jawaban && q.opsi_jawaban[jwbUser]) {
+                        const opt = q.opsi_jawaban[jwbUser];
+                        skorDimensi += (typeof opt === 'string' ? (jwbUser === q.jawaban_benar ? (q.poin_reward||1) : 0) : opt.poin);
+                    }
+                });
+
+                totalPoinDiDapat += skorDimensi;
+                // Pecah jadi baris terpisah berdasarkan Dimensinya (misal: "Pre-Test - Pengetahuan")
+                payloadRiwayat.push({
+                    id_user: loggedInUser.id,
+                    id_buku: bookId, 
+                    poin_didapat: skorDimensi,
+                    durasi_baca_detik: Math.floor((Date.now() - waktuMulaiMembaca) / 1000),
+                    jenis_tes: `${labelTesInduk} - ${namaDimensi}` 
+                });
+            });
+
+            eksekusiKirimKeDatabase(totalPoinDiDapat, payloadRiwayat, btn);
+        }
+
+        // ==========================================
+        // FINALISASI PENYIMPANAN & TAMPILAN SUKSES
+        // ==========================================
+        async function eksekusiKirimKeDatabase(totalPoinDapat, payloadRiwayat, btnDOM) {
             try {
-                const formData = new FormData(form);
-                const isEvaluasiGlobal = metaBuku.tipe_konten === 'Evaluasi Global';
-                const labelTesInduk = metaBuku.judul.toLowerCase().includes('pre') ? 'Pre-Test' : 'Post-Test'; // Penentu Pre atau Post
-                
-                let totalPoinDiDapat = 0; // Untuk di-update ke profile User
-                const payloadRiwayat = []; // Array data yang akan ditembak ke database
-
-                if (isEvaluasiGlobal) {
-                    // HITUNG NILAI PER DIMENSI (EVALUASI GLOBAL)
-                    Object.keys(dimGroups).forEach(namaDimensi => {
-                        let skorDimensi = 0;
-                        dimGroups[namaDimensi].forEach(q => {
-                            const jwbUser = formData.get(`jawaban_${q.id}`);
-                            if (q.opsi_jawaban && q.opsi_jawaban[jwbUser]) {
-                                const opt = q.opsi_jawaban[jwbUser];
-                                skorDimensi += (typeof opt === 'string' ? (jwbUser === q.jawaban_benar ? (q.poin_reward||1) : 0) : opt.poin);
-                            }
-                        });
-
-                        totalPoinDiDapat += skorDimensi;
-                        
-                        // Siapkan 1 baris rekaman khusus Dimensi ini
-                        // Format jenis_tes: "Pre-Test - Pengetahuan" (Sangat rapi untuk filter Admin & SPSS)
-                        payloadRiwayat.push({
-                            id_user: currentUser.id,
-                            id_buku: metaBuku.id, // Tetap menempel ke ID Buku Evaluasi
-                            poin_didapat: skorDimensi,
-                            jenis_tes: `${labelTesInduk} - ${namaDimensi}` 
-                        });
-                    });
-
-                } else {
-                    // HITUNG NILAI GABUNGAN (MODUL BIASA)
-                    let skorTunggal = 0;
-                    dataKuisAsli.forEach(q => {
-                        const jwbUser = formData.get(`jawaban_${q.id}`);
-                        if (q.opsi_jawaban && q.opsi_jawaban[jwbUser]) {
-                            const opt = q.opsi_jawaban[jwbUser];
-                            skorTunggal += (typeof opt === 'string' ? (jwbUser === q.jawaban_benar ? (q.poin_reward||1) : 0) : opt.poin);
-                        }
-                    });
-
-                    totalPoinDiDapat += skorTunggal;
-                    payloadRiwayat.push({
-                        id_user: currentUser.id,
-                        id_buku: metaBuku.id,
-                        poin_didapat: skorTunggal,
-                        jenis_tes: 'Kuis Modul'
-                    });
+                if (!sudahPernahSelesai) {
+                    if (totalPoinDapat > 0) {
+                        const { data: profil } = await supabaseClient.from('profiles').select('total_poin').eq('id', loggedInUser.id).single();
+                        await supabaseClient.from('profiles').update({ total_poin: (profil.total_poin || 0) + totalPoinDapat }).eq('id', loggedInUser.id);
+                    }
+                    // Tembakkan payload ke database (bisa 1 baris untuk modul biasa, atau 5 baris untuk Evaluasi Global)
+                    const { error } = await supabaseClient.from('riwayat_kuis').insert(payloadRiwayat);
+                    if (error) throw error;
+                    sudahPernahSelesai = true; 
                 }
 
-                // 1. Simpan ke Riwayat secara Massal
-                const { error: errRiwayat } = await supabaseClient.from('riwayat_kuis').insert(payloadRiwayat);
-                if(errRiwayat) throw errRiwayat;
-
-                // 2. Tambahkan Poin (XP) ke Profil User
-                const { data: profilLama } = await supabaseClient.from('profiles').select('total_poin').eq('id', currentUser.id).single();
-                const xpLama = profilLama ? (profilLama.total_poin || 0) : 0;
-                await supabaseClient.from('profiles').update({ total_poin: xpLama + totalPoinDiDapat }).eq('id', currentUser.id);
-
-                // 3. Sukses & Alihkan
-                document.getElementById('wadah-pertanyaan').innerHTML = `
-                <div class="text-center py-16 fade-in">
-                    <div class="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner"><i class="fa-solid fa-check-double"></i></div>
-                    <h3 class="text-3xl font-black text-slate-800 mb-2">Luar Biasa!</h3>
-                    <p class="text-slate-500 font-medium text-lg">Kamu berhasil menyelesaikan kuis dan mendapatkan <strong class="text-emerald-600">+${totalPoinDiDapat} XP</strong>.</p>
-                </div>`;
-                document.getElementById('wadah-tombol-kirim').classList.add('hidden');
+                // Tampilan Sukses
+                let textReward = sudahPernahSelesai ? `<span class="text-slate-600 font-bold text-lg"><i class="fa-solid fa-check-double"></i> Data Tersimpan</span>` : `<span class="text-rose-600 font-black text-xl">+ ${totalPoinDapat} XP Didapatkan!</span>`;
                 
-                setTimeout(() => { window.location.href = 'dashboard.html'; }, 3500); // Otomatis kembali setelah 3.5 dtk
+                document.getElementById('quiz-header').classList.add('hidden');
+                document.getElementById('quiz-footer').classList.add('hidden');
+                document.getElementById('btn-tutup-kuis').classList.add('hidden'); 
 
+                document.getElementById('quiz-content').innerHTML = `
+                    <div class="text-center py-10 modal-enter">
+                        <div class="w-24 h-24 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-trophy text-rose-500 text-5xl"></i></div>
+                        <h3 class="text-3xl font-black text-slate-800 mb-2">Perekaman Selesai!</h3>
+                        <p class="text-slate-500 mb-6 text-sm">Terima kasih atas partisipasinya dalam kuesioner ini.</p>
+                        <div class="inline-block bg-rose-50 border-rose-200 border px-8 py-4 rounded-2xl mb-8 shadow-sm">${textReward}</div>
+                        <div class="flex flex-col gap-3 max-w-sm mx-auto">
+                            <button onclick="keluarKeBeranda()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">
+                                <i class="fa-solid fa-house mr-2"></i> Kembali ke Galeri
+                            </button>
+                        </div>
+                    </div>`;
             } catch(e) {
-                alert("Terjadi kesalahan sistem saat menyimpan nilai.");
-                btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Coba Kirim Ulang`;
+                console.error(e); alert("Terjadi kesalahan jaringan."); 
+                btnDOM.disabled = false; btnDOM.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Coba Kirim Ulang`; 
             }
         }
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
