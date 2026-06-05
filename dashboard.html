@@ -111,10 +111,7 @@
                 
                 fetchBooks(); fetchLeaderboard();
 
-                if (!sessionStorage.getItem('introSudahDilihat')) {
-                    const { data: introBuku } = await supabaseClient.from('buku').select('file_url').eq('tipe_konten', 'Pengantar Sistem').maybeSingle();
-                    if (introBuku && introBuku.file_url) { tampilkanModalIntro(introBuku.file_url); sessionStorage.setItem('introSudahDilihat', 'true'); }
-                }
+                
             }
         }
 
