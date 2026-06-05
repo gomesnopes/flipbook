@@ -66,48 +66,57 @@
                         <button onclick="inisialisasiAdmin()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-4 rounded-xl border border-indigo-200 shadow-sm flex flex-col items-center justify-center transition group"><i class="fa-solid fa-arrows-rotate text-2xl mb-2 group-hover:rotate-180 transition-transform duration-500"></i><span class="text-[10px] font-bold uppercase">Refresh Data</span></button>
                     </div>
 
+                    <!-- BARIS GRAFIK 1: TREN N-GAIN KESELURUHAN & TREN PARTISIPASI -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-chart-bar text-emerald-500 mr-2"></i> Peningkatan Pemahaman (Keseluruhan)</h4>
+                            <div class="relative h-64 w-full flex-grow"><canvas id="chartOverall"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-2"></i> Tren Partisipasi Harian</h4>
+                            <div class="relative h-64 w-full flex-grow"><canvas id="chartTrendHarian"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- BARIS GRAFIK 2: GRAFIK SPESIFIK DIMENSI & MODUL -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-tags text-indigo-500 mr-2"></i> Peningkatan Per Dimensi / Topik</h4>
+                            <div class="relative h-72 w-full flex-grow"><canvas id="chartDimensi"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-book text-rose-500 mr-2"></i> Peningkatan Per Modul Pembelajaran</h4>
+                            <div class="relative h-72 w-full flex-grow"><canvas id="chartModul"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- TABEL TREN PRE-TEST vs POST-TEST & DEMOGRAFI -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:col-span-2">
-                            <div class="flex justify-between items-center mb-4"><div><h4 class="font-bold text-slate-700"><i class="fa-solid fa-chart-column text-indigo-500 mr-2"></i> Peningkatan Rata-rata per Dimensi</h4></div></div>
-                            <div class="relative h-64 w-full flex-grow"><canvas id="chartTrendDimensi"></canvas></div>
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col lg:col-span-2">
+                            <div class="p-5 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-table text-emerald-500 mr-2"></i> Raw Data Evaluasi (Export SPSS)</h4></div>
+                                <button onclick="unduhExcel(globalTrendData, 'Data_Lengkap_SPSS')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
+                            </div>
+                            <div class="overflow-y-auto w-full max-h-[350px]">
+                                <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]"><thead class="sticky top-0 z-10 bg-white shadow-sm"><tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200"><th class="py-3 px-5 font-bold">Responden</th><th class="py-3 px-5 font-bold">Topik / Dimensi</th><th class="py-3 px-5 font-bold text-center border-l border-slate-200">Pre-Test</th><th class="py-3 px-5 font-bold text-center border-r border-slate-200">Post-Test</th><th class="py-3 px-5 font-bold text-center">N-Gain</th></tr></thead>
+                                    <tbody id="tabelTrendNgain" class="text-sm text-slate-700 divide-y divide-slate-100"><tr><td colspan="5" class="py-8 text-center text-slate-400">Memuat rekapitulasi...</td></tr></tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-medal text-amber-500 mr-2"></i> Top 5 Peringkat XP</h4>
-                            <div id="papan-peringkat" class="space-y-3 flex-grow overflow-y-auto pr-2"></div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:col-span-2"><h4 class="font-bold text-slate-700 mb-4">Tren Partisipasi Mingguan</h4><div class="relative h-64 w-full flex-grow"><canvas id="chartTrend"></canvas></div></div>
-                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col"><h4 class="font-bold text-slate-700 mb-4">Komposisi Gender</h4><div class="relative h-64 w-full flex justify-center flex-grow"><canvas id="chartGender"></canvas></div></div>
-                    </div>
-
-                    <!-- TABEL TREN PRE-TEST vs POST-TEST -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-8">
-                        <div class="p-5 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-table text-emerald-500 mr-2"></i> Rekapitulasi Rapor (N-Gain Keseluruhan)</h4><p class="text-xs text-slate-500 mt-1">Menampilkan rata-rata skor gabungan seluruh dimensi per responden.</p></div>
-                            <button onclick="unduhExcel(globalTrendData, 'Data_Lengkap_SPSS')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-file-excel"></i> Export Detail SPSS</button>
-                        </div>
-                        <div class="overflow-x-auto w-full max-h-[400px]">
-                            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]"><thead class="sticky top-0 z-10 bg-white shadow-sm"><tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200"><th class="py-3 px-5 font-bold">Nama Responden</th><th class="py-3 px-5 font-bold">Asal Kota</th><th class="py-3 px-5 font-bold text-center border-l border-slate-200">Avg Pre-Test</th><th class="py-3 px-5 font-bold text-center border-r border-slate-200">Avg Post-Test</th><th class="py-3 px-5 font-bold text-center">Status N-Gain</th></tr></thead>
-                                <tbody id="tabelTrendNgain" class="text-sm text-slate-700 divide-y divide-slate-100"><tr><td colspan="5" class="py-8 text-center text-slate-400">Memuat rekapitulasi...</td></tr></tbody>
-                            </table>
+                        
+                        <!-- TABEL PERINGKAT & GENDER -->
+                        <div class="flex flex-col gap-6">
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-1/2">
+                                <h4 class="font-bold text-slate-700 mb-4">Distribusi Gender</h4>
+                                <div class="relative w-full flex justify-center flex-grow"><canvas id="chartGender"></canvas></div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-1/2">
+                                <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-medal text-amber-500 mr-2"></i> Peringkat XP</h4>
+                                <div id="papan-peringkat" class="space-y-3 flex-grow overflow-y-auto pr-2"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- TABEL LOG DETAIL -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-10">
-                        <div class="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                            <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-list-ul text-indigo-500 mr-2"></i> Log Aktivitas Historis</h4></div>
-                            <button onclick="unduhExcel(globalLogData, 'Log_Aktivitas_Riset')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
-                        </div>
-                        <div class="overflow-x-auto w-full max-h-[350px]">
-                            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
-                                <thead class="sticky top-0 z-10 bg-white shadow-sm"><tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200"><th class="py-3 px-5 font-bold">Waktu</th><th class="py-3 px-5 font-bold">Responden</th><th class="py-3 px-5 font-bold">Instrumen</th><th class="py-3 px-5 font-bold text-center">Durasi</th><th class="py-3 px-5 font-bold text-center">Skor</th></tr></thead>
-                                <tbody id="tabelAnalitikDetail" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
                 </section>
 
                 <!-- 2. TAB MANAJEMEN USER -->
@@ -152,7 +161,7 @@
                     </div>
                 </section>
 
-                <!-- 5. TAB PENGATURAN (SLIDE BUILDER DINAMIS) -->
+                <!-- 5. TAB PENGATURAN -->
                 <section id="pengaturan" class="tab-content">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
                     <div class="grid grid-cols-1 gap-6">
@@ -227,9 +236,9 @@
                 <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl mb-2">
                     <label class="block text-sm font-bold mb-1 text-rose-800">Pilih Tipe & Alur Pembelajaran</label>
                     <select id="tipeKonten" onchange="toggleFormModul('tambah')" class="w-full p-2.5 border border-rose-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500 bg-white font-bold text-slate-700 shadow-sm">
-                        <option value="Modul PDF">Modul Edukasi (Hanya PDF)</option>
-                        <option value="Hanya Kuis">Kuis Spesifik/Latihan Modul (Tanpa PDF)</option>
-                        <option value="Evaluasi Global">EVALUASI GLOBAL (Wadah Pre-Test / Post-Test Gabungan)</option>
+                        <option value="Modul PDF">📖 Modul Edukasi (Hanya PDF)</option>
+                        <option value="Hanya Kuis">📝 Kuis Spesifik/Latihan Modul (Tanpa PDF)</option>
+                        <option value="Evaluasi Global">🌟 EVALUASI GLOBAL (Wadah Pre-Test / Post-Test Gabungan)</option>
                     </select>
                 </div>
                 <div><label class="block text-sm font-medium mb-1 text-slate-700">Judul Topik / Konten</label><input type="text" id="judulBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" placeholder="Misal: Modul 1 atau Evaluasi Utama"></div>
@@ -259,7 +268,7 @@
         </div>
     </div>
 
-    <!-- STUDIO KUIS MASSAL (DENGAN DROPDOWN DIMENSI) -->
+    <!-- STUDIO KUIS MASSAL -->
     <div id="modalTambahKuis" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl modal-enter overflow-hidden flex flex-col border border-slate-100 max-h-[95vh]">
             <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0"><h3 class="font-bold text-lg text-slate-800" id="title-modal-kuis"><i class="fa-solid fa-list-ol text-indigo-500 mr-2"></i> Studio Kuesioner Baru</h3><button onclick="tutupModalKuisTanya()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
@@ -275,7 +284,6 @@
                             <select id="formKuisBuku" class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 bg-white font-bold text-slate-700 shadow-sm"></select>
                         </div>
 
-                        <!-- DROPDOWN DIMENSI -->
                         <div>
                             <label class="block text-sm font-bold mb-2 text-slate-700"><i class="fa-solid fa-tags text-indigo-400 mr-1"></i> Dimensi Variabel Penelitian:</label>
                             <select id="formKuisDimensi" class="w-full p-3 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm font-bold text-indigo-700 bg-indigo-50/50 hover:bg-indigo-50 transition">
@@ -358,7 +366,7 @@
         }
 
         // ==========================================
-        // 2. DASBOR ANALITIK & UI 
+        // 2. DASBOR ANALITIK (LOGIKA GRAFIK BARU)
         // ==========================================
         function toggleSidebar() { const sidebar = document.getElementById('sidebar'); if (window.innerWidth < 768) { sidebar.classList.toggle('-translate-x-full'); } else { sidebar.classList.toggle('md:w-0'); sidebar.classList.toggle('md:w-64'); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 350); } }
         function switchTab(tabId) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('bg-rose-600', 'text-white'); el.classList.add('hover:bg-slate-800', 'hover:text-white', 'text-slate-300'); }); document.getElementById(tabId).classList.add('active'); const activeBtn = document.getElementById('nav-' + tabId); activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300'); activeBtn.classList.add('bg-rose-600', 'text-white'); if(tabId === 'dashboard') { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100); } }
@@ -374,11 +382,10 @@
                 const { data: riwayatAsli, error } = await supabaseClient.from('riwayat_kuis').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
 
-                const kamusUser = {}; const userKotaMap = {}; const userKategoriMap = {}; 
+                const kamusUser = {}; const userKotaMap = {};
                 if (profilAsli) profilAsli.forEach(p => { 
                     kamusUser[p.id] = p.nama_lengkap; 
                     userKotaMap[p.id] = p.kota || 'Lainnya'; 
-                    userKategoriMap[p.id] = p.kategori || 'Umum';
                 });
                 
                 const kamusBuku = {}; if (listBuku) listBuku.forEach(b => kamusBuku[b.id] = { judul: b.judul, tipe: b.tipe_konten });
@@ -393,120 +400,151 @@
                     return passKota && passDate;
                 });
 
+                // Top Widget Stats
                 const totalPeserta = profil.length; let totalSkor = 0; let totalWaktu = 0;
-                let umurRents = { '< 15 Thn': 0, '16-18 Thn': 0, '19-25 Thn': 0, '> 25 Thn': 0 }; let genderCount = { 'Laki-laki': 0, 'Perempuan': 0 }; let katTotal = { 'Pelajar': { p: 0, c: 0 }, 'Mahasiswa': { p: 0, c: 0 }, 'Umum': { p: 0, c: 0 } };
-                const thnIni = new Date().getFullYear();
-                profil.forEach(p => { if(p.tanggal_lahir) { const u = thnIni - new Date(p.tanggal_lahir).getFullYear(); if (u < 15) umurRents['< 15 Thn']++; else if (u <= 18) umurRents['16-18 Thn']++; else if (u <= 25) umurRents['19-25 Thn']++; else umurRents['> 25 Thn']++; } if (genderCount[p.jenis_kelamin] !== undefined) genderCount[p.jenis_kelamin]++; if (katTotal[p.kategori]) { katTotal[p.kategori].p += (p.total_poin || 0); katTotal[p.kategori].c++; } });
+                let genderCount = { 'Laki-laki': 0, 'Perempuan': 0 }; 
+                profil.forEach(p => { if (genderCount[p.jenis_kelamin] !== undefined) genderCount[p.jenis_kelamin]++; });
                 
                 const totalPoinProfil = profil.reduce((sum, p) => sum + (p.total_poin || 0), 0); const akurasi = totalPeserta > 0 ? Math.round((profil.filter(p => p.total_poin > 0).length / totalPeserta) * 100) : 0;
                 riwayat.forEach(r => { totalSkor += (r.poin_didapat || 0); totalWaktu += (r.durasi_baca_detik || 0); }); const avgWaktu = (riwayat.length > 0) ? Math.round(totalWaktu / riwayat.length) : 0;
 
-                document.getElementById('stat-peserta').innerText = totalPeserta; document.getElementById('stat-poin').innerText = totalPoinProfil.toLocaleString('id-ID'); document.getElementById('stat-rata').innerText = totalPeserta > 0 ? Math.round(totalPoinProfil / totalPeserta) : 0; document.getElementById('stat-akurasi').innerText = akurasi + '%'; document.getElementById('stat-waktu').innerText = avgWaktu + 's'; document.getElementById('stat-total-entri').innerText = riwayat.length;
+                document.getElementById('stat-peserta').innerText = totalPeserta; document.getElementById('stat-poin').innerText = totalPoinProfil.toLocaleString('id-ID'); document.getElementById('stat-rata').innerText = totalPeserta > 0 ? Math.round(totalPoinProfil / totalPeserta) : 0; document.getElementById('stat-akurasi').innerText = akurasi + '%'; document.getElementById('stat-waktu').innerText = avgWaktu + 's'; 
 
-                const trendData = { labels: [], dataXP: [], dataKuis: [] }; const hariIni = new Date();
-                for(let i=6; i>=0; i--) { let d = new Date(hariIni); d.setDate(d.getDate() - i); trendData.labels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' })); trendData.dataXP.push(0); trendData.dataKuis.push(0); }
-                riwayat.forEach(r => { if(r.created_at) { let rDate = new Date(r.created_at); let diffDays = Math.floor((hariIni - rDate) / (1000 * 60 * 60 * 24)); if (diffDays >= 0 && diffDays < 7) { let index = 6 - diffDays; trendData.dataXP[index] += (r.poin_didapat || 0); trendData.dataKuis[index] += 1; } } });
+                // Trend Partisipasi Harian (Line Chart Data)
+                const trendData = { labels: [], dataKuis: [] }; const hariIni = new Date();
+                for(let i=6; i>=0; i--) { let d = new Date(hariIni); d.setDate(d.getDate() - i); trendData.labels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' })); trendData.dataKuis.push(0); }
+                riwayat.forEach(r => { if(r.created_at) { let rDate = new Date(r.created_at); let diffDays = Math.floor((hariIni - rDate) / (1000 * 60 * 60 * 24)); if (diffDays >= 0 && diffDays < 7) { let index = 6 - diffDays; trendData.dataKuis[index] += 1; } } });
 
+                // Ranking Users
                 const wadahPeringkat = document.getElementById('papan-peringkat'); wadahPeringkat.innerHTML = ''; const topUsers = profil.filter(p => p.total_poin > 0).slice(0, 5);
                 if(topUsers.length === 0) { wadahPeringkat.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Belum ada skor yang dicetak pada filter ini.</p>'; } else { topUsers.forEach((p, i) => { const w = ['bg-amber-200 text-amber-700', 'bg-slate-200 text-slate-700', 'bg-amber-100 text-amber-800', 'bg-blue-200 text-blue-700', 'bg-emerald-200 text-emerald-700'][i % 5]; wadahPeringkat.innerHTML += `<div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border hover:bg-white transition"><div class="flex items-center gap-3"><span class="font-bold text-slate-400 w-4 text-center">${i+1}</span><div class="w-8 h-8 rounded-full ${w} flex items-center justify-center font-bold text-sm shrink-0">${p.nama_lengkap.charAt(0)}</div><span class="font-bold text-sm truncate max-w-[120px]">${p.nama_lengkap.split(' ')[0]}</span></div><span class="font-bold text-emerald-600">${p.total_poin} XP</span></div>`; }); }
 
-                const mapTrend = {}; const tbodyDetail = document.getElementById('tabelAnalitikDetail'); tbodyDetail.innerHTML = ''; const modulStat = {};
+                // LOGIKA BARU PENGHITUNGAN GRAFIK: KESELURUHAN, DIMENSI, dan MODUL
+                let statsKeseluruhan = { preSum: 0, preCount: 0, postSum: 0, postCount: 0 };
+                let statsDimensi = {}; 
+                let statsModul = {}; 
+                const mapTrend = {}; 
+
+                const tbodyDetail = document.getElementById('tabelAnalitikDetail'); tbodyDetail.innerHTML = '';
                 globalLogData = []; 
 
                 if (riwayat.length > 0) {
                     riwayat.forEach(r => {
-                        const namaUser = kamusUser[r.id_user] || 'User Terhapus'; const bukuMeta = kamusBuku[r.id_buku] || { judul: 'Modul Terhapus', tipe: '' }; const judulAsli = bukuMeta.judul; const topikDasar = judulAsli.replace(/^(Pre-Test:\s*|Post-Test:\s*)/i, '').trim(); 
+                        const namaUser = kamusUser[r.id_user] || 'User Terhapus'; 
+                        const bukuMeta = kamusBuku[r.id_buku] || { judul: 'Modul Terhapus', tipe: '' }; 
+                        const judulAsli = bukuMeta.judul; 
                         
-                        const jenis = r.jenis_tes || (bukuMeta.tipe === 'Hanya Kuis' ? 'Pre-Test' : 'Post-Test');
-                        const isPre = jenis.toLowerCase().includes('pre');
-                        
-                        const trendKey = r.id_user + "|||" + topikDasar + "|||" + jenis; 
-                        if (!mapTrend[trendKey]) mapTrend[trendKey] = { id_user: r.id_user, nama: namaUser, topik: topikDasar, jenisDetail: jenis, pre: null, post: null };
-                        if (isPre) { mapTrend[trendKey].pre = r.poin_didapat; } else { mapTrend[trendKey].post = r.poin_didapat; }
+                        const jenisInput = r.jenis_tes || (bukuMeta.tipe === 'Hanya Kuis' ? 'Pre-Test' : 'Post-Test');
+                        const isPre = jenisInput.toLowerCase().includes('pre');
+                        const score = r.poin_didapat || 0;
 
-                        const tgl = new Date(r.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); const labelTes = (!isPre) ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">POST</span>` : `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">PRE</span>`; const userKota = userKotaMap[r.id_user]; 
-                        tbodyDetail.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-5 text-slate-500 text-xs">${tgl}</td><td class="py-3 px-5 font-bold text-slate-800 flex flex-col"><span>${namaUser}</span><span class="text-[9px] text-slate-400 font-bold uppercase"><i class="fa-solid fa-location-dot"></i> ${userKota}</span></td><td class="py-3 px-5 text-indigo-600 font-medium text-sm truncate max-w-[200px]">${judulAsli} <br><span class="text-[10px] font-black text-slate-400">${jenis}</span> ${labelTes}</td><td class="py-3 px-5 text-center font-mono text-slate-500">${r.durasi_baca_detik ? r.durasi_baca_detik+'s' : '-'}</td><td class="py-3 px-5 text-center font-black text-emerald-600">${r.poin_didapat||0}</td></tr>`;
-                        
-                        globalLogData.push({ "Waktu_Tanggal": tgl, "Nama_Responden": namaUser, "Asal_Kota": userKota, "Instrumen_Modul": judulAsli, "Dimensi_Detail": jenis, "Durasi_Detik": r.durasi_baca_detik || 0, "Skor_Didapat": r.poin_didapat || 0 });
+                        // 1. Hitung Keseluruhan
+                        if (isPre) { statsKeseluruhan.preSum += score; statsKeseluruhan.preCount++; }
+                        else { statsKeseluruhan.postSum += score; statsKeseluruhan.postCount++; }
 
-                        if (!modulStat[judulAsli]) { modulStat[judulAsli] = { totalPoin: 0, totalWaktu: 0, count: 0 }; } modulStat[judulAsli].totalPoin += (r.poin_didapat || 0); modulStat[judulAsli].totalWaktu += (r.durasi_baca_detik || 0); modulStat[judulAsli].count += 1;
+                        // 2. Pemisahan Logika Berdasarkan "Tipe String" r.jenis_tes
+                        let topikKunci = "";
+                        let namaTampilan = "";
+
+                        if (jenisInput.includes(' - ')) {
+                            // Ini adalah tipe Evaluasi Global (Contoh: "Pre-Test - Pengetahuan")
+                            const namaDimensi = jenisInput.split(' - ')[1].trim();
+                            topikKunci = namaDimensi;
+                            namaTampilan = `Dimensi: ${namaDimensi}`;
+                            
+                            if (!statsDimensi[namaDimensi]) statsDimensi[namaDimensi] = { preSum: 0, preCount: 0, postSum: 0, postCount: 0 };
+                            if (isPre) { statsDimensi[namaDimensi].preSum += score; statsDimensi[namaDimensi].preCount++; }
+                            else { statsDimensi[namaDimensi].postSum += score; statsDimensi[namaDimensi].postCount++; }
+                        } else {
+                            // Ini adalah tipe Modul Pembelajaran Biasa (Contoh "Pre-Test: Modul 1")
+                            const namaModul = judulAsli.replace(/^(Pre-Test:\s*|Post-Test:\s*)/i, '').trim();
+                            topikKunci = namaModul;
+                            namaTampilan = `Modul: ${namaModul}`;
+
+                            if (!statsModul[namaModul]) statsModul[namaModul] = { preSum: 0, preCount: 0, postSum: 0, postCount: 0 };
+                            if (isPre) { statsModul[namaModul].preSum += score; statsModul[namaModul].preCount++; }
+                            else { statsModul[namaModul].postSum += score; statsModul[namaModul].postCount++; }
+                        }
+
+                        // Mengumpulkan Data untuk Tabel Rapor SPSS di Bawah
+                        const trendKey = r.id_user + "|||" + topikKunci; 
+                        if (!mapTrend[trendKey]) mapTrend[trendKey] = { nama: namaUser, topik: namaTampilan, kota: userKotaMap[r.id_user], pre: null, post: null };
+                        if (isPre) { mapTrend[trendKey].pre = score; } else { mapTrend[trendKey].post = score; }
+
+                        // Render Log HTML
+                        const tgl = new Date(r.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}); 
+                        const labelTes = (!isPre) ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">POST</span>` : `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">PRE</span>`; 
+                        
+                        tbodyDetail.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-5 text-slate-500 text-xs">${tgl}</td><td class="py-3 px-5 font-bold text-slate-800 flex flex-col"><span>${namaUser}</span><span class="text-[9px] text-slate-400 font-bold uppercase"><i class="fa-solid fa-location-dot"></i> ${userKotaMap[r.id_user]}</span></td><td class="py-3 px-5 text-indigo-600 font-medium text-sm truncate max-w-[200px]">${judulAsli} ${labelTes}</td><td class="py-3 px-5 text-center font-mono text-slate-500">${r.durasi_baca_detik ? r.durasi_baca_detik+'s' : '-'}</td><td class="py-3 px-5 text-center font-black text-emerald-600">${score}</td></tr>`;
+                        globalLogData.push({ "Waktu_Tanggal": tgl, "Nama_Responden": namaUser, "Asal_Kota": userKotaMap[r.id_user], "Instrumen": judulAsli, "Kategori_Jenis": jenisInput, "Durasi_Detik": r.durasi_baca_detik || 0, "Skor_Didapat": score });
                     });
                 } else { tbodyDetail.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada data partisipasi.</td></tr>'; }
 
-                // LOGIKA BARU: REKAPITULASI TABEL KESELURUHAN (PER USER) & CHART PER DIMENSI
+                // Merender Data Raw SPSS Tabel
                 const tbodyNgain = document.getElementById('tabelTrendNgain'); tbodyNgain.innerHTML = ''; 
-                globalTrendData = []; 
-                
-                const dimStats = {}; // Wadah Chart Dimensi
-                const userOverall = {}; // Wadah Rapor HTML (Rekap Keseluruhan per Responden)
+                globalTrendData = []; let hasTrend = false;
                 
                 Object.values(mapTrend).forEach(t => {
+                    hasTrend = true; let pPre = t.pre !== null ? t.pre : '-'; let pPost = t.post !== null ? t.post : '-'; let selisihHtml = '<span class="text-slate-400 italic text-xs">Belum Lengkap</span>';
                     let selisihAngka = '';
-                    if(t.pre !== null && t.post !== null) selisihAngka = t.post - t.pre;
-                    
-                    // Filter String "Pre-Test - Pengetahuan" untuk Chart Dimensi
-                    let dimName = t.jenisDetail;
-                    if (dimName.includes(' - ')) { dimName = dimName.split(' - ')[1].trim(); } 
-                    else if (dimName === 'Pre-Test' || dimName === 'Post-Test') { dimName = 'Umum'; }
-                    
-                    if (!dimStats[dimName]) dimStats[dimName] = { preSum: 0, preCount: 0, postSum: 0, postCount: 0 };
-                    if (t.pre !== null) { dimStats[dimName].preSum += t.pre; dimStats[dimName].preCount++; }
-                    if (t.post !== null) { dimStats[dimName].postSum += t.post; dimStats[dimName].postCount++; }
-
-                    // Wadah Rapor Keseluruhan (Rata-rata User di semua dimensi)
-                    if (!userOverall[t.id_user]) userOverall[t.id_user] = { nama: t.nama, kota: userKotaMap[t.id_user], preSum: 0, preCount: 0, postSum: 0, postCount: 0 };
-                    if (t.pre !== null) { userOverall[t.id_user].preSum += t.pre; userOverall[t.id_user].preCount++; }
-                    if (t.post !== null) { userOverall[t.id_user].postSum += t.post; userOverall[t.id_user].postCount++; }
-                    
-                    // EXCEL TETAP RAW DETAIL MENDALAM
-                    globalTrendData.push({ "Nama_Responden": t.nama, "Asal_Kota": userKotaMap[t.id_user], "Topik_Induk": t.topik, "Dimensi_Kuesioner": dimName, "Pre_Test": t.pre !== null ? t.pre : '', "Post_Test": t.post !== null ? t.post : '', "N_Gain_Score": selisihAngka });
-                });
-
-                // Render Tabel Rekap Rapor User HTML
-                let adaDataRapor = false;
-                Object.values(userOverall).forEach(u => {
-                    if (u.preCount > 0 || u.postCount > 0) {
-                        adaDataRapor = true;
-                        let avgPre = u.preCount > 0 ? Math.round(u.preSum / u.preCount) : '-';
-                        let avgPost = u.postCount > 0 ? Math.round(u.postSum / u.postCount) : '-';
-                        let selisihHtml = '<span class="text-slate-400 italic text-xs">Belum Lengkap</span>';
-                        
-                        if (avgPre !== '-' && avgPost !== '-') {
-                            let diff = avgPost - avgPre;
-                            if(diff > 0) selisihHtml = `<span class="bg-emerald-100 text-emerald-700 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-arrow-trend-up"></i> Naik +${diff} Poin</span>`;
-                            else if(diff < 0) selisihHtml = `<span class="bg-rose-100 text-rose-700 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-arrow-trend-down"></i> Turun ${diff} Poin</span>`;
-                            else selisihHtml = `<span class="bg-slate-100 text-slate-600 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-minus"></i> Tetap</span>`;
-                        }
-                        
-                        tbodyNgain.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-5 font-bold text-slate-800">${u.nama}</td><td class="py-3 px-5 text-indigo-600 font-medium text-sm"><i class="fa-solid fa-location-dot"></i> ${u.kota}</td><td class="py-3 px-5 text-center font-bold text-amber-600 bg-amber-50/30 border-l border-slate-200">${avgPre}</td><td class="py-3 px-5 text-center font-bold text-emerald-600 bg-emerald-50/30 border-r border-slate-200">${avgPost}</td><td class="py-3 px-5 text-center">${selisihHtml}</td></tr>`;
+                    if(t.pre !== null && t.post !== null) { 
+                        let diff = t.post - t.pre; selisihAngka = diff;
+                        if(diff > 0) selisihHtml = `<span class="bg-emerald-100 text-emerald-700 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-arrow-trend-up"></i> +${diff} Poin</span>`; else if(diff < 0) selisihHtml = `<span class="bg-rose-100 text-rose-700 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-arrow-trend-down"></i> ${diff} Poin</span>`; else selisihHtml = `<span class="bg-slate-100 text-slate-600 font-bold px-3 py-1 rounded-lg"><i class="fa-solid fa-minus"></i> Tetap</span>`; 
                     }
+                    tbodyNgain.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-100"><td class="py-3 px-5 font-bold text-slate-800">${t.nama}</td><td class="py-3 px-5 text-indigo-600 font-medium text-sm">${t.topik}</td><td class="py-3 px-5 text-center font-bold text-amber-600 bg-amber-50/30 border-l border-slate-200">${pPre}</td><td class="py-3 px-5 text-center font-bold text-emerald-600 bg-emerald-50/30 border-r border-slate-200">${pPost}</td><td class="py-3 px-5 text-center">${selisihHtml}</td></tr>`;
+                    
+                    globalTrendData.push({ "Nama_Responden": t.nama, "Asal_Kota": t.kota, "Topik_Pengukuran": t.topik, "Pre_Test": t.pre !== null ? t.pre : '', "Post_Test": t.post !== null ? t.post : '', "N_Gain_Score": selisihAngka });
                 });
-                if(!adaDataRapor) tbodyNgain.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada riwayat pre/post-test.</td></tr>';
+                if(!hasTrend) tbodyNgain.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada riwayat pre/post-test yang bisa dibandingkan.</td></tr>';
 
-                // Render Chart 
-                const arrCharts = ['trend', 'usia', 'gender', 'peningkatanDimensi']; arrCharts.forEach(c => { if(chartInstances[c]) chartInstances[c].destroy(); }); const opsiGrafik = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-                chartInstances.trend = new Chart(document.getElementById('chartTrend').getContext('2d'), { type: 'line', data: { labels: trendData.labels, datasets: [{ label: 'Skor Total', data: trendData.dataXP, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 }, { label: 'Tes Selesai', data: trendData.dataKuis, borderColor: '#10b981', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } } });
-                chartInstances.usia = new Chart(document.getElementById('chartUsia').getContext('2d'), { type: 'bar', data: { labels: Object.keys(umurRents), datasets: [{ data: Object.values(umurRents), backgroundColor: '#3b82f6', borderRadius: 4 }] }, options: opsiGrafik });
-                chartInstances.gender = new Chart(document.getElementById('chartGender').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(genderCount), datasets: [{ data: Object.values(genderCount), backgroundColor: ['#3b82f6', '#ec4899'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' } });
+                // =====================================
+                // EKSEKUSI PEMBUATAN 3 GRAFIK BARU
+                // =====================================
+                const arrCharts = ['chartOverall', 'chartTrendHarian', 'chartDimensi', 'chartModul', 'chartGender']; 
+                arrCharts.forEach(c => { if(chartInstances[c]) chartInstances[c].destroy(); }); 
+
+                // 1. Grafik Overall Pre vs Post
+                let avgPreOverall = statsKeseluruhan.preCount > 0 ? Math.round(statsKeseluruhan.preSum / statsKeseluruhan.preCount) : 0;
+                let avgPostOverall = statsKeseluruhan.postCount > 0 ? Math.round(statsKeseluruhan.postSum / statsKeseluruhan.postCount) : 0;
                 
-                // GRAFIK TREN PER DIMENSI BARU
-                const labelsDimensi = Object.keys(dimStats);
-                const dataDimPre = labelsDimensi.map(k => dimStats[k].preCount ? Math.round(dimStats[k].preSum / dimStats[k].preCount) : 0);
-                const dataDimPost = labelsDimensi.map(k => dimStats[k].postCount ? Math.round(dimStats[k].postSum / dimStats[k].postCount) : 0);
-
-                chartInstances.peningkatanDimensi = new Chart(document.getElementById('chartTrendDimensi').getContext('2d'), {
+                chartInstances.chartOverall = new Chart(document.getElementById('chartOverall').getContext('2d'), {
                     type: 'bar',
-                    data: {
-                        labels: labelsDimensi,
-                        datasets: [
-                            { label: 'Avg Pre-Test', data: dataDimPre, backgroundColor: '#f43f5e', borderRadius: 4 },
-                            { label: 'Avg Post-Test', data: dataDimPost, backgroundColor: '#10b981', borderRadius: 4 }
-                        ]
-                    },
+                    data: { labels: ['Rata-Rata Keseluruhan Sistem'], datasets: [ { label: 'Pre-Test', data: [avgPreOverall], backgroundColor: '#f43f5e', borderRadius: 6 }, { label: 'Post-Test', data: [avgPostOverall], backgroundColor: '#10b981', borderRadius: 6 } ] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom' } } }
                 });
 
-            } catch (err) { console.error(err); }
+                // 2. Grafik Tren Harian (Line)
+                chartInstances.chartTrendHarian = new Chart(document.getElementById('chartTrendHarian').getContext('2d'), { 
+                    type: 'line', data: { labels: trendData.labels, datasets: [{ label: 'Tes Selesai', data: trendData.dataKuis, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } } 
+                });
+
+                // 3. Grafik Per Dimensi (Dari Evaluasi Global)
+                const labelDimensi = Object.keys(statsDimensi);
+                const dataDimPre = labelDimensi.map(k => statsDimensi[k].preCount ? Math.round(statsDimensi[k].preSum / statsDimensi[k].preCount) : 0);
+                const dataDimPost = labelDimensi.map(k => statsDimensi[k].postCount ? Math.round(statsDimensi[k].postSum / statsDimensi[k].postCount) : 0);
+                
+                chartInstances.chartDimensi = new Chart(document.getElementById('chartDimensi').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: labelDimensi.length > 0 ? labelDimensi : ['Belum ada data'], datasets: [ { label: 'Pre-Test', data: labelDimensi.length > 0 ? dataDimPre : [0], backgroundColor: '#f59e0b', borderRadius: 4 }, { label: 'Post-Test', data: labelDimensi.length > 0 ? dataDimPost : [0], backgroundColor: '#8b5cf6', borderRadius: 4 } ] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom' } } }
+                });
+
+                // 4. Grafik Per Modul (Modul Biasa)
+                const labelModul = Object.keys(statsModul);
+                const dataModPre = labelModul.map(k => statsModul[k].preCount ? Math.round(statsModul[k].preSum / statsModul[k].preCount) : 0);
+                const dataModPost = labelModul.map(k => statsModul[k].postCount ? Math.round(statsModul[k].postSum / statsModul[k].postCount) : 0);
+                
+                chartInstances.chartModul = new Chart(document.getElementById('chartModul').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: labelModul.length > 0 ? labelModul : ['Belum ada data'], datasets: [ { label: 'Pre-Test', data: labelModul.length > 0 ? dataModPre : [0], backgroundColor: '#ec4899', borderRadius: 4 }, { label: 'Post-Test', data: labelModul.length > 0 ? dataModPost : [0], backgroundColor: '#14b8a6', borderRadius: 4 } ] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom' } } }
+                });
+
+                // 5. Gender
+                chartInstances.chartGender = new Chart(document.getElementById('chartGender').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(genderCount), datasets: [{ data: Object.values(genderCount), backgroundColor: ['#3b82f6', '#ec4899'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' } });
+                
+            } catch (err) { console.error("Error Muat Dasbor:", err); }
         }
 
         // ==========================================
@@ -555,7 +593,7 @@
         async function hapusSemuaDataPeserta() { if(!confirm("Yakin hapus data?")) return; try { await supabaseClient.from('riwayat_kuis').delete().neq('id', 0); await supabaseClient.from('profiles').delete().neq('total_poin', -1); window.location.reload(); } catch(e){} }
 
         // ==========================================
-        // 4. MANAJEMEN MODUL (PERBAIKAN TOGGLE FORM)
+        // 4. MANAJEMEN MODUL
         // ==========================================
         async function fetchDaftarBukuAdmin() {
             try {
@@ -588,13 +626,8 @@
         function toggleFormModul(mode) { 
             const tipeId = mode === 'edit' ? 'edit-tipeKonten' : 'tipeKonten';
             const tipe = document.getElementById(tipeId).value; 
-            
             if (mode !== 'edit') {
-                if (tipe === 'Hanya Kuis' || tipe === 'Evaluasi Global') { 
-                    document.getElementById('areaFilePDF_tambah').classList.add('hidden'); 
-                } else { 
-                    document.getElementById('areaFilePDF_tambah').classList.remove('hidden'); 
-                }
+                if (tipe === 'Hanya Kuis' || tipe === 'Evaluasi Global') { document.getElementById('areaFilePDF_tambah').classList.add('hidden'); } else { document.getElementById('areaFilePDF_tambah').classList.remove('hidden'); }
             }
         }
         
@@ -604,46 +637,27 @@
         async function simpanEditModul(btn) { const id = document.getElementById('edit-modul-id').value; const judul = document.getElementById('edit-modul-judul').value; const kategori = document.getElementById('edit-modul-kategori').value; const tipe = document.getElementById('edit-tipeKonten').value; const deskripsi = document.getElementById('edit-deskripsiKonten').value; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`; btn.disabled = true; try { await supabaseClient.from('buku').update({ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi }).eq('id', id); tutupModal('modalEditModul'); fetchDaftarBukuAdmin(); muatDataDasbor(); } catch(e) {} finally { btn.innerHTML = `<i class="fa-solid fa-check"></i> Simpan`; btn.disabled = false; } }
 
         async function simpanKontenBaru() {
-            const tipe = document.getElementById('tipeKonten').value; 
-            const judul = document.getElementById('judulBuku').value; 
-            const kategori = document.getElementById('kategoriBuku').value; 
-            const deskripsi = document.getElementById('deskripsiKonten').value; 
-            const fileInput = document.getElementById('filePdf'); 
-            const btn = document.getElementById('btnUpload'); 
-            const status = document.getElementById('statusUpload');
-            
+            const tipe = document.getElementById('tipeKonten').value; const judul = document.getElementById('judulBuku').value; const kategori = document.getElementById('kategoriBuku').value; const deskripsi = document.getElementById('deskripsiKonten').value; const fileInput = document.getElementById('filePdf'); const btn = document.getElementById('btnUpload'); const status = document.getElementById('statusUpload');
             if (!judul) return alert("Judul konten wajib diisi!");
-            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Proses...`; 
-            status.className = 'bg-blue-50 text-blue-700 p-3 rounded-lg block mt-4'; status.classList.remove('hidden');
-            
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Proses...`; status.className = 'bg-blue-50 text-blue-700 p-3 rounded-lg block mt-4'; status.classList.remove('hidden');
             try {
                 let pdfUrl = null; let coverUrl = null;
                 if (tipe === 'Modul PDF') {
-                    if (fileInput.files.length === 0) throw new Error("File PDF wajib dipilih untuk jenis Modul!");
-                    status.innerHTML = `Mengekstrak PDF...`; 
-                    const file = fileInput.files[0]; const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
+                    if (fileInput.files.length === 0) throw new Error("File PDF wajib dipilih!");
+                    status.innerHTML = `Mengekstrak PDF...`; const file = fileInput.files[0]; const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
                     const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.0 }); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: ctx, viewport: viewport }).promise; const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
                     await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", file); await supabaseClient.storage.from('pdf-buku').upload(baseFileName + "_cover.jpg", coverBlob);
                     pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
                 }
-                
                 status.innerHTML = `Menyimpan ke database...`; 
-                
                 if (tipe === 'Evaluasi Global') {
-                    await supabaseClient.from('buku').insert([
-                        { judul: 'Pre-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false },
-                        { judul: 'Post-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false }
-                    ]);
+                    await supabaseClient.from('buku').insert([ { judul: 'Pre-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false }, { judul: 'Post-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false } ]);
                 } else {
                     await supabaseClient.from('buku').insert([{ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, is_active: false }]);
                 }
-                
                 status.className = 'bg-green-100 text-green-700 p-3 rounded-lg block mt-4'; status.innerHTML = `Berhasil disimpan!`;
                 setTimeout(() => { document.getElementById('judulBuku').value = ''; if(fileInput) fileInput.value = ''; document.getElementById('deskripsiKonten').value = ''; status.classList.add('hidden'); tutupModal('modalTambahModul'); fetchDaftarBukuAdmin(); btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-save"></i> Buat Konten`; }, 1500);
-            } catch (error) { 
-                status.className = 'bg-red-100 text-red-700 p-3 rounded-lg block mt-4'; status.innerHTML = error.message; 
-                btn.disabled = false; btn.innerHTML = `Coba Lagi`; 
-            }
+            } catch (error) { status.className = 'bg-red-100 text-red-700 p-3 rounded-lg block mt-4'; status.innerHTML = error.message; btn.disabled = false; btn.innerHTML = `Coba Lagi`; }
         }
 
         // ==========================================
@@ -679,7 +693,6 @@
                 if(!teksInput) return alert(`Teks pada Opsi ${lbl} tidak boleh kosong!`);
                 opsiJawabanJson[lbl] = { teks: teksInput, poin: poinInput }; if (poinInput > poinMaksimal) { poinMaksimal = poinInput; labelKunciOtomatis = lbl; }
             }
-            // Simpan dimensi ke dalam draft
             draftKuisArray.push({ jenis_kuis: 'Kuesioner Berbobot', pertanyaan: pertanyaan, opsi_jawaban: opsiJawabanJson, jawaban_benar: labelKunciOtomatis, poin_reward: poinMaksimal, dimensi: dimensiDipilih });
             renderDraftList(); document.getElementById('formKuisPertanyaan').value = ''; document.getElementById('formKuisPertanyaan').focus(); dataEditSementara = null;
         }
@@ -713,7 +726,6 @@
                 btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Sinkronisasi Massal...`;
                 try { 
                     await supabaseClient.from('kuis').delete().eq('id_buku', idBukuTarget); 
-                    // Termasuk Mapping Kolom 'dimensi'
                     const payloadFinal = draftKuisArray.map(soal => { return { id_buku: idBukuTarget, jenis_kuis: soal.jenis_kuis, pertanyaan: soal.pertanyaan, opsi_jawaban: soal.opsi_jawaban, jawaban_benar: soal.jawaban_benar, poin_reward: soal.poin_reward, dimensi: soal.dimensi }; });
                     await supabaseClient.from('kuis').insert(payloadFinal); 
                     tutupModal('modalTambahKuis'); fetchDaftarKuis(); alert("Seluruh soal pada modul ini berhasil diperbarui secara massal!");
@@ -726,7 +738,6 @@
             
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
             try {
-                // Termasuk Mapping Kolom 'dimensi'
                 const payloadFinal = draftKuisArray.map(soal => { return { ...soal, id_buku: formVal }; });
                 await supabaseClient.from('kuis').insert(payloadFinal);
                 tutupModal('modalTambahKuis'); fetchDaftarKuis(); kosongkanDraft(); alert(`Berhasil mendistribusikan ${draftKuisArray.length} soal ke database!`);
