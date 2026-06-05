@@ -89,7 +89,7 @@
         </div>
     </div>
 
-  <script>
+    <script>
         let supabaseClient;
         let loggedInUser = null;
         let dataBuku = null;
@@ -99,10 +99,10 @@
         let waktuMulaiMembaca = Date.now(); 
         
         let currentQuizData = [];
-        let dimGroups = {}; // Tambahan: Wadah Pengelompokan Dimensi
+        let dimGroups = {}; // Wadah Pengelompokan Dimensi Evaluasi Global
         let sudahPernahSelesai = false;
         
-        // State CAT System
+        // State CAT System (Hanya untuk Kuis Latihan Modul)
         let indexSoalSaatIni = 0;
         let jawabanPeserta = []; 
 
@@ -114,7 +114,7 @@
 
         async function inisialisasiHalaman() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.location.href = 'dashboard'; return; }
+            if (!session) { window.location.href = 'dashboard.html'; return; }
             loggedInUser = session.user;
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -127,7 +127,6 @@
             if (error || !bukuInfo) return keluarKeBeranda();
             dataBuku = bukuInfo;
 
-            // PERUBAHAN: Kenali 'Evaluasi Global' agar masuk ke layar Start yang sama dengan Kuis
             if (dataBuku.tipe_konten === 'Hanya Kuis' || dataBuku.tipe_konten === 'Evaluasi Global') {
                 document.getElementById('wadah-pretest').classList.remove('hidden');
                 document.getElementById('wadah-pretest').classList.add('flex');
@@ -157,7 +156,7 @@
             }
         }
 
-        function keluarKeBeranda() { window.location.href = 'dashboard'; }
+        function keluarKeBeranda() { window.location.href = 'dashboard.html'; }
         function tampilkanKonfirmasiSelesai() { document.getElementById('modalSelesai').classList.remove('hidden'); }
         function tutupModalSelesai() { document.getElementById('modalSelesai').classList.add('hidden'); kuisSudahDipicu = false; }
 
@@ -177,60 +176,36 @@
             }
         }
 
-       async function tarikDataKuis() {
+        async function tarikDataKuis() {
             try {
-                // 1. Cek Riwayat agar tidak bisa spam XP
                 const { data: riwayat } = await supabaseClient.from('riwayat_kuis').select('id').eq('id_user', loggedInUser.id).eq('id_buku', bookId).limit(1).maybeSingle();
                 if (riwayat) {
                     sudahPernahSelesai = true;
                     document.getElementById('info-latihan').classList.remove('hidden'); document.getElementById('info-latihan').classList.add('flex');
                 }
 
-                let kuisYangDidapat = [];
-
-                // 2. Tarik Soal Berdasarkan Tipe (LOGIKA ANTI-GAGAL)
+                let query = supabaseClient.from('kuis').select('*, buku!inner(is_active, tipe_konten)');
                 if (dataBuku.tipe_konten === 'Evaluasi Global') {
-                    // Tahap A: Cari semua modul yang sudah berstatus PUBLISH (is_active = true)
-                    const { data: modulAktif } = await supabaseClient.from('buku')
-                        .select('id')
-                        .eq('is_active', true)
-                        .neq('tipe_konten', 'Evaluasi Global');
-                    
-                    if (modulAktif && modulAktif.length > 0) {
-                        const kumpulanIdModul = modulAktif.map(m => m.id);
-                        
-                        // Tahap B: Tarik semua soal yang bernaung di bawah modul-modul aktif tersebut
-                        const { data } = await supabaseClient.from('kuis')
-                            .select('*')
-                            .in('id_buku', kumpulanIdModul);
-                            
-                        kuisYangDidapat = data || [];
-                    }
+                    query = query.neq('buku.tipe_konten', 'Evaluasi Global').eq('buku.is_active', true);
                 } else {
-                    // Jika Kuis Modul Biasa, tarik berdasarkan ID bukunya langsung
-                    const { data } = await supabaseClient.from('kuis')
-                        .select('*')
-                        .eq('id_buku', bookId)
-                        .order('created_at', { ascending: true });
-                        
-                    kuisYangDidapat = data || [];
+                    query = query.eq('id_buku', bookId).order('created_at', { ascending: true });
                 }
+
+                const { data, error } = await query;
                 
-                // 3. Jika benar-benar kosong
-                if (kuisYangDidapat.length === 0) {
+                if (error || !data || data.length === 0) {
                     document.getElementById('quiz-header').classList.add('hidden');
                     document.getElementById('quiz-content').innerHTML = `
                         <div class="text-center py-12"><i class="fa-solid fa-face-smile text-6xl text-slate-300 mb-6"></i>
-                        <h4 class="text-xl font-bold text-slate-700">Tidak Ada Kuesioner</h4><p class="text-slate-500 mt-2">Pastikan Modul yang berisi soal-soal kuis sudah berstatus "Publish" (Aktif) di panel Admin.</p>
+                        <h4 class="text-xl font-bold text-slate-700">Tidak Ada Kuesioner</h4><p class="text-slate-500 mt-2">Belum ada evaluasi yang disiapkan untuk konten ini.</p>
                         <button onclick="keluarKeBeranda()" class="mt-8 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-8 rounded-xl transition">Kembali ke Galeri</button></div>`;
                     return;
                 }
 
-                currentQuizData = kuisYangDidapat;
+                currentQuizData = data;
                 document.getElementById('quiz-header').classList.remove('hidden');
                 document.getElementById('quiz-footer').classList.remove('hidden');
                 
-                // 4. Render ke Layar
                 if (dataBuku.tipe_konten === 'Evaluasi Global') {
                     renderSoalGabunganGlobal();
                 } else {
@@ -240,12 +215,11 @@
         }
 
         // ==========================================
-        // RENDER 1: SISTEM CAT (UNTUK KUIS MODUL BIASA)
+        // RENDER 1: SISTEM CAT (MUNCUL SATU-SATU)
         // ==========================================
         function renderSoalCAT() {
             const container = document.getElementById('quiz-content');
             const soal = currentQuizData[indexSoalSaatIni];
-            
             const progress = ((indexSoalSaatIni) / currentQuizData.length) * 100;
             document.getElementById('progress-bar').style.width = `${progress}%`;
 
@@ -253,13 +227,11 @@
             if (soal.opsi_jawaban) {
                 const keys = Object.keys(soal.opsi_jawaban);
                 const layoutGrid = keys.length <= 2 ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2';
-                
                 htmlOpsi = `<div class="grid ${layoutGrid} gap-3 mt-5">`;
                 keys.forEach(k => {
                     const opt = soal.opsi_jawaban[k];
                     const teks = typeof opt === 'string' ? opt : opt.teks;
                     const poinVal = typeof opt === 'string' ? (k === soal.jawaban_benar ? (soal.poin_reward||1) : 0) : opt.poin;
-                    
                     htmlOpsi += `
                         <label class="radio-card flex items-center gap-3 p-4 border-2 border-slate-200 rounded-xl cursor-pointer transition bg-white">
                             <input type="radio" name="jawaban" value="${k}" data-poin="${poinVal}" class="mt-0.5 w-4 h-4 accent-rose-600 shrink-0">
@@ -281,7 +253,7 @@
 
             const footer = document.getElementById('quiz-footer');
             if (indexSoalSaatIni === currentQuizData.length - 1) {
-                footer.innerHTML = `<button onclick="prosesKirimTerakhir()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg"><i class="fa-solid fa-cloud-arrow-up"></i> Kirim Jawaban Akhir</button>`;
+                footer.innerHTML = `<button onclick="prosesKirimTerakhirCAT()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg"><i class="fa-solid fa-cloud-arrow-up"></i> Kirim Jawaban Akhir</button>`;
             } else {
                 footer.innerHTML = `<button onclick="nextSoal()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-lg">Lanjut Soal Berikutnya <i class="fa-solid fa-arrow-right"></i></button>`;
             }
@@ -291,44 +263,52 @@
             const terpilih = document.querySelector('input[name="jawaban"]:checked');
             if (!terpilih) return alert("Pilih salah satu tanggapan terlebih dahulu!");
             jawabanPeserta[indexSoalSaatIni] = { label: terpilih.value, poin: parseInt(terpilih.dataset.poin) || 0 };
-            indexSoalSaatIni++;
-            renderSoalCAT();
+            indexSoalSaatIni++; renderSoalCAT();
         }
 
-        async function prosesKirimTerakhir() {
+        async function prosesKirimTerakhirCAT() {
             const terpilih = document.querySelector('input[name="jawaban"]:checked');
             if (!terpilih) return alert("Tentukan tanggapan untuk soal terakhir ini!");
             jawabanPeserta[indexSoalSaatIni] = { label: terpilih.value, poin: parseInt(terpilih.dataset.poin) || 0 };
 
-            if(!confirm("Yakin ingin menyelesaikan evaluasi ini? Nilai/Tanggapan tidak dapat diubah lagi.")) return;
+            if(!confirm("Yakin ingin menyelesaikan evaluasi ini?")) return;
 
             const btn = document.querySelector('#quiz-footer button');
             btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Memproses Hasil...";
 
             let totalPoinDapat = 0; 
-            jawabanPeserta.forEach(ans => { totalPoinDapat += ans.poin; });
+            let rekamanJawaban = {}; // Perekam Jawaban Detail
+            
+            jawabanPeserta.forEach((ans, idx) => { 
+                totalPoinDapat += ans.poin; 
+                let soalData = currentQuizData[idx];
+                if(soalData && soalData.opsi_jawaban && soalData.opsi_jawaban[ans.label]){
+                    let opt = soalData.opsi_jawaban[ans.label];
+                    rekamanJawaban[soalData.id] = typeof opt === 'string' ? opt : opt.teks;
+                }
+            });
             
             let jenisTes = dataBuku.tipe_konten === 'Hanya Kuis' ? 'Pre-Test' : 'Post-Test';
-            let payloadRiwayat = [{
-                id_user: loggedInUser.id,
-                id_buku: bookId,
-                poin_didapat: totalPoinDapat,
-                durasi_baca_detik: Math.floor((Date.now() - waktuMulaiMembaca) / 1000),
-                jenis_tes: jenisTes
+            let payloadRiwayat = [{ 
+                id_user: loggedInUser.id, 
+                id_buku: bookId, 
+                poin_didapat: totalPoinDapat, 
+                durasi_baca_detik: Math.floor((Date.now() - waktuMulaiMembaca) / 1000), 
+                jenis_tes: jenisTes,
+                detail_jawaban: rekamanJawaban // Menyimpan JSON spesifik pilihan user
             }];
-
+            
             eksekusiKirimKeDatabase(totalPoinDapat, payloadRiwayat, btn);
         }
 
         // ==========================================
-        // RENDER 2: SISTEM EVALUASI GLOBAL (SEMUA DIMENSI DALAM 1 HALAMAN)
+        // RENDER 2: SISTEM EVALUASI GLOBAL (TAMPIL SEMUA DIPISAH DIMENSI)
         // ==========================================
         function renderSoalGabunganGlobal() {
             const container = document.getElementById('quiz-content');
             document.getElementById('progress-bar').style.width = '100%';
             dimGroups = {};
 
-            // Kelompokkan soal berdasarkan dimensi
             currentQuizData.forEach(q => {
                 const dim = q.dimensi || 'Umum';
                 if(!dimGroups[dim]) dimGroups[dim] = [];
@@ -340,34 +320,34 @@
 
             Object.keys(dimGroups).forEach((namaDimensi, idx) => {
                 htmlKuisLong += `
-                <div class="mb-8 border-2 border-slate-100 bg-white rounded-2xl shadow-sm overflow-hidden modal-enter">
-                    <div class="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-                        <div class="w-8 h-8 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center font-black">${idx + 1}</div>
-                        <h3 class="font-black text-slate-700 uppercase tracking-wide text-sm md:text-base">Dimensi: ${namaDimensi}</h3>
+                <div class="mb-8 border border-rose-100 bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="bg-rose-50 px-5 py-3 border-b border-rose-100 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-rose-500"></i>
+                        <h3 class="font-black text-rose-800 uppercase tracking-wide text-sm">Bagian ${idx + 1}: ${namaDimensi}</h3>
                     </div>
-                    <div class="p-5 md:p-8 space-y-10">
+                    <div class="p-5 space-y-6">
                 `;
 
                 dimGroups[namaDimensi].forEach(soal => {
                     let htmlOpsi = '';
                     if (soal.opsi_jawaban) {
                         const keys = Object.keys(soal.opsi_jawaban);
-                        htmlOpsi = `<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">`;
+                        htmlOpsi = `<div class="grid grid-cols-1 gap-2 mt-3 pl-4">`;
                         keys.forEach(k => {
                             const opt = soal.opsi_jawaban[k];
                             const teks = typeof opt === 'string' ? opt : opt.teks;
                             const poinVal = typeof opt === 'string' ? (k === soal.jawaban_benar ? (soal.poin_reward||1) : 0) : opt.poin;
                             htmlOpsi += `
-                                <label class="radio-card flex items-start gap-3 p-4 border-2 border-slate-100 rounded-xl cursor-pointer transition hover:bg-slate-50">
+                                <label class="radio-card flex items-start gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer transition">
                                     <input type="radio" name="jawaban_${soal.id}" value="${k}" data-poin="${poinVal}" class="mt-1 w-4 h-4 accent-rose-600 shrink-0" required>
-                                    <span class="text-slate-600 font-medium text-sm leading-snug">${teks}</span>
+                                    <span class="text-slate-700 font-medium text-sm leading-snug">${teks}</span>
                                 </label>`;
                         });
                         htmlOpsi += `</div>`;
                     }
                     htmlKuisLong += `
                     <div>
-                        <p class="font-bold text-slate-800 text-base md:text-lg leading-relaxed"><span class="text-rose-500 mr-2">${nomorGlobal}.</span>${soal.pertanyaan}</p>
+                        <p class="font-bold text-slate-800 leading-relaxed"><span class="text-rose-500 mr-1">${nomorGlobal}.</span> ${soal.pertanyaan}</p>
                         ${htmlOpsi}
                     </div>`;
                     nomorGlobal++;
@@ -385,10 +365,10 @@
         async function prosesKirimEvaluasiGlobal() {
             const form = document.getElementById('form-evaluasi-global');
             if(!form.checkValidity()) { form.reportValidity(); return; }
-            if(!confirm("Yakin ingin mengirim evaluasi? Pastikan semua jawaban telah diisi.")) return;
+            if(!confirm("Yakin ingin mengirim evaluasi? Periksa kembali kelengkapan jawabanmu.")) return;
 
             const btn = document.querySelector('#quiz-footer button');
-            btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Menghitung Nilai...";
+            btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Menghitung Nilai Per Dimensi...";
 
             const formData = new FormData(form);
             const labelTesInduk = dataBuku.judul.toLowerCase().includes('pre') ? 'Pre-Test' : 'Post-Test';
@@ -398,11 +378,15 @@
 
             Object.keys(dimGroups).forEach(namaDimensi => {
                 let skorDimensi = 0;
+                let rekamanJawaban = {}; // Perekam Jawaban Detail untuk dimensi ini
+                
                 dimGroups[namaDimensi].forEach(q => {
                     const jwbUser = formData.get(`jawaban_${q.id}`);
                     if (q.opsi_jawaban && q.opsi_jawaban[jwbUser]) {
                         const opt = q.opsi_jawaban[jwbUser];
                         skorDimensi += (typeof opt === 'string' ? (jwbUser === q.jawaban_benar ? (q.poin_reward||1) : 0) : opt.poin);
+                        // Mencatat teks jawaban pasti yang dipilih user
+                        rekamanJawaban[q.id] = typeof opt === 'string' ? opt : opt.teks;
                     }
                 });
 
@@ -412,7 +396,8 @@
                     id_buku: bookId, 
                     poin_didapat: skorDimensi,
                     durasi_baca_detik: Math.floor((Date.now() - waktuMulaiMembaca) / 1000),
-                    jenis_tes: `${labelTesInduk} - ${namaDimensi}` 
+                    jenis_tes: `${labelTesInduk} - ${namaDimensi}`,
+                    detail_jawaban: rekamanJawaban // Menyimpan JSON spesifik ke database
                 });
             });
 
@@ -420,64 +405,44 @@
         }
 
         // ==========================================
-        // FUNGSI UMUM UNTUK MENYIMPAN KE DATABASE & UI SUKSES
+        // FINALISASI PENYIMPANAN & TAMPILAN SUKSES
         // ==========================================
         async function eksekusiKirimKeDatabase(totalPoinDapat, payloadRiwayat, btnDOM) {
             try {
                 if (!sudahPernahSelesai) {
                     if (totalPoinDapat > 0) {
                         const { data: profil } = await supabaseClient.from('profiles').select('total_poin').eq('id', loggedInUser.id).single();
-                        const poinBaru = (profil.total_poin || 0) + totalPoinDapat;
-                        await supabaseClient.from('profiles').update({ total_poin: poinBaru }).eq('id', loggedInUser.id);
+                        await supabaseClient.from('profiles').update({ total_poin: (profil.total_poin || 0) + totalPoinDapat }).eq('id', loggedInUser.id);
                     }
-                    
-                    const { error: errRiwayat } = await supabaseClient.from('riwayat_kuis').insert(payloadRiwayat);
-                    if (errRiwayat) throw errRiwayat;
-                    
+                    const { error } = await supabaseClient.from('riwayat_kuis').insert(payloadRiwayat);
+                    if (error) throw error;
                     sudahPernahSelesai = true; 
                 }
-                
-                let textReward = sudahPernahSelesai 
-                    ? `<span class="text-slate-600 font-bold text-lg"><i class="fa-solid fa-check-double"></i> Data Latihan Selesai (Tidak Disimpan)</span>`
-                    : `<span class="text-rose-600 font-black text-xl">+ ${totalPoinDapat} XP Didapatkan!</span>`;
 
-                document.getElementById('progress-bar').style.width = '100%';
+                let textReward = sudahPernahSelesai ? `<span class="text-slate-600 font-bold text-lg"><i class="fa-solid fa-check-double"></i> Data Tersimpan</span>` : `<span class="text-rose-600 font-black text-xl">+ ${totalPoinDapat} XP Didapatkan!</span>`;
+                
                 document.getElementById('quiz-header').classList.add('hidden');
                 document.getElementById('quiz-footer').classList.add('hidden');
                 document.getElementById('btn-tutup-kuis').classList.add('hidden'); 
 
-                // Menggunakan UI Result Screen bawaan Anda
                 document.getElementById('quiz-content').innerHTML = `
                     <div class="text-center py-10 modal-enter">
-                        <div class="w-24 h-24 ${sudahPernahSelesai ? 'bg-slate-100' : 'bg-rose-100'} rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fa-solid ${sudahPernahSelesai ? 'fa-star text-slate-400' : 'fa-trophy text-rose-500'} text-5xl"></i>
-                        </div>
+                        <div class="w-24 h-24 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-trophy text-rose-500 text-5xl"></i></div>
                         <h3 class="text-3xl font-black text-slate-800 mb-2">Perekaman Selesai!</h3>
                         <p class="text-slate-500 mb-6 text-sm">Terima kasih atas partisipasinya dalam kuesioner ini.</p>
-                        
-                        <div class="inline-block ${sudahPernahSelesai ? 'bg-slate-50 border-slate-200' : 'bg-rose-50 border-rose-200'} border px-8 py-4 rounded-2xl mb-8 shadow-sm">
-                            ${textReward}
-                        </div>
-
+                        <div class="inline-block bg-rose-50 border-rose-200 border px-8 py-4 rounded-2xl mb-8 shadow-sm">${textReward}</div>
                         <div class="flex flex-col gap-3 max-w-sm mx-auto">
                             <button onclick="keluarKeBeranda()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">
-                                <i class="fa-solid fa-house mr-2"></i> Kembali ke Menu Utama
+                                <i class="fa-solid fa-house mr-2"></i> Kembali ke Galeri
                             </button>
                         </div>
-                    </div>
-                `;
-            } catch (err) { dfli
-                console.error(err); alert("Terjadi kesalahan jaringan."); 
+                    </div>`;
+            } catch(e) {
+                console.error(e); alert("Terjadi kesalahan jaringan saat menyimpan evaluasi."); 
                 btnDOM.disabled = false; btnDOM.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Coba Kirim Ulang`; 
             }
         }
-        
-        window.onbeforeunload = function() {
-            const modalQuiz = document.getElementById('modalQuiz');
-            if (!modalQuiz.classList.contains('hidden') && document.getElementById('quiz-footer').classList.contains('hidden') === false) {
-                return "Kuis sedang berjalan! Jika Anda keluar, progres akan hilang.";
-            }
-        };
     </script>
+
 </body>
 </html>
