@@ -90,7 +90,7 @@
 
         async function cekStatusLogin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; } // PERBAIKAN: Usir ke index.html
+            if (!session) { window.location.href = 'index'; return; } // PERBAIKAN: Usir ke index
             
             loggedInUser = session.user;
             const menuContainer = document.getElementById('user-menu-container');
@@ -99,7 +99,7 @@
             if (profil) {
                 menuContainer.innerHTML = `
                     <div class="flex items-center gap-3 md:gap-4">
-                        <a href="profil.html" class="flex items-center gap-3 group cursor-pointer bg-slate-50 border border-slate-200 py-1.5 px-2 md:pr-4 rounded-full transition hover:bg-white hover:shadow-sm">
+                        <a href="profil" class="flex items-center gap-3 group cursor-pointer bg-slate-50 border border-slate-200 py-1.5 px-2 md:pr-4 rounded-full transition hover:bg-white hover:shadow-sm">
                             <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-rose-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm md:text-lg uppercase shadow-sm group-hover:scale-105 transition transform">${profil.nama_lengkap.charAt(0)}</div>
                             <div class="text-left hidden sm:block group-hover:opacity-80 transition"><p class="text-xs md:text-sm font-bold text-slate-800 leading-tight">${profil.nama_lengkap.split(' ')[0]}</p><p class="text-[10px] md:text-xs font-black text-emerald-600">${profil.total_poin} XP</p></div>
                         </a>
@@ -117,8 +117,8 @@
 
         function tampilkanModalIntro(fileUrl) { document.getElementById('modalIntroSystem').classList.remove('hidden'); document.getElementById('wadah-flipbook-intro').innerHTML = `<div class="_df_book" source="${fileUrl}" id="df_manual_intro"></div>`; if(window.DFLIP && window.DFLIP.parseBooks) window.DFLIP.parseBooks(); }
         function tutupModalIntro() { document.getElementById('modalIntroSystem').classList.add('hidden'); document.getElementById('wadah-flipbook-intro').innerHTML = ''; }
-        async function prosesLogout() { if(confirm("Yakin ingin keluar?")) { await supabaseClient.auth.signOut(); sessionStorage.removeItem('introSudahDilihat'); window.location.href = 'index.html'; } }
-        function arahkanMembaca(idBuku, urlFile) { window.location.href = `buku.html?id=${idBuku}&file=${encodeURIComponent(urlFile || '')}`; }
+        async function prosesLogout() { if(confirm("Yakin ingin keluar?")) { await supabaseClient.auth.signOut(); sessionStorage.removeItem('introSudahDilihat'); window.location.href = 'index'; } }
+        function arahkanMembaca(idBuku, urlFile) { window.location.href = `buku?id=${idBuku}&file=${encodeURIComponent(urlFile || '')}`; }
         function alertTerkunci() { alert('🔒 Modul ini masih terkunci! Tunggu instruksi peneliti untuk membukanya.'); }
 
         function filterBuku(kategori, btnElement) {
