@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil & Rapor Belajar - SIRASA</title>
+    <title>Profil & Rapor Belajar - KITA SEBAYA</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,7 +26,7 @@
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
     <nav class="glass-nav shadow-sm border-b border-slate-200 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-40 transition-all">
-        <a href="index.html" class="flex items-center gap-3 cursor-pointer group text-slate-500 hover:text-rose-600 transition">
+        <a href="dashboard" class="flex items-center gap-3 cursor-pointer group text-slate-500 hover:text-rose-600 transition">
             <div class="w-10 h-10 bg-slate-100 group-hover:bg-rose-100 rounded-xl flex items-center justify-center text-xl transition transform">
                 <i class="fa-solid fa-arrow-left"></i>
             </div>
@@ -111,7 +111,7 @@
     </main>
 
     <footer class="bg-white border-t border-slate-200 mt-auto py-8 text-center">
-        <p class="text-slate-500 text-sm font-medium">© 2026 SIRASA. Dibangun untuk mengedukasi generasi peduli kesehatan.</p>
+        <p class="text-slate-500 text-sm font-medium">© 2026 KITA SEBAYA. Dibangun untuk mengedukasi generasi peduli kesehatan.</p>
     </footer>
 
     <div id="modalEditProfil" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
@@ -177,7 +177,7 @@
         async function inisialisasiProfil() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
-                window.location.href = 'index.html';
+                window.location.href = 'dashboard';
                 return;
             }
             loggedInUser = session.user;
