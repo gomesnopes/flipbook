@@ -256,18 +256,56 @@
         // ===================================
         // 2. MANAJEMEN MODUL (EDIT JALAN)
         // ===================================
+        // ===================================
+        // 2. MANAJEMEN MODUL (EDIT & TOGGLE JALAN)
+        // ===================================
         async function fetchDaftarBukuAdmin() {
             const { data } = await supabaseClient.from('buku').select('*').order('created_at', { ascending: false });
-            const tabel = document.getElementById('tabelModul'); const ddKuis = document.getElementById('formKuisBuku'); const ddEditSinkron = document.getElementById('edit-kuisTerkait'); const ddSinkron = document.getElementById('kuisTerkait');
-            tabel.innerHTML = ''; ddKuis.innerHTML = '<option value="">-- Pilih Wadah --</option>'; let optTaut = '<option value="">-- Tidak ditautkan --</option>'; dbBukuList = data || [];
+            const tabel = document.getElementById('tabelModul'); 
+            const ddKuis = document.getElementById('formKuisBuku'); 
+            const ddEditSinkron = document.getElementById('edit-kuisTerkait'); 
+            const ddSinkron = document.getElementById('kuisTerkait');
+            
+            tabel.innerHTML = ''; 
+            ddKuis.innerHTML = '<option value="">-- Pilih Wadah --</option>'; 
+            let optTaut = '<option value="">-- Tidak ditautkan --</option>'; 
+            dbBukuList = data || [];
+            
             dbBukuList.forEach(b => {
                 let icon = b.tipe_konten === 'Evaluasi Global' ? '🌟' : (b.tipe_konten === 'Hanya Kuis' ? '📝' : '📖');
-                tabel.innerHTML += `<tr class="border-b"><td class="py-3 px-6">${icon} ${b.tipe_konten}</td><td class="py-3 px-6 font-bold">${b.judul}</td><td class="py-3 px-6 text-center"><button onclick="bukaModalEditModul('${encodeURIComponent(JSON.stringify(b))}')" class="text-blue-500 bg-blue-50 p-2 rounded mr-1"><i class="fa-solid fa-pen"></i></button><button onclick="hapusModul('${b.id}')" class="text-red-500 bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                
+                // Membuat elemen Toggle Switch
+                const isAktif = b.is_active === true;
+                const toggleHtml = `
+                    <label class="flex items-center justify-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only" ${isAktif ? 'checked' : ''} onchange="toggleStatusModul('${b.id}', ${isAktif})">
+                            <div class="block w-10 h-6 rounded-full transition ${isAktif ? 'bg-emerald-400' : 'bg-slate-300'}"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${isAktif ? 'translate-x-4' : ''}"></div>
+                        </div>
+                    </label>`;
+
+                // Memasukkan Toggle ke dalam tabel (sebelum kolom Aksi)
+                tabel.innerHTML += `
+                    <tr class="border-b">
+                        <td class="py-3 px-6">${icon} ${b.tipe_konten}</td>
+                        <td class="py-3 px-6 font-bold">${b.judul}</td>
+                        <td class="py-3 px-6 text-center">${toggleHtml}</td>
+                        <td class="py-3 px-6 text-center">
+                            <button onclick="bukaModalEditModul('${encodeURIComponent(JSON.stringify(b))}')" class="text-blue-500 bg-blue-50 p-2 rounded mr-1"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="hapusModul('${b.id}')" class="text-red-500 bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                    
                 ddKuis.innerHTML += `<option value="${b.id}">${icon} Target: ${b.judul}</option>`;
                 if (b.tipe_konten !== 'Modul PDF') optTaut += `<option value="${b.id}">Kuis: ${b.judul}</option>`;
             });
-            ddEditSinkron.innerHTML = optTaut; ddSinkron.innerHTML = optTaut;
+            
+            ddEditSinkron.innerHTML = optTaut; 
+            ddSinkron.innerHTML = optTaut;
         }
+
+        
         function toggleFormModul(m) { document.getElementById('areaFilePDF_tambah').classList.toggle('hidden', document.getElementById('tipeKonten').value !== 'Modul PDF'); }
         async function simpanKontenBaru() {
             const tipe = document.getElementById('tipeKonten').value; const judul = document.getElementById('judulBuku').value; const file = document.getElementById('filePdf').files[0]; const sinkron = document.getElementById('kuisTerkait').value;
