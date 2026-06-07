@@ -304,7 +304,11 @@
             ddEditSinkron.innerHTML = optTaut; 
             ddSinkron.innerHTML = optTaut;
         }
-
+// Fungsi mengeksekusi perubahan ke Database saat Toggle diklik
+        async function toggleStatusModul(id, statusSaatIni) { 
+            await supabaseClient.from('buku').update({ is_active: !statusSaatIni }).eq('id', id); 
+            fetchDaftarBukuAdmin(); 
+        }
         
         function toggleFormModul(m) { document.getElementById('areaFilePDF_tambah').classList.toggle('hidden', document.getElementById('tipeKonten').value !== 'Modul PDF'); }
         async function simpanKontenBaru() {
