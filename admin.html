@@ -795,65 +795,86 @@
             document.getElementById('modalEditModul').classList.remove('hidden'); 
         }
         
-        async function simpanKontenBaru() {
-            const tipe = document.getElementById('tipeKonten').value; 
-            const judul = document.getElementById('judulBuku').value; 
-            const kategori = document.getElementById('kategoriBuku').value; 
-            const deskripsi = document.getElementById('deskripsiKonten').value; 
-            const idKuisSinkron = document.getElementById('kuisTerkait').value || null; 
-            const fileInput = document.getElementById('filePdf'); 
-            const btn = document.getElementById('btnUpload'); 
-            const status = document.getElementById('statusUpload');
-            
-            if (!judul) return alert("Judul wajib diisi!"); 
-            btn.disabled = true; btn.innerHTML = `Proses...`; 
-            status.className = 'bg-blue-50 text-blue-700 p-3 rounded block mt-4'; 
-            status.classList.remove('hidden');
-            
-            try {
-                let pdfUrl = null; let coverUrl = null;
-                if (tipe === 'Modul PDF') {
-                    if (fileInput.files.length === 0) throw new Error("File PDF wajib dipilih!");
-                    status.innerHTML = `Mengekstrak PDF...`; 
-                    const file = fileInput.files[0]; 
-                    const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
-                    const arrayBuffer = await file.arrayBuffer(); 
-                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; 
-                    const page = await pdf.getPage(1); 
-                    const viewport = page.getViewport({ scale: 1.0 }); 
-                    const canvas = document.createElement('canvas'); 
-                    const ctx = canvas.getContext('2d'); 
-                    canvas.height = viewport.height; canvas.width = viewport.width; 
-                    await page.render({ canvasContext: ctx, viewport: viewport }).promise; 
-                    const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-                    
-                    await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", file); 
-                    await supabaseClient.storage.from('pdf-buku').upload(baseFileName + "_cover.jpg", coverBlob);
-                    
-                    pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; 
-                    coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
-                }
-                status.innerHTML = `Menyimpan ke database...`; 
-                if (tipe === 'Evaluasi Global') { 
-                    await supabaseClient.from('buku').insert([ 
-                        { judul: 'Pre-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false }, 
-                        { judul: 'Post-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false } 
-                    ]); 
-                } else { 
-                    await supabaseClient.from('buku').insert([{ 
-                        judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, id_kuis_terkait: idKuisSinkron, is_active: false 
-                    }]); 
-                }
-                status.className = 'bg-green-100 text-green-700 p-3 rounded block mt-4'; 
-                status.innerHTML = `Berhasil!`; 
-                setTimeout(() => { window.location.reload(); }, 1000);
-            } catch (error) { 
-                status.className = 'bg-red-100 text-red-700 p-3 rounded block mt-4'; 
-                status.innerHTML = error.message; 
-                btn.disabled = false; btn.innerHTML = `Coba Lagi`; 
-            }
-        }
+       // Tambahkan baris ini HANYA SEKALI di luar fungsi, letakkan di bawah deklarasi variabel (di dekat let supabaseClient;)
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+async function simpanKontenBaru() {
+    const tipe = document.getElementById('tipeKonten').value; 
+    const judul = document.getElementById('judulBuku').value; 
+    const kategori = document.getElementById('kategoriBuku').value; 
+    const deskripsi = document.getElementById('deskripsiKonten').value; 
+    const idKuisSinkron = document.getElementById('kuisTerkait').value || null; 
+    const fileInput = document.getElementById('filePdf'); 
+    const btn = document.getElementById('btnUpload'); 
+    const status = document.getElementById('statusUpload');
+    
+    if (!judul) return alert("Judul wajib diisi!"); 
+    btn.disabled = true; btn.innerHTML = `Proses...`; 
+    status.className = 'bg-blue-50 text-blue-700 p-3 rounded block mt-4'; 
+    status.classList.remove('hidden');
+    
+    try {
+        let pdfUrl = null; let coverUrl = null;
+        
+        if (tipe === 'Modul PDF') {
+            if (fileInput.files.length === 0) throw new Error("File PDF wajib dipilih!");
+            
+            const file = fileInput.files[0]; 
+            const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
+            
+            // 1. Ekstrak Cover PDF
+            status.innerHTML = `Mengekstrak Cover PDF...`; 
+            const arrayBuffer = await file.arrayBuffer(); 
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; 
+            const page = await pdf.getPage(1); 
+            const viewport = page.getViewport({ scale: 1.0 }); 
+            const canvas = document.createElement('canvas'); 
+            const ctx = canvas.getContext('2d'); 
+            canvas.height = viewport.height; canvas.width = viewport.width; 
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise; 
+            const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+            
+            // 2. Upload PDF ke Supabase dengan Pengecekan Error
+            status.innerHTML = `Mengunggah PDF ke server...`; 
+            const { error: errPdf } = await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", file);
+            if (errPdf) throw new Error("Gagal upload PDF: " + errPdf.message);
+
+            // 3. Upload Cover ke Supabase dengan Pengecekan Error
+            status.innerHTML = `Mengunggah Cover ke server...`;
+            const { error: errCover } = await supabaseClient.storage.from('pdf-buku').upload(baseFileName + "_cover.jpg", coverBlob);
+            if (errCover) throw new Error("Gagal upload Cover: " + errCover.message);
+            
+            // 4. Ambil URL Publik
+            pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; 
+            coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
+        }
+        
+        status.innerHTML = `Menyimpan ke database...`; 
+        
+        if (tipe === 'Evaluasi Global') { 
+            const { error: errDb } = await supabaseClient.from('buku').insert([ 
+                { judul: 'Pre-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false }, 
+                { judul: 'Post-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false } 
+            ]); 
+            if (errDb) throw new Error("Database error: " + errDb.message);
+        } else { 
+            const { error: errDb } = await supabaseClient.from('buku').insert([{ 
+                judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, id_kuis_terkait: idKuisSinkron, is_active: false 
+            }]); 
+            if (errDb) throw new Error("Database error: " + errDb.message);
+        }
+        
+        status.className = 'bg-green-100 text-green-700 p-3 rounded block mt-4'; 
+        status.innerHTML = `Berhasil!`; 
+        setTimeout(() => { window.location.reload(); }, 1000);
+        
+    } catch (error) { 
+        status.className = 'bg-red-100 text-red-700 p-3 rounded block mt-4'; 
+        // Sekarang error yang sebenarnya dari Supabase akan tampil di layar
+        status.innerHTML = error.message; 
+        btn.disabled = false; btn.innerHTML = `Coba Lagi`; 
+    }
+}
         async function simpanEditModul(btn) { 
             const id = document.getElementById('edit-modul-id').value; 
             const judul = document.getElementById('edit-modul-judul').value; 
