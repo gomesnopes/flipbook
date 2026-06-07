@@ -305,8 +305,19 @@
 
                 await supabaseClient.from('buku').update(payload).eq('id', id); 
                 window.location.reload();
-            } catch (err) { alert("Gagal menyimpan: " + err.message); btn.innerHTML = "Simpan Perubahan"; btn.disabled =
-        async function hapusModul(id) { if(confirm("Hapus?")) { await supabaseClient.from('buku').delete().eq('id', id); window.location.reload(); } }
+           } catch (err) { 
+                alert("Gagal menyimpan: " + err.message); 
+                btn.innerHTML = "Simpan Perubahan"; 
+                btn.disabled = false; 
+            }
+        } // Penutup fungsi simpanEditModul
+
+        async function hapusModul(id) { 
+            if(confirm("Hapus?")) { 
+                await supabaseClient.from('buku').delete().eq('id', id); 
+                window.location.reload(); 
+            } 
+        }
 
         // ===================================
         // 3. MANAJEMEN BANK SOAL (EDIT JALAN)
