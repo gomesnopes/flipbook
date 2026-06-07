@@ -87,10 +87,25 @@
 
                 <section id="pengguna" class="tab-content"><h2 class="text-2xl font-bold mb-6">Data Responden</h2><div class="bg-white rounded-xl border shadow-sm overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-100 border-b text-sm"><tr><th class="py-4 px-6">Nama Lengkap</th><th class="py-4 px-6">Kategori</th><th class="py-4 px-6">Gender</th><th class="py-4 px-6">Kota</th><th class="py-4 px-6 text-center">Aksi</th></tr></thead><tbody id="tabelPengguna" class="text-sm divide-y"></tbody></table></div></section>
                 
-                <section id="modul" class="tab-content">
-                    <div class="flex justify-between mb-6"><h2 class="text-2xl font-bold">Manajemen Konten</h2><button onclick="document.getElementById('modalTambahModul').classList.remove('hidden')" class="bg-rose-600 text-white px-4 py-2 rounded-lg font-bold">Buat Konten Baru</button></div>
-                    <div class="bg-white rounded-xl border shadow-sm overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-100 border-b text-sm"><tr><th class="py-3 px-6">Tipe</th><th class="py-3 px-6">Judul Konten</th><th class="py-3 px-6 text-center">Aksi</th></tr></thead><tbody id="tabelModul" class="text-sm divide-y"></tbody></table></div>
-                </section>
+               <section id="modul" class="tab-content">
+    <div class="flex justify-between mb-6">
+        <h2 class="text-2xl font-bold">Manajemen Konten</h2>
+        <button onclick="document.getElementById('modalTambahModul').classList.remove('hidden')" class="bg-rose-600 text-white px-4 py-2 rounded-lg font-bold">Buat Konten Baru</button>
+    </div>
+    <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-slate-100 border-b text-sm">
+                <tr>
+                    <th class="py-3 px-6">Tipe</th>
+                    <th class="py-3 px-6">Judul Konten</th>
+                    <th class="py-3 px-6 text-center">Status</th> <!-- Tambahkan baris ini -->
+                    <th class="py-3 px-6 text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabelModul" class="text-sm divide-y"></tbody>
+        </table>
+    </div>
+</section>
 
                 <section id="kuis" class="tab-content">
                     <div class="flex justify-between mb-6"><h2 class="text-2xl font-bold">Studio Bank Soal</h2><button onclick="bukaModalKuisTambah()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold">Input Kuesioner Baru</button></div>
