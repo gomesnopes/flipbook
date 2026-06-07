@@ -136,27 +136,80 @@
         }
 
         function renderGridBuku(dataBuku) {
-            const bookList = document.getElementById('bookList'); bookList.innerHTML = '';
-            if (dataBuku.length === 0) { bookList.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 fade-in"><p>Tidak ada modul dalam kategori ini.</p></div>`; return; }
+    const bookList = document.getElementById('bookList'); 
+    bookList.innerHTML = '';
+    
+    if (dataBuku.length === 0) { 
+        bookList.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 fade-in"><p>Tidak ada modul dalam kategori ini.</p></div>`; 
+        return; 
+    }
 
-            dataBuku.forEach((book, index) => {
-                const isLocked = book.is_active === false || book.is_active === null; 
-                let cover = "";
-                if (book.cover_url) { cover = `<img src="${book.cover_url}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 ${isLocked ? '' : 'group-hover:scale-110'}">`; } 
-                else { if (book.judul.toLowerCase().includes('pre-test')) { cover = `<div class="w-full h-full bg-indigo-600 flex flex-col items-center justify-center text-white"><i class="fa-solid fa-clipboard-question text-5xl opacity-30 mb-2"></i><span class="font-black text-xs tracking-widest">PRE-TEST</span></div>`; } else if (book.judul.toLowerCase().includes('post-test')) { cover = `<div class="w-full h-full bg-emerald-600 flex flex-col items-center justify-center text-white"><i class="fa-solid fa-clipboard-check text-5xl opacity-30 mb-2"></i><span class="font-black text-xs tracking-widest">POST-TEST</span></div>`; } else { cover = `<div class="w-full h-full bg-slate-200 flex items-center justify-center"><i class="fa-regular fa-file-pdf text-6xl text-slate-400"></i></div>`; } }
-                
-                let badgeColor = "text-rose-700 bg-white/90"; let badgeText = book.kategori;
-                if (book.judul.toLowerCase().includes('post-test')) { badgeText = "POST-TEST"; badgeColor = "text-emerald-700 bg-emerald-50 border border-emerald-200 shadow-sm"; } else if (book.judul.toLowerCase().includes('pre-test') || book.tipe_konten === 'Hanya Kuis') { badgeText = "PRE-TEST"; badgeColor = "text-indigo-700 bg-indigo-50 border border-indigo-200 shadow-sm"; }
-
-                const actionClick = isLocked ? `alertTerkunci()` : `arahkanMembaca('${book.id}', '${book.file_url}')`;
-                const cardStyle = isLocked ? "grayscale opacity-75 cursor-not-allowed border-slate-200" : "card-hover group cursor-pointer border-slate-100";
-                const btnBawahStyle = isLocked ? "bg-slate-100 text-slate-400 border-transparent" : "bg-slate-50 hover:bg-rose-600 text-rose-600 hover:text-white border-slate-100";
-                const btnBawahText = isLocked ? '<i class="fa-solid fa-lock"></i> Terkunci' : '<i class="fa-solid fa-book-open"></i> Buka Konten';
-                const overlayContent = isLocked ? `<div class="bg-slate-800/90 text-white font-bold py-2.5 px-6 rounded-full text-sm shadow-xl flex items-center gap-2 border border-slate-600"><i class="fa-solid fa-lock"></i> Belum Dibuka</div>` : `<button class="bg-white text-rose-600 font-bold py-2.5 px-6 rounded-full text-sm transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">Mulai Sekarang</button>`;
-
-                bookList.innerHTML += `<div class="bg-white rounded-2xl p-3 border flex flex-col h-full transition-all duration-300 fade-in ${cardStyle}" style="animation-delay: ${index * 0.05}s; opacity: 0;"><div class="aspect-[3/4] rounded-xl overflow-hidden relative shadow-inner bg-slate-100 shrink-0" onclick="${actionClick}">${cover}<div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 ${isLocked ? 'opacity-100 bg-slate-900/30' : 'group-hover:opacity-100'} transition-opacity duration-300 flex items-end justify-center pb-5">${overlayContent}</div><span class="absolute top-3 right-3 ${badgeColor} px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide backdrop-blur-md">${badgeText}</span></div><div class="pt-4 flex flex-col flex-grow text-center px-1"><h4 class="font-bold text-sm md:text-base text-slate-800 mb-4 flex-grow line-clamp-2 leading-snug ${isLocked ? '' : 'group-hover:text-rose-600'} transition-colors" onclick="${actionClick}">${book.judul}</h4><button onclick="${actionClick}" class="w-full py-2.5 rounded-xl text-xs md:text-sm font-bold transition-colors border flex items-center justify-center gap-2 mt-auto ${btnBawahStyle}">${btnBawahText}</button></div></div>`;
-            });
+    dataBuku.forEach((book, index) => {
+        const isLocked = book.is_active === false || book.is_active === null; 
+        
+        // 1. LOGIKA COVER
+        let cover = "";
+        if (book.cover_url) { 
+            cover = `<img src="${book.cover_url}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 ${isLocked ? '' : 'group-hover:scale-110'}">`; 
+        } else { 
+            if (book.judul.toLowerCase().includes('pre-test')) { 
+                cover = `<div class="w-full h-full bg-indigo-600 flex flex-col items-center justify-center text-white"><i class="fa-solid fa-clipboard-question text-5xl opacity-30 mb-2"></i><span class="font-black text-xs tracking-widest">PRE-TEST</span></div>`; 
+            } else if (book.judul.toLowerCase().includes('post-test')) { 
+                cover = `<div class="w-full h-full bg-emerald-600 flex flex-col items-center justify-center text-white"><i class="fa-solid fa-clipboard-check text-5xl opacity-30 mb-2"></i><span class="font-black text-xs tracking-widest">POST-TEST</span></div>`; 
+            } else if (book.tipe_konten === 'Hanya Kuis') {
+                // Tambahan: Cover default khusus jika dia Hanya Kuis
+                cover = `<div class="w-full h-full bg-amber-500 flex flex-col items-center justify-center text-white"><i class="fa-solid fa-list-check text-5xl opacity-30 mb-2"></i><span class="font-black text-xs tracking-widest">KUIS</span></div>`;
+            } else { 
+                cover = `<div class="w-full h-full bg-slate-200 flex items-center justify-center"><i class="fa-regular fa-file-pdf text-6xl text-slate-400"></i></div>`; 
+            } 
         }
+        
+        // 2. LOGIKA BADGE
+        let badgeColor = "text-rose-700 bg-white/90"; 
+        let badgeText = book.kategori;
+        
+        if (book.judul.toLowerCase().includes('post-test')) { 
+            badgeText = "POST-TEST"; 
+            badgeColor = "text-emerald-700 bg-emerald-50 border border-emerald-200 shadow-sm"; 
+        } else if (book.judul.toLowerCase().includes('pre-test')) { 
+            badgeText = "PRE-TEST"; 
+            badgeColor = "text-indigo-700 bg-indigo-50 border border-indigo-200 shadow-sm"; 
+        } else if (book.tipe_konten === 'Hanya Kuis') { 
+            // KONDISI DIPISAH: Modul "Hanya Kuis" kini punya badgenya sendiri
+            badgeText = "KUIS"; 
+            badgeColor = "text-amber-700 bg-amber-50 border border-amber-200 shadow-sm"; 
+        }
+
+        // 3. LOGIKA STYLE & RENDER
+        const actionClick = isLocked ? `alertTerkunci()` : `arahkanMembaca('${book.id}', '${book.file_url}')`;
+        const cardStyle = isLocked ? "grayscale opacity-75 cursor-not-allowed border-slate-200" : "card-hover group cursor-pointer border-slate-100";
+        const btnBawahStyle = isLocked ? "bg-slate-100 text-slate-400 border-transparent" : "bg-slate-50 hover:bg-rose-600 text-rose-600 hover:text-white border-slate-100";
+        const btnBawahText = isLocked ? '<i class="fa-solid fa-lock"></i> Terkunci' : '<i class="fa-solid fa-book-open"></i> Buka Konten';
+        const overlayContent = isLocked ? `<div class="bg-slate-800/90 text-white font-bold py-2.5 px-6 rounded-full text-sm shadow-xl flex items-center gap-2 border border-slate-600"><i class="fa-solid fa-lock"></i> Belum Dibuka</div>` : `<button class="bg-white text-rose-600 font-bold py-2.5 px-6 rounded-full text-sm transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">Mulai Sekarang</button>`;
+
+        bookList.innerHTML += `
+            <div class="bg-white rounded-2xl p-3 border flex flex-col h-full transition-all duration-300 fade-in ${cardStyle}" style="animation-delay: ${index * 0.05}s; opacity: 0;">
+                <div class="aspect-[3/4] rounded-xl overflow-hidden relative shadow-inner bg-slate-100 shrink-0" onclick="${actionClick}">
+                    ${cover}
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 ${isLocked ? 'opacity-100 bg-slate-900/30' : 'group-hover:opacity-100'} transition-opacity duration-300 flex items-end justify-center pb-5">
+                        ${overlayContent}
+                    </div>
+                    <span class="absolute top-3 right-3 ${badgeColor} px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide backdrop-blur-md">
+                        ${badgeText}
+                    </span>
+                </div>
+                <div class="pt-4 flex flex-col flex-grow text-center px-1">
+                    <h4 class="font-bold text-sm md:text-base text-slate-800 mb-4 flex-grow line-clamp-2 leading-snug ${isLocked ? '' : 'group-hover:text-rose-600'} transition-colors" onclick="${actionClick}">
+                        ${book.judul}
+                    </h4>
+                    <button onclick="${actionClick}" class="w-full py-2.5 rounded-xl text-xs md:text-sm font-bold transition-colors border flex items-center justify-center gap-2 mt-auto ${btnBawahStyle}">
+                        ${btnBawahText}
+                    </button>
+                </div>
+            </div>`;
+    });
+}
+
 
         async function fetchLeaderboard() {
             try {
