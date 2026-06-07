@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SIRASA Edukasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="config.js"></script>
+
+    <style>
+        .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-enter { animation: zoomIn 0.3s ease-out forwards; } @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        #sidebar { transition: width 0.3s ease, transform 0.3s ease; }
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; } .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
+    
+    <aside id="sidebar" class="w-64 md:w-0 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0 transition-all duration-300 shadow-xl md:shadow-none">
+        <div class="h-16 flex items-center justify-between px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800 min-w-[256px]">
+            <div><i class="fa-solid fa-ribbon text-rose-500 mr-2"></i> Admin SIRASA</div><button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-w-[256px]">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-rose-600 text-white font-medium transition-colors"><i class="fa-solid fa-chart-pie w-5"></i> Dasbor Analitik</button>
+            <button onclick="switchTab('pengguna')" id="nav-pengguna" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-users w-5"></i> Data Responden</button>
+            <button onclick="switchTab('modul')" id="nav-modul" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-book-medical w-5"></i> Konten & Modul</button>
+            <button onclick="switchTab('kuis')" id="nav-kuis" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-list-check w-5"></i> Bank Soal / Kuis</button>
+            <button onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white font-medium transition-colors"><i class="fa-solid fa-sliders w-5"></i> Pengaturan</button>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <header class="bg-white h-16 border-b border-slate-200 flex items-center px-6 shrink-0 z-10 shadow-sm"><button onclick="toggleSidebar()" class="text-slate-500 hover:text-rose-600 transition p-2 bg-slate-100 rounded-lg"><i class="fa-solid fa-bars text-xl"></i></button><h1 class="ml-4 font-bold text-slate-700 hidden sm:block">Panel Peneliti - SIRASA</h1></header>
+
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
+            <div class="max-w-[1400px] mx-auto">
+                
+                <section id="dashboard" class="tab-content active">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 class="text-2xl font-bold text-slate-800">Dasbor Analitik Kuantitatif</h2>
+                        <button onclick="inisialisasiAdmin()" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 px-4 rounded-lg shadow transition font-bold text-sm"><i class="fa-solid fa-rotate mr-2"></i> Refresh Data</button>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-users"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Peserta Aktif</p><h3 id="stat-peserta" class="text-xl font-black text-slate-800">0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-star"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Total XP User</p><h3 id="stat-poin" class="text-xl font-black text-slate-800">0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-bullseye"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Tingkat Partisipasi</p><h3 id="stat-akurasi" class="text-xl font-black text-slate-800">0%</h3></div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center"><div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-lg mb-2"><i class="fa-solid fa-clock"></i></div><p class="text-[10px] font-bold text-slate-400 uppercase">Rata-rata Waktu Kuis</p><h3 id="stat-waktu" class="text-xl font-black text-slate-800">0s</h3></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-chart-bar text-emerald-500 mr-2"></i> Peningkatan Pemahaman (Evaluasi Global)</h4>
+                            <div class="relative h-64 w-full flex-grow"><canvas id="chartOverall"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-tags text-indigo-500 mr-2"></i> N-Gain Per Topik / Dimensi</h4>
+                            <div class="relative h-64 w-full flex-grow"><canvas id="chartDimensi"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-2 h-full bg-rose-500"></div>
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                                <h4 class="font-bold text-slate-800"><i class="fa-solid fa-chart-pie text-rose-500 mr-2"></i> Analisis Butir Soal (Semua Tipe)</h4>
+                                <select id="filter-analisis-soal" onchange="renderChartButirSoal()" class="p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none w-full md:w-1/2 shadow-sm cursor-pointer"></select>
+                            </div>
+                            <div class="relative h-72 w-full flex-grow"><canvas id="chartButirSoal"></canvas></div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-book-open text-blue-500 mr-2"></i> Rata-Rata Nilai Kuis Modul Mandiri</h4>
+                            <div class="relative h-72 w-full flex-grow"><canvas id="chartModul"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-8">
+                        <div class="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                            <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-table text-emerald-500 mr-2"></i> Raw Data Evaluasi Global (Export SPSS)</h4></div>
+                            <button onclick="unduhExcel(globalTrendData, 'Data_Evaluasi_SPSS')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
+                        </div>
+                        <div class="overflow-y-auto w-full max-h-[350px]">
+                            <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]"><thead class="sticky top-0 z-10 bg-white shadow-sm"><tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200"><th class="py-3 px-5 font-bold">Responden</th><th class="py-3 px-5 font-bold">Topik / Dimensi</th><th class="py-3 px-5 font-bold text-center border-l border-slate-200">Pre-Test</th><th class="py-3 px-5 font-bold text-center border-r border-slate-200">Post-Test</th><th class="py-3 px-5 font-bold text-center">N-Gain</th></tr></thead>
+                                <tbody id="tabelTrendNgain" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pengguna" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Data Responden</h2>
+                        <button onclick="unduhExcel(globalRespondenData, 'Data_Responden_Riset')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm"><i class="fa-solid fa-file-excel"></i> Export Data ke Excel</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
+                            <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-4 px-6 font-bold">Nama Lengkap</th><th class="py-4 px-6 font-bold">Kategori</th><th class="py-4 px-6 font-bold">Gender</th><th class="py-4 px-6 font-bold">Asal Kota</th><th class="py-4 px-6 font-bold text-center">Aksi</th></tr></thead>
+                            <tbody id="tabelPengguna" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="modul" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Manajemen Konten (Buku/PDF & Wadah Ujian)</h2>
+                        <button onclick="document.getElementById('modalTambahModul').classList.remove('hidden')" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm"><i class="fa-solid fa-plus"></i> Buat Konten Baru</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                            <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-3 px-6 font-bold w-16">Tipe</th><th class="py-3 px-6 font-bold min-w-[200px]">Judul Konten</th><th class="py-3 px-6 font-bold text-center">Status Modul</th><th class="py-3 px-6 font-bold text-center">Aksi</th></tr></thead>
+                            <tbody id="tabelModul" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="kuis" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Studio Bank Soal</h2>
+                        <button onclick="bukaModalKuisTambah()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm"><i class="fa-solid fa-plus"></i> Input Kuesioner Baru</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                            <thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="py-3 px-6 font-bold w-[40%]">Terkait Wadah / Konten</th><th class="py-3 px-6 font-bold w-[30%] text-center">Total Pertanyaan</th><th class="py-3 px-6 font-bold text-center w-[30%]">Aksi Pengeditan</th></tr></thead>
+                            <tbody id="tabelKuis" class="text-sm text-slate-700 divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="pengaturan" class="tab-content">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Pengaturan Sistem</h2>
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6 flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 mb-1">Reset Database</h3>
+                                <p class="text-slate-500 text-sm mb-4">Hapus seluruh riwayat interaksi dan data profil peserta.</p>
+                                <button onclick="hapusSemuaDataPeserta()" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-sm"><i class="fa-solid fa-trash-can"></i> Kosongkan Data Peserta</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="modalTambahModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-enter overflow-hidden flex flex-col border border-slate-100">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-book-medical text-rose-500 mr-2"></i> Tambah Wadah Baru</h3>
+                <button onclick="tutupModal('modalTambahModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl mb-2">
+                    <label class="block text-sm font-bold mb-1 text-rose-800">Pilih Tipe Konten</label>
+                    <select id="tipeKonten" onchange="toggleFormModul('tambah')" class="w-full p-2.5 border border-rose-300 rounded-lg outline-none bg-white font-bold text-slate-700 shadow-sm">
+                        <option value="Modul PDF">📖 Modul Pembelajaran (Hanya PDF)</option>
+                        <option value="Hanya Kuis">📝 Kuis Modul Latihan Mandiri</option>
+                        <option value="Evaluasi Global">🌟 Evaluasi Global (Pre/Post Test Utama)</option>
+                    </select>
+                </div>
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">Judul (Contoh: "Modul 1 HIV/AIDS" atau "Pre-Test Utama")</label><input type="text" id="judulBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none"></div>
+                <div><label class="block text-sm font-medium mb-1 text-slate-700">Kategori</label><select id="kategoriBuku" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none"><option value="Materi Inti">Materi Inti</option><option value="Panduan Praktik">Panduan Praktik</option><option value="Evaluasi">Evaluasi / Ujian</option></select></div>
+                
+                <div id="areaSinkronKuis" class="pt-2">
+                    <label class="block text-sm font-bold mb-1 text-indigo-700"><i class="fa-solid fa-link"></i> Jika selesai baca PDF, arahkan otomatis ke Kuis:</label>
+                    <select id="kuisTerkait" class="w-full p-2.5 border border-indigo-300 rounded-lg outline-none bg-indigo-50 font-semibold text-indigo-800">
+                        <option value="">-- Jangan arahkan ke mana-mana --</option>
+                    </select>
+                </div>
+
+                <div id="areaFilePDF_tambah" class="pt-2"><label class="block text-sm font-medium mb-1 text-slate-700">Upload File Modul PDF</label><input type="file" id="filePdf" accept="application/pdf" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 file:text-slate-700 border border-slate-300 rounded-lg"></div>
+                <div id="areaDeskripsi_tambah" class="pt-2"><label class="block text-sm font-medium mb-1 text-slate-700">Deskripsi / Petunjuk Singkat</label><textarea id="deskripsiKonten" rows="2" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none"></textarea></div>
+                <div id="statusUpload" class="hidden p-3 rounded-lg text-sm font-medium"></div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalTambahModul')" class="w-1/3 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanKontenBaru()" id="btnUpload" class="w-2/3 bg-rose-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-save"></i> Buat Konten</button></div>
+        </div>
+    </div>
+
+    <div id="modalEditModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-slate-800">Edit Wadah Konten</h3><button onclick="tutupModal('modalEditModul')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="edit-modul-id">
+                <div><label class="block text-sm font-medium mb-1">Tipe Konten</label><select id="edit-tipeKonten" onchange="toggleFormModul('edit')" class="w-full p-2 border rounded-lg outline-none bg-rose-50 font-semibold"><option value="Modul PDF">Modul PDF</option><option value="Hanya Kuis">Hanya Kuis</option><option value="Evaluasi Global">Evaluasi Global</option></select></div>
+                <div><label class="block text-sm font-medium mb-1">Judul Konten</label><input type="text" id="edit-modul-judul" class="w-full p-2 border rounded-lg outline-none"></div>
+                
+                <div id="edit-areaSinkronKuis" class="pt-2">
+                    <label class="block text-sm font-bold mb-1 text-indigo-700"><i class="fa-solid fa-link"></i> Arahkan otomatis ke Kuis:</label>
+                    <select id="edit-kuisTerkait" class="w-full p-2.5 border border-indigo-300 rounded-lg outline-none bg-indigo-50 font-semibold text-indigo-800"><option value="">-- Jangan arahkan ke mana-mana --</option></select>
+                </div>
+
+                <div class="pt-2"><label class="block text-sm font-medium mb-1">Deskripsi Singkat</label><textarea id="edit-deskripsiKonten" rows="3" class="w-full p-2 border rounded-lg outline-none"></textarea></div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanEditModul(this)" class="w-1/2 bg-rose-600 text-white font-bold py-2.5 rounded-lg"><i class="fa-solid fa-check"></i> Simpan</button></div>
+        </div>
+    </div>
+
+    <div id="modalTambahKuis" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl modal-enter overflow-hidden flex flex-col border border-slate-100 max-h-[95vh]">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0"><h3 class="font-bold text-lg text-slate-800" id="title-modal-kuis"><i class="fa-solid fa-list-ol text-indigo-500 mr-2"></i> Studio Input Soal</h3><button onclick="tutupModal('modalTambahKuis')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-100/50">
+                <div class="flex flex-col lg:flex-row gap-6 h-full">
+                    
+                    <div class="flex-1 space-y-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <input type="hidden" id="formKuisId">
+                        
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl mb-2" id="wadahPilihBuku">
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Soal ini untuk wadah yang mana?</label>
+                            <select id="formKuisBuku" class="w-full p-3 border border-slate-300 rounded-lg outline-none bg-white font-bold text-slate-700 shadow-sm"></select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-700"><i class="fa-solid fa-tags text-indigo-400 mr-1"></i> Topik / Dimensi Evaluasi:</label>
+                            <select id="formKuisDimensi" class="w-full p-3 border border-indigo-200 rounded-xl outline-none font-bold text-indigo-700 bg-indigo-50 transition shadow-sm">
+                                <option value="Pengetahuan">📘 Pengetahuan</option>
+                                <option value="Sikap">📘 Sikap</option>
+                                <option value="Efikasi Diri">📘 Efikasi Diri</option>
+                                <option value="Aksesibilitas Media Digital">📘 Aksesibilitas Media Digital</option>
+                                <option value="Perilaku Pencegahan">📘 Perilaku Pencegahan</option>
+                                <option value="Umum">Umum / Tanpa Topik (Kuis Modul)</option>
+                            </select>
+                        </div>
+
+                        <div><label class="block text-sm font-bold mb-2 text-slate-700 mt-2">Pernyataan Soal</label><textarea id="formKuisPertanyaan" rows="2" class="w-full p-3 border border-slate-300 rounded-xl outline-none shadow-sm"></textarea></div>
+                        
+                        <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                            <div class="flex justify-between items-center mb-4 border-b border-indigo-200 pb-3"><label class="font-bold text-slate-700 text-sm">Builder Opsi</label><select id="formKuisJumlahOpsi" onchange="renderDynamicOptions()" class="p-1 border border-indigo-200 rounded-lg text-xs outline-none bg-white font-bold text-indigo-700 shadow-sm"><option value="2">2 Pilihan</option><option value="3" selected>3 Pilihan</option><option value="4">4 Pilihan</option><option value="5">5 Pilihan</option></select></div>
+                            <div class="grid grid-cols-12 gap-2 mb-2 px-1 text-[10px] font-bold text-slate-400 uppercase text-center"><div class="col-span-1">Opt</div><div class="col-span-8 text-left pl-2">Teks Jawaban</div><div class="col-span-3">Skor</div></div>
+                            <div id="wadahDynamicOptions" class="space-y-2"></div>
+                        </div>
+                        <button onclick="tambahKeDraft()" class="w-full bg-white hover:bg-indigo-50 text-indigo-600 font-bold py-3.5 rounded-xl border border-indigo-200 border-dashed mt-4 shadow-sm">Masukkan Soal ke Daftar</button>
+                    </div>
+
+                    <div class="w-full lg:w-5/12 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                        <div class="bg-slate-800 text-white px-5 py-4 border-b flex justify-between items-center"><h4 class="font-bold text-sm">Daftar Soal (<span id="draftCount">0</span>)</h4><button onclick="kosongkanDraft()" class="text-xs text-rose-400 underline">Kosongkan</button></div>
+                        <div id="draftList" class="flex-1 overflow-y-auto p-4 bg-slate-50 min-h-[300px]"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-white border-t flex gap-3"><button onclick="tutupModal('modalTambahKuis')" class="w-1/3 bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl">Batal</button><button onclick="simpanKuisKeDatabase(this)" class="w-2/3 bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg">Terapkan Pembuatan Soal</button></div>
+        </div>
+    </div>
+
+    <script>
+        let supabaseClient; let chartInstances = {}; const LABELS = ['A', 'B', 'C', 'D', 'E'];
+        let draftKuisArray = []; let dataEditSementara = null; let isEditMode = false; let dbBukuList = []; 
+        let globalTrendData = []; let globalLogData = []; let globalRespondenData = [];
+        window.globalItemResponse = {}; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof CONFIG === 'undefined') { alert("config.js tidak terbaca!"); return; }
+            supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+            inisialisasiAdmin();
+        });
+
+        async function inisialisasiAdmin() {
+            await fetchDaftarBukuAdmin(); await fetchDaftarKuis(); await fetchPengguna(); await muatDataDasbor(); 
+        }
+
+        function toggleSidebar() { const sb = document.getElementById('sidebar'); if (window.innerWidth < 768) { sb.classList.toggle('-translate-x-full'); } else { sb.classList.toggle('md:w-0'); sb.classList.toggle('md:w-64'); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 350); } }
+        function switchTab(tabId) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('bg-rose-600', 'text-white'); el.classList.add('hover:bg-slate-800', 'hover:text-white', 'text-slate-300'); }); document.getElementById(tabId).classList.add('active'); const activeBtn = document.getElementById('nav-' + tabId); activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300'); activeBtn.classList.add('bg-rose-600', 'text-white'); }
+        function tutupModal(idModal) { document.getElementById(idModal).classList.add('hidden'); }
+
+        function unduhExcel(dataArray, namaFileAsli) {
+            if(dataArray.length === 0) return alert("Tidak ada data untuk diexport!");
+            try { const worksheet = XLSX.utils.json_to_sheet(dataArray); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "Data"); const formatTgl = new Date().toISOString().slice(0,10); XLSX.writeFile(workbook, `${namaFileAsli}_${formatTgl}.xlsx`); } 
+            catch (e) { alert("Gagal Export."); }
+        }
+
+        // --- MANAJEMEN MODUL & SINKRONISASI ---
+        async function fetchDaftarBukuAdmin() {
+            try {
+                const { data } = await supabaseClient.from('buku').select('*').order('created_at', { ascending: false });
+                const tabel = document.getElementById('tabelModul'); 
+                const ddTambah = document.getElementById('kuisTerkait'); 
+                const ddEdit = document.getElementById('edit-kuisTerkait');
+                const ddKuis = document.getElementById('formKuisBuku');
+
+                tabel.innerHTML = ''; dbBukuList = data || [];
+                if (!data || data.length === 0) return;
+                
+                let htmlSinkron = '<option value="">-- Jangan arahkan ke mana-mana --</option>';
+                let htmlWadahKuis = '<option value="">-- Pilih Wadah Evaluasi/Kuis --</option>';
+
+                data.forEach(buku => {
+                    let iconTipe = ''; 
+                    if (buku.tipe_konten === 'Evaluasi Global') { iconTipe = `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">EVALUASI GLOBAL</span>`; }
+                    else if (buku.tipe_konten === 'Hanya Kuis') { iconTipe = `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold">KUIS MANDIRI</span>`; } 
+                    else { iconTipe = `<span class="bg-rose-100 text-rose-600 px-2 py-1 rounded text-xs font-bold">MODUL PDF</span>`; }
+                    
+                    const isAktif = buku.is_active === true; const toggleHtml = `<label class="flex items-center justify-center cursor-pointer"><div class="relative"><input type="checkbox" class="sr-only toggle-checkbox" ${isAktif ? 'checked' : ''} onchange="toggleStatusModul('${buku.id}', ${isAktif})"><div class="block bg-slate-200 w-10 h-6 rounded-full transition toggle-label"></div><div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${isAktif ? 'translate-x-4' : ''}"></div></div></label>`;
+                    
+                    tabel.innerHTML += `<tr class="border-b border-slate-100"><td class="py-3 px-6">${iconTipe}</td><td class="py-3 px-6 font-medium">${buku.judul}</td><td class="py-3 px-6 text-center">${toggleHtml}</td><td class="py-3 px-6 text-center"><button onclick="bukaModalEditModul('${encodeURIComponent(JSON.stringify(buku))}')" class="text-blue-500 bg-blue-50 p-2 rounded mr-1"><i class="fa-solid fa-pen"></i></button><button onclick="hapusModul('${buku.id}')" class="text-red-500 bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                    
+                    if (buku.tipe_konten !== 'Modul PDF') {
+                        htmlSinkron += `<option value="${buku.id}">Tautkan ke: ${buku.judul}</option>`;
+                        htmlWadahKuis += `<option value="${buku.id}">Target: ${buku.judul}</option>`;
+                    }
+                });
+
+                if(ddTambah) ddTambah.innerHTML = htmlSinkron;
+                if(ddEdit) ddEdit.innerHTML = htmlSinkron;
+                if(ddKuis) ddKuis.innerHTML = htmlWadahKuis;
+
+            } catch (err) {}
+        }
+        
+        function toggleFormModul(mode) { 
+            const tipeId = mode === 'edit' ? 'edit-tipeKonten' : 'tipeKonten';
+            const tipe = document.getElementById(tipeId).value; 
+            const areaPDF = document.getElementById(mode === 'edit' ? '' : 'areaFilePDF_tambah');
+            const areaSinkron = document.getElementById(mode === 'edit' ? 'edit-areaSinkronKuis' : 'areaSinkronKuis');
+
+            if (tipe === 'Modul PDF') {
+                if(areaPDF) areaPDF.classList.remove('hidden');
+                if(areaSinkron) areaSinkron.classList.remove('hidden');
+            } else {
+                if(areaPDF) areaPDF.classList.add('hidden');
+                if(areaSinkron) areaSinkron.classList.add('hidden');
+            }
+        }
+        
+        async function toggleStatusModul(id, stat) { await supabaseClient.from('buku').update({ is_active: !stat }).eq('id', id); fetchDaftarBukuAdmin(); }
+        async function hapusModul(id) { if(confirm("Yakin hapus?")) { await supabaseClient.from('buku').delete().eq('id', id); fetchDaftarBukuAdmin(); fetchDaftarKuis(); } }
+        
+        function bukaModalEditModul(str) { 
+            const b = JSON.parse(decodeURIComponent(str)); 
+            document.getElementById('edit-modul-id').value = b.id; document.getElementById('edit-modul-judul').value = b.judul; document.getElementById('edit-tipeKonten').value = b.tipe_konten; document.getElementById('edit-deskripsiKonten').value = b.deskripsi || ''; document.getElementById('edit-kuisTerkait').value = b.id_kuis_terkait || ''; 
+            toggleFormModul('edit'); document.getElementById('modalEditModul').classList.remove('hidden'); 
+        }
+
+        async function simpanKontenBaru() {
+            const tipe = document.getElementById('tipeKonten').value; const judul = document.getElementById('judulBuku').value; const kategori = document.getElementById('kategoriBuku').value; const deskripsi = document.getElementById('deskripsiKonten').value; 
+            const idKuisSinkron = document.getElementById('kuisTerkait').value || null; const fileInput = document.getElementById('filePdf'); const btn = document.getElementById('btnUpload'); const status = document.getElementById('statusUpload');
+            
+            if (!judul) return alert("Judul wajib diisi!");
+            btn.disabled = true; btn.innerHTML = `Proses...`; status.className = 'bg-blue-50 text-blue-700 p-3 rounded block mt-4'; status.classList.remove('hidden');
+            
+            try {
+                let pdfUrl = null; let coverUrl = null;
+                if (tipe === 'Modul PDF') {
+                    if (fileInput.files.length === 0) throw new Error("File PDF wajib dipilih!");
+                    status.innerHTML = `Mengekstrak PDF...`; const file = fileInput.files[0]; const baseFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
+                    const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.0 }); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: ctx, viewport: viewport }).promise; const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                    await supabaseClient.storage.from('pdf-buku').upload(baseFileName + ".pdf", file); await supabaseClient.storage.from('pdf-buku').upload(baseFileName + "_cover.jpg", coverBlob);
+                    pdfUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + ".pdf").data.publicUrl; coverUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(baseFileName + "_cover.jpg").data.publicUrl;
+                }
+                
+                status.innerHTML = `Menyimpan ke database...`; 
+                // Evaluasi Global dipecah Pre & Post
+                if (tipe === 'Evaluasi Global') {
+                    await supabaseClient.from('buku').insert([ { judul: 'Pre-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false }, { judul: 'Post-Test: ' + judul, kategori: kategori, tipe_konten: 'Evaluasi Global', deskripsi: deskripsi, is_active: false } ]);
+                } else {
+                    await supabaseClient.from('buku').insert([{ judul, kategori, tipe_konten: tipe, deskripsi: deskripsi, file_url: pdfUrl, cover_url: coverUrl, id_kuis_terkait: idKuisSinkron, is_active: false }]);
+                }
+                status.className = 'bg-green-100 text-green-700 p-3 rounded block mt-4'; status.innerHTML = `Berhasil!`; setTimeout(() => { window.location.reload(); }, 1000);
+            } catch (error) { status.className = 'bg-red-100 text-red-700 p-3 rounded block mt-4'; status.innerHTML = error.message; btn.disabled = false; btn.innerHTML = `Coba Lagi`; }
+        }
+
+        async function simpanEditModul(btn) { 
+            const id = document.getElementById('edit-modul-id').value; const judul = document.getElementById('edit-modul-judul').value; const tipe = document.getElementById('edit-tipeKonten').value; const deskripsi = document.getElementById('edit-deskripsiKonten').value; const idKuisSinkron = document.getElementById('edit-kuisTerkait').value || null;
+            btn.innerHTML = `Proses...`; btn.disabled = true; 
+            try { await supabaseClient.from('buku').update({ judul, tipe_konten: tipe, deskripsi: deskripsi, id_kuis_terkait: idKuisSinkron }).eq('id', id); window.location.reload(); } catch(e) {} 
+        }
+
+        // --- DASHBOARD ANALITIK (PEMISAHAN KETAT GLOBAL VS MODUL) ---
+        window.renderChartButirSoal = function() {
+            const dropdown = document.getElementById('filter-analisis-soal'); if(!dropdown) return;
+            const selectedKey = dropdown.value; const ctx = document.getElementById('chartButirSoal'); if(!ctx) return;
+            if (chartInstances.chartButirSoal) chartInstances.chartButirSoal.destroy();
+            if (!selectedKey || !window.globalItemResponse[selectedKey]) { chartInstances.chartButirSoal = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: ['Tidak ada data'], datasets: [] }, options: { maintainAspectRatio: false } }); return; }
+
+            const moduleData = window.globalItemResponse[selectedKey];
+            const labels = []; const tooltipFullText = []; let uniqueAnswers = new Set();
+            Object.values(moduleData).forEach(q => { labels.push(q.text.length > 25 ? q.text.substring(0, 25) + '...' : q.text); tooltipFullText.push(q.text); Object.keys(q.counts).forEach(ans => uniqueAnswers.add(ans)); });
+
+            const ansArray = Array.from(uniqueAnswers); const colors = ['#10b981', '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6'];
+            const datasets = ansArray.map((ans, i) => { return { label: ans, data: Object.values(moduleData).map(q => q.counts[ans] || 0), backgroundColor: colors[i % colors.length] }; });
+
+            chartInstances.chartButirSoal = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: labels, datasets: datasets }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { tooltip: { callbacks: { title: function(c) { return tooltipFullText[c[0].dataIndex]; } } } } } });
+        }
+
+        async function muatDataDasbor() {
+            try {
+                const { data: profilAsli } = await supabaseClient.from('profiles').select('*').order('total_poin', { ascending: false });
+                const { data: listBuku } = await supabaseClient.from('buku').select('id, judul, tipe_konten');
+                const { data: riwayatAsli } = await supabaseClient.from('riwayat_kuis').select('*').order('created_at', { ascending: false });
+                const { data: listKuisRaw } = await supabaseClient.from('kuis').select('id, pertanyaan');
+                
+                const kamusSoal = {}; if (listKuisRaw) listKuisRaw.forEach(k => kamusSoal[k.id] = k.pertanyaan);
+                const kamusUser = {}; const userKotaMap = {}; let profil = profilAsli || []; 
+                profil.forEach(p => { kamusUser[p.id] = p.nama_lengkap; userKotaMap[p.id] = p.kota; });
+                const kamusBuku = {}; if (listBuku) listBuku.forEach(b => kamusBuku[b.id] = { judul: b.judul, tipe: b.tipe_konten });
+
+                let riwayat = riwayatAsli || [];
+                const totalPeserta = profil.length; let totalPoinProfil = 0; let totalWaktu = 0;
+                profil.forEach(p => totalPoinProfil += (p.total_poin || 0));
+                riwayat.forEach(r => totalWaktu += (r.durasi_baca_detik || 0));
+
+                try { document.getElementById('stat-peserta').innerText = totalPeserta; document.getElementById('stat-poin').innerText = totalPoinProfil; document.getElementById('stat-rata').innerText = totalPeserta > 0 ? Math.round(totalPoinProfil / totalPeserta) : 0; document.getElementById('stat-waktu').innerText = (riwayat.length > 0 ? Math.round(totalWaktu / riwayat.length) : 0) + 's'; document.getElementById('stat-akurasi').innerText = (totalPeserta > 0 ? Math.round((profil.filter(p => p.total_poin > 0).length / totalPeserta) * 100) : 0) + '%'; } catch(e){}
+
+                let statsKeseluruhan = { preSum: 0, preCount: 0, postSum: 0, postCount: 0 };
+                let statsDimensi = {}; let statsModul = {}; const mapTrendGlobal = {}; 
+                window.globalItemResponse = {}; globalTrendData = [];
+
+                riwayat.forEach(r => {
+                    const bukuMeta = kamusBuku[r.id_buku] || { judul: 'Terhapus', tipe: 'Umum' };
+                    const isGlobal = bukuMeta.tipe === 'Evaluasi Global';
+                    const jenisInput = r.jenis_tes || '';
+                    const isPre = jenisInput.toLowerCase().includes('pre');
+                    const score = r.poin_didapat || 0;
+                    const dimTarget = r.dimensi || 'Umum'; // Pastikan ambil kolom dimensi
+                    
+                    if (isGlobal) {
+                        // HITUNGAN MURNI UNTUK EVALUASI GLOBAL
+                        if (isPre) { statsKeseluruhan.preSum += score; statsKeseluruhan.preCount++; } else { statsKeseluruhan.postSum += score; statsKeseluruhan.postCount++; }
+                        if (!statsDimensi[dimTarget]) statsDimensi[dimTarget] = { preSum: 0, preCount: 0, postSum: 0, postCount: 0 };
+                        if (isPre) { statsDimensi[dimTarget].preSum += score; statsDimensi[dimTarget].preCount++; } else { statsDimensi[dimTarget].postSum += score; statsDimensi[dimTarget].postCount++; }
+                        
+                        const tKey = r.id_user + "|||" + dimTarget;
+                        if (!mapTrendGlobal[tKey]) mapTrendGlobal[tKey] = { nama: kamusUser[r.id_user], kota: userKotaMap[r.id_user], topik: dimTarget, pre: null, post: null };
+                        if (isPre) mapTrendGlobal[tKey].pre = score; else mapTrendGlobal[tKey].post = score;
+                    } else {
+                        // HITUNGAN MURNI UNTUK MODUL KUIS BIASA
+                        if (!statsModul[bukuMeta.judul]) statsModul[bukuMeta.judul] = { sum: 0, count: 0 };
+                        statsModul[bukuMeta.judul].sum += score; statsModul[bukuMeta.judul].count++;
+                    }
+
+                    // JSON ITEM RESPONSE
+                    if (r.detail_jawaban && typeof r.detail_jawaban === 'object') {
+                        const grupLabel = isGlobal ? jenisInput : `Kuis: ${bukuMeta.judul}`;
+                        if (!window.globalItemResponse[grupLabel]) window.globalItemResponse[grupLabel] = {};
+                        Object.keys(r.detail_jawaban).forEach(qid => {
+                            const ans = r.detail_jawaban[qid];
+                            if (!window.globalItemResponse[grupLabel][qid]) window.globalItemResponse[grupLabel][qid] = { text: kamusSoal[qid] || `ID ${qid}`, counts: {} };
+                            window.globalItemResponse[grupLabel][qid].counts[ans] = (window.globalItemResponse[grupLabel][qid].counts[ans] || 0) + 1;
+                        });
+                    }
+                });
+
+                // RENDER TABEL N-GAIN (HANYA DARI GLOBAL)
+                const tbodyNgain = document.getElementById('tabelTrendNgain'); if(tbodyNgain) tbodyNgain.innerHTML = '';
+                Object.values(mapTrendGlobal).forEach(t => {
+                    let diff = (t.post !== null && t.pre !== null) ? (t.post - t.pre) : '';
+                    globalTrendData.push({ Responden: t.nama, Kota: t.kota, Topik_Dimensi: t.topik, PreTest: t.pre !== null ? t.pre : '', PostTest: t.post !== null ? t.post : '', NGain: diff });
+                    if(tbodyNgain) {
+                        let htmlStatus = diff === '' ? '<i class="text-slate-400">Belum Lengkap</i>' : (diff > 0 ? `<span class="text-emerald-600 font-bold">+${diff}</span>` : `<span class="text-rose-600 font-bold">${diff}</span>`);
+                        tbodyNgain.innerHTML += `<tr><td class="p-3">${t.nama}</td><td class="p-3">${t.topik}</td><td class="p-3 text-center">${t.pre !== null ? t.pre : '-'}</td><td class="p-3 text-center">${t.post !== null ? t.post : '-'}</td><td class="p-3 text-center">${htmlStatus}</td></tr>`;
+                    }
+                });
+
+                // UPDATE DROPDOWN ITEM RESPONSE
+                const ddAnalisis = document.getElementById('filter-analisis-soal');
+                if (ddAnalisis) {
+                    ddAnalisis.innerHTML = ''; Object.keys(window.globalItemResponse).forEach(k => { ddAnalisis.innerHTML += `<option value="${k}">${k}</option>`; });
+                }
+
+                // RENDER SEMUA GRAFIK
+                const arrCharts = ['chartOverall', 'chartDimensi', 'chartModul']; arrCharts.forEach(c => { if(chartInstances[c]) chartInstances[c].destroy(); });
+                
+                const cO = document.getElementById('chartOverall');
+                if(cO) {
+                    let aPre = statsKeseluruhan.preCount ? Math.round(statsKeseluruhan.preSum/statsKeseluruhan.preCount) : 0; let aPost = statsKeseluruhan.postCount ? Math.round(statsKeseluruhan.postSum/statsKeseluruhan.postCount) : 0;
+                    chartInstances.chartOverall = new Chart(cO.getContext('2d'), { type: 'bar', data: { labels: ['Pre-Test vs Post-Test (Global)'], datasets: [{label:'Pre-Test', data:[aPre], backgroundColor:'#f43f5e'}, {label:'Post-Test', data:[aPost], backgroundColor:'#10b981'}] }, options:{maintainAspectRatio:false} });
+                }
+
+                const cD = document.getElementById('chartDimensi');
+                if(cD) {
+                    const lbD = Object.keys(statsDimensi);
+                    chartInstances.chartDimensi = new Chart(cD.getContext('2d'), { type: 'bar', data: { labels: lbD, datasets: [{label:'Pre-Test', data: lbD.map(k=>statsDimensi[k].preCount ? Math.round(statsDimensi[k].preSum/statsDimensi[k].preCount):0), backgroundColor:'#f59e0b'}, {label:'Post-Test', data: lbD.map(k=>statsDimensi[k].postCount ? Math.round(statsDimensi[k].postSum/statsDimensi[k].postCount):0), backgroundColor:'#8b5cf6'}] }, options:{maintainAspectRatio:false} });
+                }
+
+                const cM = document.getElementById('chartModul');
+                if(cM) {
+                    const lbM = Object.keys(statsModul);
+                    chartInstances.chartModul = new Chart(cM.getContext('2d'), { type: 'bar', data: { labels: lbM, datasets: [{label:'Avg Skor Kuis Modul', data: lbM.map(k=> Math.round(statsModul[k].sum/statsModul[k].count)), backgroundColor:'#14b8a6'}] }, options:{maintainAspectRatio:false} });
+                }
+
+                window.renderChartButirSoal();
+
+            } catch (err) {}
+        }
+
+        // --- STUDIO KUIS MASSAL (TETAP SAMA, HANYA DIPERSINGKAT) ---
+        function bukaModalKuisTambah() { document.getElementById('modalTambahKuis').classList.remove('hidden'); document.getElementById('formKuisPertanyaan').value = ''; renderDynamicOptions(); }
+        function renderDynamicOptions() { const j = document.getElementById('formKuisJumlahOpsi').value; const w = document.getElementById('wadahDynamicOptions'); w.innerHTML = ''; for(let i=0;i<j;i++){ w.innerHTML += `<div class="flex gap-2 mb-2"><span class="w-8 bg-slate-200 text-center font-bold p-2">${LABELS[i]}</span><input type="text" id="opt_${LABELS[i]}" class="w-full p-2 border" placeholder="Teks opsi"><input type="number" id="poin_${LABELS[i]}" class="w-20 p-2 border" value="${i===0?1:0}"></div>`; } }
+        function tambahKeDraft() {
+            const p = document.getElementById('formKuisPertanyaan').value; const d = document.getElementById('formKuisDimensi').value; const j = document.getElementById('formKuisJumlahOpsi').value;
+            if(!p) return alert("Pernyataan kosong!");
+            let opsi = {}; let maxP=0; let jwb='A';
+            for(let i=0;i<j;i++){ const t = document.getElementById(`opt_${LABELS[i]}`).value; const po = parseInt(document.getElementById(`poin_${LABELS[i]}`).value); if(!t) return alert("Opsi kosong!"); opsi[LABELS[i]] = {teks: t, poin: po}; if(po > maxP){maxP=po; jwb=LABELS[i];} }
+            draftKuisArray.push({jenis_kuis: 'Berbobot', pertanyaan: p, opsi_jawaban: opsi, jawaban_benar: jwb, poin_reward: maxP, dimensi: d});
+            document.getElementById('draftList').innerHTML += `<div class="p-2 border-b"><span class="text-xs text-indigo-500 font-bold">${d}</span><p class="text-sm">${p}</p></div>`; document.getElementById('formKuisPertanyaan').value = '';
+        }
+        function kosongkanDraft() { draftKuisArray = []; document.getElementById('draftList').innerHTML = ''; }
+        async function simpanKuisKeDatabase() {
+            const buku = document.getElementById('formKuisBuku').value; if(!buku) return alert("Pilih wadah tujuan!"); if(draftKuisArray.length===0) return alert("Belum ada soal!");
+            const final = draftKuisArray.map(s => ({...s, id_buku: buku}));
+            try { await supabaseClient.from('kuis').insert(final); alert("Soal berhasil dimasukkan!"); window.location.reload(); } catch(e){}
+        }
+        async function fetchDaftarKuis() {
+            try {
+                const {data} = await supabaseClient.from('kuis').select('id_buku'); let m = {}; if(data) data.forEach(q => {m[q.id_buku]=(m[q.id_buku]||0)+1;});
+                const tb = document.getElementById('tabelKuis'); tb.innerHTML = '';
+                dbBukuList.forEach(b => { if(m[b.id]) tb.innerHTML += `<tr class="border-b border-slate-100"><td class="py-3 px-6 font-bold text-slate-700">${b.judul}</td><td class="py-3 px-6 text-center">${m[b.id]} Pertanyaan</td><td class="py-3 px-6 text-center"><button onclick="hapusSemuaKuisModul('${b.id}')" class="text-red-500 bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i> Kosongkan</button></td></tr>`; });
+            } catch(e){}
+        }
+        async function hapusSemuaKuisModul(id) { if(confirm("Hapus seluruh kuis di wadah ini?")) { await supabaseClient.from('kuis').delete().eq('id_buku', id); window.location.reload(); } }
+    </script>
+</body>
+</html>
