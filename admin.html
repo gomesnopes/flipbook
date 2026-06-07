@@ -102,10 +102,25 @@
 
     <!-- SEMUA MODAL POP-UP -->
     
-    <!-- Modal Detail User -->
+
+<!-- Modal Edit Data Responden -->
     <div id="modalDetailUser" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col"><div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0"><h3 class="font-bold text-lg text-slate-800">Edit Data Responden</h3><button onclick="tutupModal('modalDetailUser')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="p-6 space-y-4 overflow-y-auto"><input type="hidden" id="edit-user-id"><div class="space-y-3 pt-2"><div><label class="block text-xs font-bold text-slate-500 mb-1">Nama Lengkap</label><input type="text" id="edit-user-nama" class="w-full p-2 border rounded-lg"></div><div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-slate-500 mb-1">Kategori</label><select id="edit-user-kategori" class="w-full p-2 border rounded-lg"><option value="Pelajar">Pelajar</option><option value="Mahasiswa">Mahasiswa</option><option value="Umum">Umum</option></select></div><div><label class="block text-xs font-bold text-slate-500 mb-1">Gender</label><select id="edit-user-gender" class="w-full p-2 border rounded-lg"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div></div><div><label class="block text-xs font-bold text-slate-500 mb-1">Asal Kota</label><input type="text" id="edit-user-kota" class="w-full p-2 border rounded-lg"></div></div></div><div class="p-6 bg-slate-50 border-t flex gap-3 shrink-0"><button onclick="tutupModal('modalDetailUser')" class="w-1/2 bg-slate-200 font-bold py-3 rounded-lg">Batal</button><button onclick="simpanEditUser(this)" class="w-1/2 bg-blue-600 text-white font-bold py-3 rounded-lg">Perbarui</button></div></div>
+        <div class="bg-white rounded-2xl w-full max-w-md modal-enter overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg">Edit Data Responden</h3><button onclick="tutupModal('modalDetailUser')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="p-6 space-y-3 overflow-y-auto max-h-[70vh]">
+                <input type="hidden" id="edit-user-id">
+                <div><label class="block text-xs font-bold text-slate-500 mb-1">Nama Lengkap</label><input type="text" id="edit-user-nama" class="w-full p-2.5 border rounded-lg"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Kategori</label><select id="edit-user-kategori" class="w-full p-2.5 border rounded-lg"><option value="Pelajar">Pelajar</option><option value="Mahasiswa">Mahasiswa</option><option value="Umum">Umum</option></select></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-1">Gender</label><select id="edit-user-gender" class="w-full p-2.5 border rounded-lg"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+                </div>
+                <div><label class="block text-xs font-bold text-slate-500 mb-1">Asal Kota</label><input type="text" id="edit-user-kota" class="w-full p-2.5 border rounded-lg"></div>
+                <div><label class="block text-xs font-bold text-slate-500 mb-1">Total Poin / XP (Bisa disesuaikan manual)</label><input type="number" id="edit-user-poin" class="w-full p-2.5 border bg-emerald-50 text-emerald-700 font-bold rounded-lg"></div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalDetailUser')" class="w-1/2 bg-slate-200 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanEditUser()" class="w-1/2 bg-blue-600 text-white font-bold py-2.5 rounded-lg">Perbarui</button></div>
+        </div>
     </div>
+    
 
     <!-- Modal Tambah Modul -->
     <div id="modalTambahModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
@@ -113,8 +128,23 @@
     </div>
 
     <!-- Modal Edit Modul -->
+    <!-- Modal Edit Modul -->
     <div id="modalEditModul" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md modal-enter overflow-hidden"><div class="bg-slate-50 px-6 py-4 border-b flex justify-between"><h3 class="font-bold text-lg">Edit Modul</h3><button onclick="tutupModal('modalEditModul')" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><div class="p-6 space-y-4"><input type="hidden" id="edit-modul-id"><select id="edit-tipeKonten" class="w-full p-2 border rounded-lg font-bold"><option value="Modul PDF">Modul PDF</option><option value="Hanya Kuis">Hanya Kuis</option><option value="Evaluasi Global">Evaluasi Global</option></select><input type="text" id="edit-modul-judul" class="w-full p-2 border rounded-lg"><select id="edit-kuisTerkait" class="w-full p-2 border bg-indigo-50 font-bold"><option value="">-- Tidak ditautkan --</option></select></div><div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalEditModul')" class="w-1/2 bg-slate-200 font-bold py-2 rounded-lg">Batal</button><button onclick="simpanEditModul()" class="w-1/2 bg-rose-600 text-white font-bold py-2 rounded-lg">Simpan</button></div></div>
+        <div class="bg-white rounded-2xl w-full max-w-lg modal-enter overflow-hidden">
+            <div class="bg-slate-50 px-6 py-4 border-b flex justify-between"><h3 class="font-bold text-lg">Edit Modul & Konten</h3><button onclick="tutupModal('modalEditModul')" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="edit-modul-id">
+                <select id="edit-tipeKonten" class="w-full p-2.5 border rounded-lg bg-rose-50 font-bold"><option value="Modul PDF">📖 Modul PDF</option><option value="Hanya Kuis">📝 Hanya Kuis</option><option value="Evaluasi Global">🌟 Evaluasi Global</option></select>
+                <input type="text" id="edit-modul-judul" placeholder="Judul Modul" class="w-full p-2.5 border rounded-lg font-bold">
+                <select id="edit-kuisTerkait" class="w-full p-2.5 border bg-indigo-50 font-bold"><option value="">-- Tidak ditautkan ke Kuis manapun --</option></select>
+                <div id="areaFilePDF_edit" class="pt-2 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <label class="block text-sm font-bold text-amber-800 mb-1">Ganti File PDF Baru (Opsional)</label>
+                    <p class="text-xs text-amber-600 mb-2">Abaikan jika tidak ingin mengganti file PDF.</p>
+                    <input type="file" id="edit-filePdf" accept="application/pdf" class="w-full border p-2 bg-white rounded-lg">
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t flex gap-3"><button onclick="tutupModal('modalEditModul')" class="w-1/3 bg-slate-200 font-bold py-2.5 rounded-lg">Batal</button><button onclick="simpanEditModul()" id="btnEditModul" class="w-2/3 bg-rose-600 text-white font-bold py-2.5 rounded-lg">Simpan Perubahan</button></div>
+        </div>
     </div>
 
     <!-- Modal Input Soal -->
@@ -128,8 +158,28 @@
     </div>
 
     <!-- Modal Edit Soal -->
-    <div id="modalEditSoal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-lg p-6 modal-enter"><h3 class="font-bold text-lg mb-4">Edit Teks Soal</h3><input type="hidden" id="edit-soal-id"><textarea id="edit-soal-teks" class="w-full p-3 border rounded-lg mb-4" rows="4"></textarea><div class="flex gap-2"><button onclick="tutupModal('modalEditSoal')" class="flex-1 bg-slate-200 py-2 rounded-lg font-bold">Batal</button><button onclick="simpanEditSoal()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold">Simpan</button></div></div>
+   <div id="modalEditSoal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl p-6 modal-enter max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-4 mb-4"><h3 class="font-bold text-lg"><i class="fa-solid fa-pen-to-square text-indigo-500 mr-2"></i>Edit Soal Kuesioner</h3><button onclick="tutupModal('modalEditSoal')" class="text-red-400"><i class="fa-solid fa-xmark"></i></button></div>
+            <input type="hidden" id="edit-soal-id">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-1">Topik / Dimensi Evaluasi:</label>
+                    <select id="edit-soal-dimensi" class="w-full p-3 border bg-indigo-50 font-bold text-indigo-700 rounded-lg"><option value="Pengetahuan">📘 Pengetahuan</option><option value="Wawasan">📘 Wawasan</option><option value="Sikap">📘 Sikap</option><option value="Aksesibilitas Media Digital">📘 Aksesibilitas Media Digital</option><option value="Perilaku Pencegahan">📘 Perilaku Pencegahan</option><option value="Umum">⚪ Umum</option></select>
+                </div>
+                <div><label class="block text-sm font-bold mb-1">Pertanyaan:</label><textarea id="edit-soal-teks" class="w-full p-3 border rounded-lg" rows="2"></textarea></div>
+                <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="font-bold text-sm">Opsi Jawaban & Skor</label>
+                        <select id="edit-soal-jumlah-opsi" onchange="renderEditDynamicOptions()" class="p-1 border bg-white font-bold rounded-lg"><option value="2">2 Pilihan</option><option value="3">3 Pilihan</option><option value="4">4 Pilihan</option><option value="5">5 Pilihan</option></select>
+                    </div>
+                    <div id="edit-wadahDynamicOptions" class="space-y-2"></div>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6 pt-4 border-t"><button onclick="tutupModal('modalEditSoal')" class="flex-1 bg-slate-200 py-3 rounded-xl font-bold">Batal</button><button onclick="simpanEditSoal()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold">Simpan Perubahan Soal</button></div>
+        </div>
     </div>
 
     <!-- SCRIPT JAVASCRIPT MASTER -->
@@ -164,8 +214,28 @@
                 ddUser.innerHTML += `<option value="${u.id}">${u.nama_lengkap}</option>`;
             });
         }
-        function bukaModalDetailUser(str) { const u = JSON.parse(decodeURIComponent(str)); document.getElementById('edit-user-id').value = u.id; document.getElementById('edit-user-nama').value = u.nama_lengkap; document.getElementById('edit-user-kategori').value = u.kategori; document.getElementById('edit-user-gender').value = u.jenis_kelamin; document.getElementById('edit-user-kota').value = u.kota; document.getElementById('modalDetailUser').classList.remove('hidden'); }
-        async function simpanEditUser() { const id = document.getElementById('edit-user-id').value; await supabaseClient.from('profiles').update({nama_lengkap: document.getElementById('edit-user-nama').value, kategori: document.getElementById('edit-user-kategori').value, jenis_kelamin: document.getElementById('edit-user-gender').value, kota: document.getElementById('edit-user-kota').value}).eq('id', id); tutupModal('modalDetailUser'); fetchPengguna(); }
+        function bukaModalDetailUser(str) { 
+            const u = JSON.parse(decodeURIComponent(str)); 
+            document.getElementById('edit-user-id').value = u.id; 
+            document.getElementById('edit-user-nama').value = u.nama_lengkap; 
+            document.getElementById('edit-user-kategori').value = u.kategori; 
+            document.getElementById('edit-user-gender').value = u.jenis_kelamin; 
+            document.getElementById('edit-user-kota').value = u.kota; 
+            document.getElementById('edit-user-poin').value = u.total_poin || 0;
+            document.getElementById('modalDetailUser').classList.remove('hidden'); 
+        }
+
+        async function simpanEditUser() { 
+            const id = document.getElementById('edit-user-id').value; 
+            await supabaseClient.from('profiles').update({
+                nama_lengkap: document.getElementById('edit-user-nama').value, 
+                kategori: document.getElementById('edit-user-kategori').value, 
+                jenis_kelamin: document.getElementById('edit-user-gender').value, 
+                kota: document.getElementById('edit-user-kota').value,
+                total_poin: parseInt(document.getElementById('edit-user-poin').value) || 0
+            }).eq('id', id); 
+            tutupModal('modalDetailUser'); fetchPengguna(); 
+        }
         async function hapusUser(id) { if(confirm("Hapus?")) { await supabaseClient.from('profiles').delete().eq('id', id); fetchPengguna(); } }
 
         // ===================================
@@ -193,8 +263,49 @@
             else { await supabaseClient.from('buku').insert([{judul, tipe_konten:tipe, file_url:pUrl, cover_url:cUrl, id_kuis_terkait:sinkron}]); }
             window.location.reload();
         }
-        function bukaModalEditModul(str) { const m = JSON.parse(decodeURIComponent(str)); document.getElementById('edit-modul-id').value = m.id; document.getElementById('edit-modul-judul').value = m.judul; document.getElementById('edit-tipeKonten').value = m.tipe_konten; document.getElementById('edit-kuisTerkait').value = m.id_kuis_terkait||''; document.getElementById('modalEditModul').classList.remove('hidden'); }
-        async function simpanEditModul() { const id = document.getElementById('edit-modul-id').value; await supabaseClient.from('buku').update({judul: document.getElementById('edit-modul-judul').value, tipe_konten: document.getElementById('edit-tipeKonten').value, id_kuis_terkait: document.getElementById('edit-kuisTerkait').value}).eq('id', id); window.location.reload(); }
+       // ===================================
+        function bukaModalEditModul(str) { 
+            const m = JSON.parse(decodeURIComponent(str)); 
+            document.getElementById('edit-modul-id').value = m.id; 
+            document.getElementById('edit-modul-judul').value = m.judul; 
+            document.getElementById('edit-tipeKonten').value = m.tipe_konten; 
+            document.getElementById('edit-kuisTerkait').value = m.id_kuis_terkait || ''; 
+            
+            // Tampilkan uploader PDF hanya jika tipe konten = Modul PDF
+            document.getElementById('areaFilePDF_edit').classList.toggle('hidden', m.tipe_konten !== 'Modul PDF');
+            document.getElementById('modalEditModul').classList.remove('hidden'); 
+        }
+
+        async function simpanEditModul() { 
+            const id = document.getElementById('edit-modul-id').value; 
+            const judul = document.getElementById('edit-modul-judul').value;
+            const tipe = document.getElementById('edit-tipeKonten').value;
+            const sinkronKuis = document.getElementById('edit-kuisTerkait').value || null;
+            const fileInput = document.getElementById('edit-filePdf');
+            const btn = document.getElementById('btnEditModul');
+            
+            btn.innerHTML = "Menyimpan..."; btn.disabled = true;
+
+            let payload = { judul: judul, tipe_konten: tipe, id_kuis_terkait: sinkronKuis };
+
+            try {
+                // Jika Admin mengunggah PDF Baru
+                if (tipe === 'Modul PDF' && fileInput.files.length > 0) {
+                    const file = fileInput.files[0]; 
+                    const fName = Date.now() + "_" + Math.random().toString(36).substring(7);
+                    
+                    const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.0 }); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: ctx, viewport: viewport }).promise; const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                    
+                    await supabaseClient.storage.from('pdf-buku').upload(fName + ".pdf", file);
+                    await supabaseClient.storage.from('pdf-buku').upload(fName + "_cover.jpg", coverBlob);
+                    
+                    payload.file_url = supabaseClient.storage.from('pdf-buku').getPublicUrl(fName + ".pdf").data.publicUrl;
+                    payload.cover_url = supabaseClient.storage.from('pdf-buku').getPublicUrl(fName + "_cover.jpg").data.publicUrl;
+                }
+
+                await supabaseClient.from('buku').update(payload).eq('id', id); 
+                window.location.reload();
+            } catch (err) { alert("Gagal menyimpan: " + err.message); btn.innerHTML = "Simpan Perubahan"; btn.disabled =
         async function hapusModul(id) { if(confirm("Hapus?")) { await supabaseClient.from('buku').delete().eq('id', id); window.location.reload(); } }
 
         // ===================================
@@ -211,8 +322,62 @@
             dbBukuList.forEach(b => { if(m[b.id]) tb.innerHTML += `<tr class="border-b"><td class="py-3 px-6 font-bold">${b.judul}</td><td class="py-3 px-6 text-center">${m[b.id]} Soal</td><td class="py-3 px-6 text-center"><button onclick="bukaListSoal('${b.id}','${b.judul}')" class="text-blue-500 bg-blue-50 p-2 rounded mr-1"><i class="fa-solid fa-list"></i> Lihat/Edit</button><button onclick="hapusSemuaKuisModul('${b.id}')" class="text-red-500 bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button></td></tr>`; });
         }
         async function bukaListSoal(idBuku, judul) { document.getElementById('title-modal-list').innerText = "Soal: " + judul; const {data} = await supabaseClient.from('kuis').select('*').eq('id_buku', idBuku); const w = document.getElementById('wadah-list-soal'); w.innerHTML=''; data.forEach(q => { w.innerHTML += `<div class="p-3 border rounded flex justify-between bg-slate-50"><p class="text-sm truncate w-3/4">${q.pertanyaan}</p><button onclick="bukaModalEditSoal('${encodeURIComponent(JSON.stringify(q))}')" class="text-indigo-600 font-bold text-xs bg-white px-3 border rounded shadow-sm">Edit</button></div>`; }); document.getElementById('modalListSoal').classList.remove('hidden'); }
-        function bukaModalEditSoal(qStr) { const q = JSON.parse(decodeURIComponent(qStr)); document.getElementById('edit-soal-id').value = q.id; document.getElementById('edit-soal-teks').value = q.pertanyaan; document.getElementById('modalEditSoal').classList.remove('hidden'); }
-        async function simpanEditSoal() { await supabaseClient.from('kuis').update({pertanyaan: document.getElementById('edit-soal-teks').value}).eq('id', document.getElementById('edit-soal-id').value); tutupModal('modalEditSoal'); tutupModal('modalListSoal'); fetchDaftarKuis(); }
+        let currentEditSoalOpsi = null; // Menyimpan memori opsi saat modal dibuka
+        
+        function bukaModalEditSoal(qStr) { 
+            const q = JSON.parse(decodeURIComponent(qStr)); 
+            document.getElementById('edit-soal-id').value = q.id; 
+            document.getElementById('edit-soal-dimensi').value = q.dimensi || 'Umum';
+            document.getElementById('edit-soal-teks').value = q.pertanyaan; 
+            
+            // Muat opsi jawaban sebelumnya
+            currentEditSoalOpsi = q.opsi_jawaban || {};
+            const jmlOpsi = Object.keys(currentEditSoalOpsi).length || 3;
+            document.getElementById('edit-soal-jumlah-opsi').value = jmlOpsi;
+            
+            renderEditDynamicOptions(q.jawaban_benar);
+            document.getElementById('modalEditSoal').classList.remove('hidden'); 
+        }
+
+        function renderEditDynamicOptions(kunciJawabanAsli = 'A') {
+            const j = document.getElementById('edit-soal-jumlah-opsi').value; 
+            const w = document.getElementById('edit-wadahDynamicOptions'); 
+            w.innerHTML = ''; 
+            
+            for(let i=0; i<j; i++) { 
+                const abjad = LABELS[i];
+                let teks = ''; let poin = 0;
+                
+                if (currentEditSoalOpsi && currentEditSoalOpsi[abjad]) {
+                    const opt = currentEditSoalOpsi[abjad];
+                    teks = typeof opt === 'string' ? opt : opt.teks;
+                    poin = typeof opt === 'string' ? (abjad === kunciJawabanAsli ? 10 : 0) : parseInt(opt.poin || 0);
+                } else if (i === 0) { poin = 1; } // Default poin untuk opsi pertama jika opsi baru ditambahkan
+                
+                w.innerHTML += `<div class="flex gap-2 mb-2"><span class="w-8 bg-slate-200 text-center font-bold p-2">${abjad}</span><input type="text" id="edit-opt_${abjad}" class="w-full p-2 border rounded" placeholder="Teks opsi" value="${teks}"><input type="number" id="edit-poin_${abjad}" class="w-20 p-2 border rounded" value="${poin}"></div>`; 
+            } 
+        }
+
+        async function simpanEditSoal() { 
+            const id = document.getElementById('edit-soal-id').value;
+            const p = document.getElementById('edit-soal-teks').value; 
+            const d = document.getElementById('edit-soal-dimensi').value; 
+            const j = document.getElementById('edit-soal-jumlah-opsi').value;
+            
+            if(!p) return alert("Pernyataan tidak boleh kosong!"); 
+            let opsi = {}; let maxP=0; let jwb='A';
+            
+            for(let i=0; i<j; i++) { 
+                const t = document.getElementById(`edit-opt_${LABELS[i]}`).value; 
+                const po = parseInt(document.getElementById(`edit-poin_${LABELS[i]}`).value); 
+                if(!t) return alert(`Teks pada opsi ${LABELS[i]} masih kosong!`); 
+                opsi[LABELS[i]] = {teks: t, poin: po}; 
+                if(po > maxP) { maxP=po; jwb=LABELS[i]; } 
+            }
+            
+            await supabaseClient.from('kuis').update({ pertanyaan: p, dimensi: d, opsi_jawaban: opsi, jawaban_benar: jwb, poin_reward: maxP }).eq('id', id); 
+            tutupModal('modalEditSoal'); tutupModal('modalListSoal'); fetchDaftarKuis(); // Refresh List
+        }
         async function hapusSemuaKuisModul(id) { if(confirm("Kosongkan semua soal di wadah ini?")) { await supabaseClient.from('kuis').delete().eq('id_buku', id); window.location.reload(); } }
 
         // ===================================
