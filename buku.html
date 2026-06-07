@@ -160,13 +160,22 @@
         function tampilkanKonfirmasiSelesai() { document.getElementById('modalSelesai').classList.remove('hidden'); }
         function tutupModalSelesai() { document.getElementById('modalSelesai').classList.add('hidden'); kuisSudahDipicu = false; }
 
-        function lanjutKuis() {
+              function lanjutKuis() {
             tutupModalSelesai(); 
+            
+            // JIKA Modul PDF ini punya Kuis tersinkron, langsung lempar/arahkan halamannya ke kuis tersebut!
+            if (dataBuku.tipe_konten === 'Modul PDF' && dataBuku.id_kuis_terkait) {
+                window.location.href = 'buku.html?id=' + dataBuku.id_kuis_terkait;
+                return;
+            }
+
+            // Jika dia memang sedang buka Kuis/Evaluasi, render modal kuis bawaannya.
             document.getElementById('modalQuiz').classList.remove('hidden'); 
             indexSoalSaatIni = 0; jawabanPeserta = [];
             document.getElementById('progress-bar').style.width = '0%';
             tarikDataKuis(); 
         }
+
 
         function tutupQuiz() {
             if(confirm("Yakin ingin menutup tes? Progres akan hilang.")) {
