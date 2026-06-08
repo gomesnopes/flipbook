@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruang Belajar & Evaluasi - SIRASA</title>
+    <title>Ruang Belajar & Evaluasi - KITA SEBAYA</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -96,7 +96,13 @@
                     return panggilKuisSekarang(bookId, dataBuku.judul);
                 }
 
-                let pdfBersih = new URLSearchParams(window.location.search).get('file') ? decodeURIComponent(new URLSearchParams(window.location.search).get('file')) : dataBuku.file_url;
+                // Paksa selalu ambil file PDF terbaru langsung dari database!
+let pdfBersih = dataBuku.file_url;
+
+if (!pdfBersih) {
+    alert("Modul PDF belum diunggah atau kosong!");
+    return keluarKeBeranda();
+}
                 document.getElementById('wadah-buku').innerHTML = `<div class="_df_book" id="df_container" source="${pdfBersih}"></div>`;
 
                 window.DFLIP.defaults.onFlip = function(flipbook) {
