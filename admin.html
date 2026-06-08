@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - SIRASA Edukasi</title>
+    <title>Admin Panel - KITA SEBAYA Edukasi</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -28,7 +28,7 @@
     
     <aside id="sidebar" class="w-64 md:w-0 bg-slate-900 text-slate-300 flex flex-col absolute md:relative z-50 h-full flex-shrink-0 overflow-hidden -translate-x-full md:translate-x-0 transition-all duration-300 shadow-xl md:shadow-none">
         <div class="h-16 flex items-center justify-between px-6 bg-slate-950 text-white font-bold text-xl tracking-wide border-b border-slate-800 min-w-[256px]">
-            <div><i class="fa-solid fa-ribbon text-rose-500 mr-2"></i> Admin SIRASA</div>
+            <div><i class="fa-solid fa-ribbon text-rose-500 mr-2"></i> Admin KITA SEBAYA</div>
             <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-w-[256px]">
@@ -42,7 +42,7 @@
     <div class="flex-1 flex flex-col h-full overflow-hidden relative">
         <header class="bg-white h-16 border-b border-slate-200 flex items-center px-6 shrink-0 z-10 shadow-sm">
             <button onclick="toggleSidebar()" class="text-slate-500 hover:text-rose-600 transition p-2 bg-slate-100 rounded-lg"><i class="fa-solid fa-bars text-xl"></i></button>
-            <h1 class="ml-4 font-bold text-slate-700 hidden sm:block">Panel Peneliti - SIRASA</h1>
+            <h1 class="ml-4 font-bold text-slate-700 hidden sm:block">Panel Peneliti - KITA SEBAYA</h1>
         </header>
 
         <main class="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 w-full">
@@ -310,16 +310,64 @@
             fetchDaftarBukuAdmin(); 
         }
         
-        function toggleFormModul(m) { document.getElementById('areaFilePDF_tambah').classList.toggle('hidden', document.getElementById('tipeKonten').value !== 'Modul PDF'); }
+       // ==========================================
+        // GANTI FUNGSI INI DI ADMIN.HTML ANDA
+        // ==========================================
         async function simpanKontenBaru() {
-            const tipe = document.getElementById('tipeKonten').value; const judul = document.getElementById('judulBuku').value; const file = document.getElementById('filePdf').files[0]; const sinkron = document.getElementById('kuisTerkait').value;
-            if(!judul) return alert("Judul wajib!"); document.getElementById('statusUpload').classList.remove('hidden'); document.getElementById('statusUpload').innerText = "Loading...";
-            let pUrl=null, cUrl=null;
-            if(tipe==='Modul PDF') { if(!file) return alert("Pilih PDF"); const fn = Date.now()+".pdf"; await supabaseClient.storage.from('pdf-buku').upload(fn, file); pUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(fn).data.publicUrl; }
-            if(tipe==='Evaluasi Global') { await supabaseClient.from('buku').insert([{judul:'Pre-Test: '+judul, tipe_konten:tipe},{judul:'Post-Test: '+judul, tipe_konten:tipe}]); } 
-            else { await supabaseClient.from('buku').insert([{judul, tipe_konten:tipe, file_url:pUrl, cover_url:cUrl, id_kuis_terkait:sinkron}]); }
-            window.location.reload();
+            const tipe = document.getElementById('tipeKonten').value; 
+            const judul = document.getElementById('judulBuku').value; 
+            const fileInput = document.getElementById('filePdf'); 
+            const sinkron = document.getElementById('kuisTerkait').value;
+            
+            if(!judul) return alert("Judul wajib diisi!"); 
+            const btn = document.getElementById('btnUpload');
+            document.getElementById('statusUpload').classList.remove('hidden'); 
+            document.getElementById('statusUpload').innerText = "Memproses Upload...";
+            btn.disabled = true;
+
+            try {
+                let pUrl=null, cUrl=null;
+                if(tipe === 'Modul PDF') { 
+                    if(fileInput.files.length === 0) throw new Error("Pilih File PDF!"); 
+                    const file = fileInput.files[0]; 
+                    const fn = Date.now() + "_" + Math.random().toString(36).substring(7); 
+                    
+                    // 1. Ambil data mentah (ArrayBuffer) agar aman dari bug Safari
+                    const arrayBuffer = await file.arrayBuffer(); 
+                    
+                    // 2. Generate Cover (Dibungkus try-catch agar jika gagal, PDF tetap aman)
+                    try {
+                        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; 
+                        const page = await pdf.getPage(1); 
+                        const viewport = page.getViewport({ scale: 1.0 }); 
+                        const canvas = document.createElement('canvas'); 
+                        const ctx = canvas.getContext('2d'); 
+                        canvas.height = viewport.height; canvas.width = viewport.width; 
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise; 
+                        const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                        await supabaseClient.storage.from('pdf-buku').upload(fn + "_cover.jpg", coverBlob, { contentType: 'image/jpeg' });
+                        cUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(fn + "_cover.jpg").data.publicUrl;
+                    } catch (e) { console.log("Gagal membuat cover otomatis"); }
+                    
+                    // 3. UPLOAD MENGGUNAKAN ARRAY BUFFER (Ini kunci agar file tidak 0 byte!)
+                    await supabaseClient.storage.from('pdf-buku').upload(fn + ".pdf", arrayBuffer, { contentType: 'application/pdf' }); 
+                    pUrl = supabaseClient.storage.from('pdf-buku').getPublicUrl(fn + ".pdf").data.publicUrl; 
+                }
+                
+                if(tipe === 'Evaluasi Global') { 
+                    await supabaseClient.from('buku').insert([{judul:'Pre-Test: '+judul, tipe_konten:tipe},{judul:'Post-Test: '+judul, tipe_konten:tipe}]); 
+                } else { 
+                    await supabaseClient.from('buku').insert([{judul, tipe_konten:tipe, file_url:pUrl, cover_url:cUrl, id_kuis_terkait:sinkron}]); 
+                }
+                window.location.reload();
+            } catch (err) { 
+                alert(err.message); 
+                btn.disabled = false; 
+                document.getElementById('statusUpload').innerText = "Gagal Upload!";
+            }
         }
+
+        
        // ===================================
         function bukaModalEditModul(str) { 
             const m = JSON.parse(decodeURIComponent(str)); 
@@ -333,7 +381,7 @@
             document.getElementById('modalEditModul').classList.remove('hidden'); 
         }
 
-        async function simpanEditModul() { 
+       async function simpanEditModul() { 
             const id = document.getElementById('edit-modul-id').value; 
             const judul = document.getElementById('edit-modul-judul').value;
             const tipe = document.getElementById('edit-tipeKonten').value;
@@ -349,25 +397,37 @@
                 // Jika Admin mengunggah PDF Baru
                 if (tipe === 'Modul PDF' && fileInput.files.length > 0) {
                     const file = fileInput.files[0]; 
-                    const fName = Date.now() + "_" + Math.random().toString(36).substring(7);
+                    const fn = Date.now() + "_" + Math.random().toString(36).substring(7);
                     
-                    const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.0 }); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: ctx, viewport: viewport }).promise; const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                    // Ambil ArrayBuffer mentah
+                    const arrayBuffer = await file.arrayBuffer(); 
                     
-                    await supabaseClient.storage.from('pdf-buku').upload(fName + ".pdf", file);
-                    await supabaseClient.storage.from('pdf-buku').upload(fName + "_cover.jpg", coverBlob);
-                    
-                    payload.file_url = supabaseClient.storage.from('pdf-buku').getPublicUrl(fName + ".pdf").data.publicUrl;
-                    payload.cover_url = supabaseClient.storage.from('pdf-buku').getPublicUrl(fName + "_cover.jpg").data.publicUrl;
+                    try {
+                        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; 
+                        const page = await pdf.getPage(1); 
+                        const viewport = page.getViewport({ scale: 1.0 }); 
+                        const canvas = document.createElement('canvas'); 
+                        const ctx = canvas.getContext('2d'); 
+                        canvas.height = viewport.height; canvas.width = viewport.width; 
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise; 
+                        const coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                        await supabaseClient.storage.from('pdf-buku').upload(fn + "_cover.jpg", coverBlob, { contentType: 'image/jpeg' });
+                        payload.cover_url = supabaseClient.storage.from('pdf-buku').getPublicUrl(fn + "_cover.jpg").data.publicUrl;
+                    } catch(e) { console.log("Gagal membuat cover otomatis"); }
+
+                    // UPLOAD MENGGUNAKAN ARRAY BUFFER
+                    await supabaseClient.storage.from('pdf-buku').upload(fn + ".pdf", arrayBuffer, { contentType: 'application/pdf' });
+                    payload.file_url = supabaseClient.storage.from('pdf-buku').getPublicUrl(fn + ".pdf").data.publicUrl;
                 }
 
                 await supabaseClient.from('buku').update(payload).eq('id', id); 
                 window.location.reload();
-           } catch (err) { 
+            } catch (err) { 
                 alert("Gagal menyimpan: " + err.message); 
                 btn.innerHTML = "Simpan Perubahan"; 
                 btn.disabled = false; 
             }
-        } // Penutup fungsi simpanEditModul
+        }
 
         async function hapusModul(id) { 
             if(confirm("Hapus?")) { 
