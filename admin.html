@@ -287,36 +287,59 @@
 
         // TAMBAHAN UPDATE KREDENSIAL AUTH
         async function simpanEditUser() { 
-            const id = document.getElementById('edit-user-id').value; 
-            const emailBaru = document.getElementById('edit-user-email').value;
-            const passwordBaru = document.getElementById('edit-user-password').value;
+    const id = document.getElementById('edit-user-id').value; 
+    const emailBaru = document.getElementById('edit-user-email').value;
+    const passwordBaru = document.getElementById('edit-user-password').value;
+    const btn = document.querySelector("#modalDetailUser button.bg-blue-600");
+    const teksAsli = btn.innerHTML;
+    
+    btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Memproses...";
+    btn.disabled = true;
+    
+    try {
+        // 1. Update Profile Tabel Publik (Tetap pakai Anon Key)
+        await supabaseClient.from('profiles').update({
+            nama_lengkap: document.getElementById('edit-user-nama').value, 
+            kategori: document.getElementById('edit-user-kategori').value, 
+            jenis_kelamin: document.getElementById('edit-user-gender').value, 
+            kota: document.getElementById('edit-user-kota').value,
+            total_poin: parseInt(document.getElementById('edit-user-poin').value) || 0
+        }).eq('id', id); 
+        
+        // 2. Update Auth via Google Apps Script (Hanya Eksekusi Jika Form Email/Pass Diisi)
+        if (emailBaru || passwordBaru) {
+            let updates = {};
+            if (emailBaru) updates.email = emailBaru;
+            if (passwordBaru) updates.password = passwordBaru;
             
-            // 1. Update Profile Tabel Publik
-            await supabaseClient.from('profiles').update({
-                nama_lengkap: document.getElementById('edit-user-nama').value, 
-                kategori: document.getElementById('edit-user-kategori').value, 
-                jenis_kelamin: document.getElementById('edit-user-gender').value, 
-                kota: document.getElementById('edit-user-kota').value,
-                total_poin: parseInt(document.getElementById('edit-user-poin').value) || 0
-            }).eq('id', id); 
+            // GANTI URL INI DENGAN URL WEB APP GAS ANDA
+            const gasUrl = "https://script.google.com/macros/s/AKfycbyWaBvkDeM65f6zDYuffG7xKQy7gglni90LFjNicZGMqYejzR6_08Z7QAiKN_b8eW1M/exec";
             
-            // 2. Update Auth (Hanya Eksekusi Jika Form Email/Pass Diisi)
-            if (emailBaru || passwordBaru) {
-                let updates = {};
-                if (emailBaru) updates.email = emailBaru;
-                if (passwordBaru) updates.password = passwordBaru;
-                
-                // Peringatan: Script supabase.auth.admin ini mewajibkan config.js berisi SERVICE ROLE KEY
-                if (supabaseClient.auth.admin) {
-                    const { error } = await supabaseClient.auth.admin.updateUserById(id, updates);
-                    if (error) alert("Profile Publik Tersimpan, TAPI gagal mengganti email/password auth: " + error.message);
-                } else {
-                    alert("Kredensial Email/Password TIDAK tersimpan karena panel admin ini belum memakai Service Role Key.");
-                }
+            const response = await fetch(gasUrl, {
+                method: "POST",
+                body: JSON.stringify({
+                    id: id,
+                    updates: updates
+                })
+            });
+            
+            const result = await response.json();
+            
+            // Jika ada error dari response API
+            if (result.error || result.code) {
+                alert("Data profil tersimpan, namun Gagal ubah kredensial: " + (result.msg || result.message || "Error Supabase"));
             }
-
-            tutupModal('modalDetailUser'); fetchPengguna(); 
         }
+
+        tutupModal('modalDetailUser'); 
+        fetchPengguna(); 
+    } catch (err) {
+        alert("Terjadi kesalahan: " + err.message);
+    } finally {
+        btn.innerHTML = teksAsli;
+        btn.disabled = false;
+    }
+}
         async function hapusUser(id) { if(confirm("Hapus pengguna ini beserta datanya?")) { await supabaseClient.from('profiles').delete().eq('id', id); fetchPengguna(); } }
 
         // ===================================
