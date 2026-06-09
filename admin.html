@@ -49,41 +49,10 @@
             <div class="max-w-[1500px] mx-auto">
                 
                 <!-- TAB DASHBOARD ANALITIK -->
-                <section id="dashboard" class="tab-content active">
-                    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
-                        <h2 class="text-2xl font-bold text-slate-800">Dasbor Analitik Kuantitatif</h2>
-                        <div class="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-2 w-full xl:w-auto z-20">
-                            <select id="filter-user" class="bg-transparent text-sm font-bold text-slate-700 outline-none px-2 border-r border-slate-100"><option value="Semua">Semua User</option></select>
-                            <select id="filter-kota" class="bg-transparent text-sm font-bold text-slate-700 outline-none px-2 border-r border-slate-100"><option value="Semua">Semua Kota</option><option value="Ternate">Ternate</option><option value="Palembang">Palembang</option><option value="Surabaya">Surabaya</option></select>
-                            <div class="flex items-center px-2">
-                                <input type="date" id="filter-start" class="bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium px-2 py-1 outline-none text-slate-600"><span class="text-slate-400 mx-1">-</span><input type="date" id="filter-end" class="bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium px-2 py-1 outline-none text-slate-600">
-                            </div>
-                            <button onclick="muatDataDasbor()" class="bg-indigo-600 text-white p-2 rounded-lg px-4 font-bold text-sm"><i class="fa-solid fa-filter mr-2"></i> Filter</button>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <div class="bg-white p-4 rounded-xl border shadow-sm text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Total User</p><h3 id="stat-peserta" class="text-2xl font-black text-blue-600">0</h3></div>
-                        <div class="bg-white p-4 rounded-xl border shadow-sm text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">User Aktif</p><h3 id="stat-aktif" class="text-2xl font-black text-emerald-600">0</h3></div>
-                        <div class="bg-white p-4 rounded-xl border shadow-sm text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Avg Baca Modul</p><h3 id="stat-waktu-baca" class="text-2xl font-black text-amber-500">0s</h3></div>
-                        <div class="bg-white p-4 rounded-xl border shadow-sm text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Avg Pengerjaan Soal</p><h3 id="stat-waktu-kuis" class="text-2xl font-black text-rose-500">0s</h3></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl border shadow-sm lg:col-span-1"><h4 class="font-bold text-slate-700 mb-4 text-sm">Demografi (Gender & Usia)</h4><div class="relative h-64"><canvas id="chartDemografi"></canvas></div></div>
-                        <div class="bg-white p-6 rounded-xl border shadow-sm lg:col-span-2"><h4 class="font-bold text-slate-700 mb-4 text-sm">Tren Peningkatan (Pre-Test vs Post-Test)</h4><div class="relative h-64"><canvas id="chartTrendDimensi"></canvas></div></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl border shadow-sm"><h4 class="font-bold text-slate-700 mb-4 text-sm">Rata-Rata Waktu Baca Tiap Modul</h4><div class="relative h-64"><canvas id="chartDurasiModul"></canvas></div></div>
-                        <div class="bg-white p-6 rounded-xl border shadow-sm"><h4 class="font-bold text-slate-700 mb-4 text-sm">Rata-Rata Pengerjaan per Butir Soal</h4><div class="relative h-64"><canvas id="chartButirSoal"></canvas></div></div>
-                    </div>
-
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col mb-8">
-                        <div class="p-5 border-b flex justify-between items-center bg-slate-50"><h4 class="font-bold"><i class="fa-solid fa-table-cells text-emerald-600 mr-2"></i> Master Data SPSS</h4><button onclick="exportMasterExcel()" class="bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold"><i class="fa-solid fa-file-excel"></i> Export Excel</button></div>
-                        <div class="overflow-x-auto table-container"><table class="w-full text-left min-w-[1500px]"><thead class="bg-slate-100 text-xs uppercase border-b" id="headMasterData"></thead><tbody id="tabelMasterData" class="text-sm divide-y"></tbody></table></div>
-                    </div>
-                </section>
+                <!-- TAB DASHBOARD ANALITIK (VIA IFRAME) -->
+<section id="dashboard" class="tab-content active h-[calc(100vh-8rem)]">
+    <iframe src="analitik.html" class="w-full h-full border-0 rounded-xl shadow-inner bg-slate-50" title="Dasbor Analitik"></iframe>
+</section>
 
                 <section id="pengguna" class="tab-content"><h2 class="text-2xl font-bold mb-6">Data Responden</h2><div class="bg-white rounded-xl border shadow-sm overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-100 border-b text-sm"><tr><th class="py-4 px-6">Nama Lengkap</th><th class="py-4 px-6">Kategori</th><th class="py-4 px-6">Gender</th><th class="py-4 px-6">Kota</th><th class="py-4 px-6 text-center">Aksi</th></tr></thead><tbody id="tabelPengguna" class="text-sm divide-y"></tbody></table></div></section>
                 
