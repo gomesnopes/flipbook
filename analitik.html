@@ -20,19 +20,11 @@
         .animate-fade { animation: fadeIn 0.4s ease-in-out; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800 animate-fade">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800 animate-fade p-2 md:p-4">
     
-    <header class="bg-white h-16 border-b border-slate-200 flex items-center justify-between px-6 shadow-sm sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-            <a href="admin.html" class="text-slate-500 hover:text-rose-600 transition bg-slate-100 p-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                <i class="fa-solid fa-arrow-left"></i> Kembali ke Admin
-            </a>
-            <h1 class="font-bold text-slate-700 hidden sm:block"><i class="fa-solid fa-chart-line text-rose-500 mr-2"></i> Studio Analitik KITA SEBAYA</h1>
-        </div>
-    </header>
-
-    <main class="p-6 md:p-8 w-full max-w-[1500px] mx-auto overflow-hidden">
+    <main class="w-full max-w-[1500px] mx-auto overflow-hidden">
         
+        <!-- Header & Filter -->
         <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
             <div>
                 <h2 class="text-2xl font-bold text-slate-800">Dasbor Analitik Kuantitatif</h2>
@@ -45,11 +37,12 @@
                     <input type="date" id="filter-start" class="bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium px-2 py-1 outline-none text-slate-600"><span class="text-slate-400 mx-1">-</span><input type="date" id="filter-end" class="bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium px-2 py-1 outline-none text-slate-600">
                 </div>
                 <button onclick="muatDataDasbor()" class="bg-indigo-600 text-white p-2 rounded-lg px-4 font-bold text-sm hover:bg-indigo-700 transition">
-                    <i class="fa-solid fa-filter mr-2"></i> Terapkan Filter
+                    <i class="fa-solid fa-filter mr-2"></i> Filter
                 </button>
             </div>
         </div>
         
+        <!-- Kartu Statistik -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div class="bg-white p-4 rounded-xl border shadow-sm text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Total User</p><h3 id="stat-peserta" class="text-2xl font-black text-blue-600">0</h3></div>
             <div class="bg-white p-4 rounded-xl border shadow-sm text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">User Aktif</p><h3 id="stat-aktif" class="text-2xl font-black text-emerald-600">0</h3></div>
@@ -57,6 +50,7 @@
             <div class="bg-white p-4 rounded-xl border shadow-sm text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Avg Pengerjaan Soal</p><h3 id="stat-waktu-kuis" class="text-2xl font-black text-rose-500">0s</h3></div>
         </div>
 
+        <!-- Baris Grafik 1 -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-6 rounded-xl border shadow-sm lg:col-span-1">
                 <h4 class="font-bold text-slate-700 mb-4 text-sm">Demografi (Kategori)</h4>
@@ -68,6 +62,7 @@
             </div>
         </div>
 
+        <!-- Baris Grafik 2 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div class="bg-white p-6 rounded-xl border shadow-sm">
                 <h4 class="font-bold text-slate-700 mb-4 text-sm">Rata-Rata Waktu Baca Tiap Modul</h4>
@@ -79,6 +74,7 @@
             </div>
         </div>
 
+        <!-- Tabel SPSS -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col mb-8 overflow-hidden">
             <div class="p-5 border-b flex justify-between items-center bg-slate-50">
                 <h4 class="font-bold"><i class="fa-solid fa-table-cells text-emerald-600 mr-2"></i> Master Data Ekspor (Format SPSS)</h4>
@@ -96,9 +92,7 @@
     </main>
 
     <script>
-        let supabaseClient; 
-        let chartInstances = {}; 
-        let globalMasterExportData = []; 
+        let supabaseClient; let chartInstances = {}; let globalMasterExportData = []; 
         const DIMENSI_LIST = ["Pengetahuan", "Efikasi Diri", "Sikap", "Aksesibilitas Media Digital", "Perilaku Pencegahan"];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -108,12 +102,9 @@
         });
 
         async function inisialisasiHalamanAnalitik() {
-            // Isi dropdown user filter terlebih dahulu
             const { data: users } = await supabaseClient.from('profiles').select('id, nama_lengkap');
             const ddUser = document.getElementById('filter-user');
-            if (users) {
-                users.forEach(u => { ddUser.innerHTML += `<option value="${u.id}">${u.nama_lengkap}</option>`; });
-            }
+            if (users) users.forEach(u => { ddUser.innerHTML += `<option value="${u.id}">${u.nama_lengkap}</option>`; });
             await muatDataDasbor();
         }
 
@@ -127,8 +118,7 @@
             const idValid = new Set(profil.map(p => p.id));
             riwayat = riwayat.filter(r => { if (!idValid.has(r.id_user)) return false; if (r.created_at) { let rD=new Date(r.created_at); rD.setHours(0,0,0,0); if (fStart && rD<new Date(fStart).setHours(0,0,0,0)) return false; if (fEnd && rD>new Date(fEnd).setHours(23,59,59,999)) return false; } return true; });
             
-            document.getElementById('stat-peserta').innerText = profilAsli ? profilAsli.length : 0; 
-            document.getElementById('stat-aktif').innerText = profil.filter(p=>p.total_poin>0).length;
+            document.getElementById('stat-peserta').innerText = profilAsli ? profilAsli.length : 0; document.getElementById('stat-aktif').innerText = profil.filter(p=>p.total_poin>0).length;
             
             let userRecord = {}; let modBaca = new Set(); let modKuis = new Set(); let genderMap = {'Laki-laki':0, 'Perempuan':0}; let katMap = {'Pelajar':0, 'Mahasiswa':0, 'Umum':0};
             profil.forEach(p => { userRecord[p.id] = { nama: p.nama_lengkap, pre:{}, post:{}, baca:{}, kuis:{}, timeKuis:{}, timeButir:{}, totalTimeButir:0, totalItemButir:0 }; if(p.jenis_kelamin) genderMap[p.jenis_kelamin] = (genderMap[p.jenis_kelamin]||0)+1; if(p.kategori) katMap[p.kategori] = (katMap[p.kategori]||0)+1; });
