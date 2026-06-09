@@ -208,18 +208,61 @@
             document.getElementById('edit-user-poin').value = u.total_poin || 0;
             document.getElementById('modalDetailUser').classList.remove('hidden'); 
         }
-
-        async function simpanEditUser() { 
-            const id = document.getElementById('edit-user-id').value; 
-            await supabaseClient.from('profiles').update({
-                nama_lengkap: document.getElementById('edit-user-nama').value, 
-                kategori: document.getElementById('edit-user-kategori').value, 
-                jenis_kelamin: document.getElementById('edit-user-gender').value, 
-                kota: document.getElementById('edit-user-kota').value,
-                total_poin: parseInt(document.getElementById('edit-user-poin').value) || 0
-            }).eq('id', id); 
-            tutupModal('modalDetailUser'); fetchPengguna(); 
+async function simpanEditUser() { 
+    const id = document.getElementById('edit-user-id').value; 
+    const emailBaru = document.getElementById('edit-user-email').value;
+    const passwordBaru = document.getElementById('edit-user-password').value;
+    const btn = document.querySelector("#modalDetailUser button.bg-blue-600");
+    const teksAsli = btn.innerHTML;
+    
+    btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Memproses...";
+    btn.disabled = true;
+    
+    try {
+        // 1. Update Profile Tabel Publik (Tetap pakai Anon Key)
+        await supabaseClient.from('profiles').update({
+            nama_lengkap: document.getElementById('edit-user-nama').value, 
+            kategori: document.getElementById('edit-user-kategori').value, 
+            jenis_kelamin: document.getElementById('edit-user-gender').value, 
+            kota: document.getElementById('edit-user-kota').value,
+            total_poin: parseInt(document.getElementById('edit-user-poin').value) || 0
+        }).eq('id', id); 
+        
+        // 2. Update Auth via Google Apps Script (Hanya Eksekusi Jika Form Email/Pass Diisi)
+        if (emailBaru || passwordBaru) {
+            let updates = {};
+            if (emailBaru) updates.email = emailBaru;
+            if (passwordBaru) updates.password = passwordBaru;
+            
+            // GANTI URL INI DENGAN URL WEB APP GAS ANDA
+            const gasUrl = "https://script.google.com/macros/s/AKfycbyWaBvkDeM65f6zDYuffG7xKQy7gglni90LFjNicZGMqYejzR6_08Z7QAiKN_b8eW1M/exec";
+            
+            const response = await fetch(gasUrl, {
+                method: "POST",
+                body: JSON.stringify({
+                    id: id,
+                    updates: updates
+                })
+            });
+            
+            const result = await response.json();
+            
+            // Jika ada error dari response API
+            if (result.error || result.code) {
+                alert("Data profil tersimpan, namun Gagal ubah kredensial: " + (result.msg || result.message || "Error Supabase"));
+            }
         }
+
+        tutupModal('modalDetailUser'); 
+        fetchPengguna(); 
+    } catch (err) {
+        alert("Terjadi kesalahan: " + err.message);
+    } finally {
+        btn.innerHTML = teksAsli;
+        btn.disabled = false;
+    }
+}
+       
         async function hapusUser(id) { if(confirm("Hapus?")) { await supabaseClient.from('profiles').delete().eq('id', id); fetchPengguna(); } }
 
         // ===================================
