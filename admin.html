@@ -217,7 +217,12 @@
         });
 
         // TAMBAHAN: Eksekusi fetchPengaturan
-        async function inisialisasiAdmin() { await fetchPengguna(); await fetchDaftarBukuAdmin(); await fetchDaftarKuis(); await muatDataDasbor(); await fetchPengaturan(); }
+       async function inisialisasiAdmin() { 
+    await fetchPengguna(); 
+    await fetchDaftarBukuAdmin(); 
+    await fetchDaftarKuis(); 
+    await fetchPengaturan(); 
+}
         
         function toggleSidebar() { const sb = document.getElementById('sidebar'); sb.classList.toggle('-translate-x-full'); sb.classList.toggle('md:w-0'); sb.classList.toggle('md:w-64'); }
         function switchTab(t) { document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(el=>{el.classList.remove('bg-rose-600','text-white');el.classList.add('text-slate-300');}); document.getElementById(t).classList.add('active'); document.getElementById('nav-'+t).classList.add('bg-rose-600','text-white'); }
