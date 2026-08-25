@@ -189,12 +189,14 @@
         let supabaseClient; 
         let chartInstances = {}; 
         let globalMasterExportData = []; 
+        let arrDetailJawaban = []; // Menyimpan semua nama kolom SPSS
         
         let rawProfiles = []; let rawRiwayat = []; let rawBuku = []; 
         let filteredProfiles = []; let filteredRiwayat = [];
-        let kamusSoal = {}; // Penampung (ID -> {pertanyaan, opsi_jawaban})
+        let kamusSoal = {}; // Penampung (ID -> {pertanyaan, opsi_jawaban, id_buku, dimensi, judulKolom})
         
-        const DIMENSI_LIST = ["Pengetahuan", "Efikasi Diri", "Sikap", "Aksesibilitas Media Digital", "Perilaku Pencegahan"];
+        // PERBAIKAN 1: Menambahkan Dimensi "Umum" ke dalam master list
+        const DIMENSI_LIST = ["Pengetahuan", "Efikasi Diri", "Sikap", "Aksesibilitas Media Digital", "Perilaku Pencegahan", "Umum"];
         const MAX_SCORE_TOTAL = 500; 
         const TAHUN_SEKARANG = new Date().getFullYear();
 
@@ -230,29 +232,28 @@
                 supabaseClient.from('profiles').select('*').order('created_at', { ascending: false }),
                 supabaseClient.from('buku').select('id, judul, tipe_konten'),
                 supabaseClient.from('riwayat_kuis').select('*').order('created_at', { ascending: false }),
-                // Tarik kolom opsi_jawaban JSON dari tabel kuis
-                supabaseClient.from('kuis').select('id, pertanyaan, opsi_jawaban') 
+                // PERBAIKAN 2: Tarik dimensi dan id_buku juga agar tahu persis soal ini dari modul mana
+                supabaseClient.from('kuis').select('id, pertanyaan, opsi_jawaban, dimensi, id_buku') 
             ]);
             
             rawProfiles = resP.data || []; 
             rawBuku = resB.data || []; 
             rawRiwayat = resR.data || [];
 
-            // Simpan teks soal dan opsi JSON-nya
             let rawKuis = resK.data || [];
             rawKuis.forEach(k => { 
                 kamusSoal[k.id] = {
                     pertanyaan: k.pertanyaan,
-                    opsi_jawaban: k.opsi_jawaban
+                    opsi_jawaban: k.opsi_jawaban,
+                    dimensi: k.dimensi || 'Umum',
+                    id_buku: k.id_buku
                 }; 
             });
 
-            // Populate Dropdown Kota Global
             const ddKota = document.getElementById('filter-kota');
             const kotaUnik = [...new Set(rawProfiles.map(p => p.kota).filter(Boolean))].sort();
             kotaUnik.forEach(k => ddKota.innerHTML += `<option value="${k}">${k}</option>`);
 
-            // Populate Dropdown Modul
             const ddModul = document.getElementById('select-modul');
             rawBuku.forEach(b => { if(b.tipe_konten !== 'Pengantar Sistem') ddModul.innerHTML += `<option value="${b.id}">[${b.tipe_konten}] ${b.judul}</option>`; });
         }
@@ -325,16 +326,38 @@
             document.getElementById('wadah-leaderboard').innerHTML = boardHtml;
 
             let kamusBuku = {}; rawBuku.forEach(b => kamusBuku[b.id] = b);
-            let userRecord = {};
             
+            // PERBAIKAN 3: Kumpulkan SEMUA kolom dari database `kuis` sejak awal, bukan nunggu ada user yang jawab
+            let setSemuaKolomJawaban = new Set();
+            Object.keys(kamusSoal).forEach(idSoal => {
+                let infoSoal = kamusSoal[idSoal];
+                let b = kamusBuku[infoSoal.id_buku] || {judul:'', tipe_konten:''};
+                
+                let tipePrefix = "Kuis"; 
+                if (b.tipe_konten === 'Evaluasi Global') {
+                    tipePrefix = b.judul.toLowerCase().includes('pre') ? "Pre" : "Post";
+                }
+                
+                let safeDim = (infoSoal.dimensi || 'Umum').replace(/\s+/g, '_');
+                let teksPendek = infoSoal.pertanyaan.substring(0, 30).replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, '_');
+                
+                let judulKolomExcel = `${tipePrefix}_${safeDim}_Q${idSoal}_${teksPendek}`; 
+                infoSoal.judulKolom = judulKolomExcel; // Simpan namanya agar nanti tinggal dipanggil
+                
+                setSemuaKolomJawaban.add(judulKolomExcel);
+            });
+            arrDetailJawaban = Array.from(setSemuaKolomJawaban).sort(); // Fix, daftar komplit seluruh soal di database
+            
+            let userRecord = {};
             filteredProfiles.forEach(p => { 
                 let ts = p.created_at ? new Date(p.created_at).toLocaleString('id-ID', {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}) : '-';
                 userRecord[p.id] = { id: p.id, timestamp: ts, nama: p.nama_lengkap, gender: p.jenis_kelamin || '-', usia: hitungUmur(p.tanggal_lahir) || '-', kategori: p.kategori || '-', kota: p.kota || '-', pre:{}, post:{}, baca:{}, kuis:{}, detailJawaban:{} }; 
             });
 
             let totalWaktuDetik = 0; 
-            let totPre = [0,0,0,0,0]; let cntPre = [0,0,0,0,0]; 
-            let totPost = [0,0,0,0,0]; let cntPost = [0,0,0,0,0];
+            // Karena DIMENSI_LIST sekarang ada 6, array-nya kita sesuaikan (6 nol)
+            let totPre = [0,0,0,0,0,0]; let cntPre = [0,0,0,0,0,0]; 
+            let totPost = [0,0,0,0,0,0]; let cntPost = [0,0,0,0,0,0];
             let countDaftar = filteredProfiles.length; let countPreAktif = 0; let countBacaAktif = 0; let countPostAktif = 0;
             
             let totalNGainValid = 0; let countNGainValid = 0;
@@ -363,35 +386,24 @@
                     }
                 }
 
-                // --- EKSTRAK JSON DAN TARIK NILAI BERDASARKAN OPSI ---
-                // CATATAN: Ganti "detail_jawaban" jika nama kolom di database Anda berbeda!
+                // Ekstrak nilai berdasarkan opsi
+                // PERHATIAN: Pastikan "detail_jawaban" ini sesuai dengan nama kolom Supabase Anda!
                 if (r.detail_jawaban) {
                     let parsedJawaban = typeof r.detail_jawaban === 'string' ? JSON.parse(r.detail_jawaban) : r.detail_jawaban;
                     
-                    let tipePrefix = "Kuis"; 
-                    if (b.tipe_konten === 'Evaluasi Global') {
-                        tipePrefix = b.judul.toLowerCase().includes('pre') ? "Pre" : "Post";
-                    }
-
                     Object.keys(parsedJawaban).forEach(idSoal => {
-                        let infoSoal = kamusSoal[idSoal] ? kamusSoal[idSoal] : { pertanyaan: `Soal_${idSoal}`, opsi_jawaban: {} };
-                        let teksPendek = infoSoal.pertanyaan.substring(0, 30).replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, '_');
-                        
-                        // Menghilangkan spasi pada nama Dimensi agar saat pemisahan sheet Excel nanti aman
-                        let safeDim = dim.replace(/\s+/g, '_');
-                        
-                        // Format Spesifik: TIPE_DIMENSI_Q... (Wajib menggunakan _Q agar mudah di-split saat ekspor)
-                        let judulKolomExcel = `${tipePrefix}_${safeDim}_Q${idSoal}_${teksPendek}`; 
-                        
-                        let jawabanUser = parsedJawaban[idSoal]; 
-                        let nilaiSoal = 0;
-                        
-                        // Tarik nilai poin dari bobot opsi jawaban
-                        if (infoSoal.opsi_jawaban && infoSoal.opsi_jawaban[jawabanUser]) {
-                            nilaiSoal = infoSoal.opsi_jawaban[jawabanUser].poin || 0;
+                        if(kamusSoal[idSoal]) {
+                            let judulKolomExcel = kamusSoal[idSoal].judulKolom; // Panggil nama baku yang sudah dibuat
+                            let jawabanUser = parsedJawaban[idSoal]; 
+                            let nilaiSoal = 0;
+                            
+                            // Tarik nilai poin dari bobot opsi jawaban
+                            if (kamusSoal[idSoal].opsi_jawaban && kamusSoal[idSoal].opsi_jawaban[jawabanUser]) {
+                                nilaiSoal = kamusSoal[idSoal].opsi_jawaban[jawabanUser].poin || 0;
+                            }
+                            
+                            userRecord[r.id_user].detailJawaban[judulKolomExcel] = nilaiSoal;
                         }
-                        
-                        userRecord[r.id_user].detailJawaban[judulKolomExcel] = nilaiSoal;
                     });
                 }
             });
@@ -401,20 +413,13 @@
             globalMasterExportData = []; 
             const arrBaca = Array.from(new Set(rawBuku.filter(b=>b.tipe_konten==='Modul PDF').map(b=>b.judul))).sort(); 
             const arrKuis = Array.from(new Set(rawBuku.filter(b=>b.tipe_konten==='Hanya Kuis').map(b=>b.judul))).sort();
-            
-            // Mengumpulkan semua detail kolom
-            let setSemuaKolomJawaban = new Set();
-            Object.values(userRecord).forEach(u => {
-                Object.keys(u.detailJawaban).forEach(k => setSemuaKolomJawaban.add(k));
-            });
-            let arrDetailJawaban = Array.from(setSemuaKolomJawaban).sort();
 
             let hd = `<th class="py-3 px-5 border-r sticky left-0 bg-slate-100 z-10">Nama Responden</th><th class="py-3 px-5 border-r">Timestamp</th><th class="py-3 px-5 border-r">Kategori</th><th class="py-3 px-5 border-r">Usia</th><th class="py-3 px-5 border-r">Gender</th><th class="py-3 px-5 border-r">Kota</th><th class="py-3 px-5 border-r">N-Gain Total</th>`;
             arrBaca.forEach(m => hd+=`<th class="py-3 px-5 bg-indigo-50 border-r">Durasi [M]: ${m} (s)</th>`); 
             arrKuis.forEach(m => hd+=`<th class="py-3 px-5 bg-amber-50 border-r">Durasi [K]: ${m} (s)</th>`); 
             DIMENSI_LIST.forEach(d => hd+=`<th class="py-3 px-5 bg-emerald-50 border-r">Pre: ${d}</th><th class="py-3 px-5 bg-emerald-50 border-r">Post: ${d}</th><th class="py-3 px-5 bg-emerald-100 border-r">Gain: ${d}</th>`);
             
-            // Header rincian tiap soal
+            // Masukkan seluruh soal di dunia ke dalam header web
             arrDetailJawaban.forEach(kolom => {
                 hd += `<th class="py-3 px-5 bg-sky-50 border-r whitespace-nowrap min-w-[200px] text-xs">${kolom.replace(/_/g, ' ')}</th>`;
             });
@@ -556,7 +561,9 @@
             document.getElementById('u-poin').innerText = user.total_poin || 0;
 
             const riwayatUser = filteredRiwayat.filter(r => r.id_user === idUser);
-            let preData = [0,0,0,0,0]; let postData = [0,0,0,0,0];
+            
+            // 6 Nol disesuaikan dengan isi DIMENSI_LIST
+            let preData = [0,0,0,0,0,0]; let postData = [0,0,0,0,0,0];
             let totPre = 0; let totPost = 0;
             let kamusBuku = {}; rawBuku.forEach(b => kamusBuku[b.id] = b);
             
@@ -567,7 +574,9 @@
                 const b = kamusBuku[r.id_buku] || {judul:'Konten Dihapus', tipe_konten:'Unknown'};
                 
                 if(b.tipe_konten === 'Evaluasi Global') {
-                    let idx = DIMENSI_LIST.indexOf(r.dimensi);
+                    // Mencegah dimensi null bikin chart error
+                    let dim = r.dimensi || 'Umum'; 
+                    let idx = DIMENSI_LIST.indexOf(dim);
                     if(idx !== -1) {
                         if(b.judul.toLowerCase().includes('pre')) { preData[idx] = r.poin_didapat; totPre += r.poin_didapat; }
                         else { postData[idx] = r.poin_didapat; totPost += r.poin_didapat; }
@@ -600,9 +609,9 @@
             
             let allKeys = Object.keys(globalMasterExportData[0]);
             
-            // Pisahkan kolom utama vs kolom pertanyaan rincian (_Q)
+            // Memisahkan kolom utama dan pertanyaan kuis
             let keysUtama = allKeys.filter(k => !k.includes('_Q'));
-            let keysDetail = allKeys.filter(k => k.includes('_Q'));
+            let keysDetail = arrDetailJawaban; // Pakai daftar absolut agar 100% komplit
             
             // 1. Buat Sheet Utama
             let dataUtama = globalMasterExportData.map(row => {
@@ -613,35 +622,35 @@
             const wsUtama = XLSX.utils.json_to_sheet(dataUtama);
             XLSX.utils.book_append_sheet(wb, wsUtama, "Data_Utama");
             
-            // 2. Kelompokkan Sheet Detail berdasarkan kombinasi Prefix_Dimensi (e.g., Pre_Pengetahuan, Kuis_Sikap)
+            // 2. Kelompokkan berdasarkan Prefix + Dimensi 
+            // (misal: "Pre_Pengetahuan", "Post_Sikap", "Kuis_Umum")
             let groupKeys = {};
             keysDetail.forEach(k => {
-                // Kolom selalu berformat: TIPE_DIMENSI_Q... 
-                // Jika di-split menggunakan "_Q", index ke-0 adalah "TIPE_DIMENSI" (misal: "Pre_Pengetahuan")
+                // Kolom selalu berformat: TIPE_DIMENSI_Q...
                 let prefixSheet = k.split('_Q')[0]; 
                 
                 if (!groupKeys[prefixSheet]) groupKeys[prefixSheet] = [];
                 groupKeys[prefixSheet].push(k);
             });
             
-            // 3. Buat Sheet secara Dinamis sesuai dimensinya
+            // 3. Buat Sheet secara Dinamis sesuai kombinasi tipe_dimensinya
             Object.keys(groupKeys).forEach(prefixSheet => {
                 let dataGrup = globalMasterExportData.map(row => {
                     let newRow = {};
                     
-                    // Identitas wajib ada di setiap sheet
+                    // Identitas wajib agar tidak nyasar di Excel
                     newRow['ID'] = row['ID'];
                     newRow['Nama'] = row['Nama'];
                     
                     groupKeys[prefixSheet].forEach(k => {
-                        newRow[k] = row[k];
+                        newRow[k] = row[k]; // Memasukkan nilai soal
                     });
                     
                     return newRow;
                 });
                 const wsGrup = XLSX.utils.json_to_sheet(dataGrup);
                 
-                // Aturan Excel: Nama Sheet maksimal 31 karakter
+                // Sheet max 31 karakter
                 let safeSheetName = prefixSheet.substring(0, 31);
                 
                 XLSX.utils.book_append_sheet(wb, wsGrup, safeSheetName);
