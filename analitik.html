@@ -68,7 +68,6 @@
                 <div class="bg-white p-4 rounded-xl border shadow-sm text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Rata-rata N-Gain</p><h3 id="g-ngain" class="text-2xl font-black text-emerald-600">0.00</h3></div>
             </div>
 
-            <!-- Baris 1: Demografi Terpisah -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div class="bg-white p-5 rounded-xl border shadow-sm">
                     <h4 class="font-bold text-sm mb-4"><i class="fa-solid fa-venus-mars text-slate-500 mr-2"></i>Distribusi Gender</h4>
@@ -84,7 +83,6 @@
                 </div>
             </div>
 
-            <!-- Baris 2: Tren dan Kesenjangan -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div class="bg-white p-5 rounded-xl border shadow-sm">
                     <h4 class="font-bold text-sm mb-4"><i class="fa-solid fa-chart-line text-indigo-500 mr-2"></i>Tren Peningkatan (Pre vs Post)</h4>
@@ -96,7 +94,6 @@
                 </div>
             </div>
 
-            <!-- Baris 3: Retensi, N-Gain Distribusi & Leaderboard -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div class="bg-white p-5 rounded-xl border shadow-sm">
                     <h4 class="font-bold text-sm mb-4"><i class="fa-solid fa-chart-pie text-emerald-500 mr-2"></i>Distribusi N-Gain</h4>
@@ -195,10 +192,10 @@
         
         let rawProfiles = []; let rawRiwayat = []; let rawBuku = []; 
         let filteredProfiles = []; let filteredRiwayat = [];
-        let kamusSoal = {}; // Penampung untuk teks pertanyaan (ID -> Teks Soal)
+        let kamusSoal = {}; // Penampung (ID -> {pertanyaan, opsi_jawaban})
         
         const DIMENSI_LIST = ["Pengetahuan", "Efikasi Diri", "Sikap", "Aksesibilitas Media Digital", "Perilaku Pencegahan"];
-        const MAX_SCORE_TOTAL = 500; // Asumsi poin maksimal kuis jika dijumlah
+        const MAX_SCORE_TOTAL = 500; 
         const TAHUN_SEKARANG = new Date().getFullYear();
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -233,16 +230,22 @@
                 supabaseClient.from('profiles').select('*').order('created_at', { ascending: false }),
                 supabaseClient.from('buku').select('id, judul, tipe_konten'),
                 supabaseClient.from('riwayat_kuis').select('*').order('created_at', { ascending: false }),
-                supabaseClient.from('kuis').select('id, pertanyaan') // Mengambil ID dan Soal
+                // Tarik kolom opsi_jawaban JSON dari tabel kuis
+                supabaseClient.from('kuis').select('id, pertanyaan, opsi_jawaban') 
             ]);
             
             rawProfiles = resP.data || []; 
             rawBuku = resB.data || []; 
             rawRiwayat = resR.data || [];
 
-            // Memasukkan teks pertanyaan ke kamusSoal
+            // Simpan teks soal dan opsi JSON-nya
             let rawKuis = resK.data || [];
-            rawKuis.forEach(k => { kamusSoal[k.id] = k.pertanyaan; });
+            rawKuis.forEach(k => { 
+                kamusSoal[k.id] = {
+                    pertanyaan: k.pertanyaan,
+                    opsi_jawaban: k.opsi_jawaban
+                }; 
+            });
 
             // Populate Dropdown Kota Global
             const ddKota = document.getElementById('filter-kota');
@@ -259,11 +262,9 @@
             const fStart = document.getElementById('filter-start').value;
             const fEnd = document.getElementById('filter-end').value;
 
-            // Filter Profil
             filteredProfiles = rawProfiles.filter(p => fKota === 'Semua' || p.kota === fKota);
             const validUserIds = new Set(filteredProfiles.map(p => p.id));
 
-            // Filter Riwayat
             filteredRiwayat = rawRiwayat.filter(r => {
                 if(!validUserIds.has(r.id_user)) return false;
                 if(fStart || fEnd) {
@@ -274,14 +275,12 @@
                 return true;
             });
 
-            // Refresh Dropdown User di Tab Responden
             const ddUser = document.getElementById('select-user');
             const currUser = ddUser.value;
             ddUser.innerHTML = '<option value="">-- Pilih Nama Responden --</option>';
             filteredProfiles.forEach(u => ddUser.innerHTML += `<option value="${u.id}">${u.nama_lengkap} - ${u.kategori || ''}</option>`);
             if(filteredProfiles.some(p => p.id === currUser)) ddUser.value = currUser;
 
-            // Render ulang semua tampilan
             renderTabGlobal();
             renderTabModul();
             renderTabUser();
@@ -308,19 +307,15 @@
                 } else { ageCount['Kosong']++; }
             });
 
-            // 1. Chart Gender
             if(chartInstances.cGender) chartInstances.cGender.destroy();
             chartInstances.cGender = new Chart(document.getElementById('c-gender'), { type: 'pie', data: { labels: Object.keys(genderCount), datasets: [{ data: Object.values(genderCount), backgroundColor: ['#3b82f6', '#ec4899'] }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }});
             
-            // 2. Chart Kategori
             if(chartInstances.cKat) chartInstances.cKat.destroy();
             chartInstances.cKat = new Chart(document.getElementById('c-kategori'), { type: 'pie', data: { labels: Object.keys(catCount), datasets: [{ data: Object.values(catCount), backgroundColor: ['#10b981', '#f59e0b', '#64748b'] }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }});
             
-            // 3. Chart Usia
             if(chartInstances.cU) chartInstances.cU.destroy();
             chartInstances.cU = new Chart(document.getElementById('c-usia'), { type: 'bar', data: { labels: Object.keys(ageCount), datasets: [{ label: 'Jumlah', data: Object.values(ageCount), backgroundColor: '#8b5cf6', borderRadius: 4 }] }, options: { maintainAspectRatio: false, plugins:{legend:{display:false}} }});
 
-            // Papan Peringkat Top 5
             let top5 = [...filteredProfiles].sort((a,b) => (b.total_poin || 0) - (a.total_poin || 0)).slice(0,5);
             let boardHtml = '';
             top5.forEach((u, i) => {
@@ -329,14 +324,11 @@
             });
             document.getElementById('wadah-leaderboard').innerHTML = boardHtml;
 
-            // PROSES DATA RIWAYAT (WAKTU, PRE/POST, N-GAIN, DETAIL SOAL)
             let kamusBuku = {}; rawBuku.forEach(b => kamusBuku[b.id] = b);
             let userRecord = {};
             
             filteredProfiles.forEach(p => { 
-                // Ekstraksi Timestamp
                 let ts = p.created_at ? new Date(p.created_at).toLocaleString('id-ID', {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}) : '-';
-                // Penambahan field timestamp & detailJawaban
                 userRecord[p.id] = { id: p.id, timestamp: ts, nama: p.nama_lengkap, gender: p.jenis_kelamin || '-', usia: hitungUmur(p.tanggal_lahir) || '-', kategori: p.kategori || '-', kota: p.kota || '-', pre:{}, post:{}, baca:{}, kuis:{}, detailJawaban:{} }; 
             });
 
@@ -371,25 +363,35 @@
                     }
                 }
 
-                // --- EKSTRAK JAWABAN UNTUK SEMUA JENIS KUIS ---
-                // PERHATIAN: Asumsi nama kolom di Supabase adalah "detail_jawaban". Jika berbeda, ubah baris di bawah ini.
+                // --- EKSTRAK JSON DAN TARIK NILAI BERDASARKAN OPSI ---
+                // CATATAN: Ganti "detail_jawaban" jika nama kolom di database Anda berbeda!
                 if (r.detail_jawaban) {
                     let parsedJawaban = typeof r.detail_jawaban === 'string' ? JSON.parse(r.detail_jawaban) : r.detail_jawaban;
                     
-                    // Deteksi otomatis awalan berdasarkan jenis kuis
                     let tipePrefix = "Kuis"; 
                     if (b.tipe_konten === 'Evaluasi Global') {
                         tipePrefix = b.judul.toLowerCase().includes('pre') ? "Pre" : "Post";
                     }
 
                     Object.keys(parsedJawaban).forEach(idSoal => {
-                        let teksAsli = kamusSoal[idSoal] ? kamusSoal[idSoal] : `Soal_${idSoal}`;
-                        let teksPendek = teksAsli.substring(0, 30).replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, '_');
+                        let infoSoal = kamusSoal[idSoal] ? kamusSoal[idSoal] : { pertanyaan: `Soal_${idSoal}`, opsi_jawaban: {} };
+                        let teksPendek = infoSoal.pertanyaan.substring(0, 30).replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, '_');
                         
-                        // Hasilnya akan otomatis jadi "Pre_...", "Post_...", atau "Kuis_..."
-                        let judulKolomExcel = `${tipePrefix}_${dim}_Q${idSoal}_${teksPendek}`; 
+                        // Menghilangkan spasi pada nama Dimensi agar saat pemisahan sheet Excel nanti aman
+                        let safeDim = dim.replace(/\s+/g, '_');
                         
-                        userRecord[r.id_user].detailJawaban[judulKolomExcel] = parsedJawaban[idSoal];
+                        // Format Spesifik: TIPE_DIMENSI_Q... (Wajib menggunakan _Q agar mudah di-split saat ekspor)
+                        let judulKolomExcel = `${tipePrefix}_${safeDim}_Q${idSoal}_${teksPendek}`; 
+                        
+                        let jawabanUser = parsedJawaban[idSoal]; 
+                        let nilaiSoal = 0;
+                        
+                        // Tarik nilai poin dari bobot opsi jawaban
+                        if (infoSoal.opsi_jawaban && infoSoal.opsi_jawaban[jawabanUser]) {
+                            nilaiSoal = infoSoal.opsi_jawaban[jawabanUser].poin || 0;
+                        }
+                        
+                        userRecord[r.id_user].detailJawaban[judulKolomExcel] = nilaiSoal;
                     });
                 }
             });
@@ -400,17 +402,28 @@
             const arrBaca = Array.from(new Set(rawBuku.filter(b=>b.tipe_konten==='Modul PDF').map(b=>b.judul))).sort(); 
             const arrKuis = Array.from(new Set(rawBuku.filter(b=>b.tipe_konten==='Hanya Kuis').map(b=>b.judul))).sort();
             
-            // Penambahan Kolom Timestamp di Header Tampilan
+            // Mengumpulkan semua detail kolom
+            let setSemuaKolomJawaban = new Set();
+            Object.values(userRecord).forEach(u => {
+                Object.keys(u.detailJawaban).forEach(k => setSemuaKolomJawaban.add(k));
+            });
+            let arrDetailJawaban = Array.from(setSemuaKolomJawaban).sort();
+
             let hd = `<th class="py-3 px-5 border-r sticky left-0 bg-slate-100 z-10">Nama Responden</th><th class="py-3 px-5 border-r">Timestamp</th><th class="py-3 px-5 border-r">Kategori</th><th class="py-3 px-5 border-r">Usia</th><th class="py-3 px-5 border-r">Gender</th><th class="py-3 px-5 border-r">Kota</th><th class="py-3 px-5 border-r">N-Gain Total</th>`;
             arrBaca.forEach(m => hd+=`<th class="py-3 px-5 bg-indigo-50 border-r">Durasi [M]: ${m} (s)</th>`); 
             arrKuis.forEach(m => hd+=`<th class="py-3 px-5 bg-amber-50 border-r">Durasi [K]: ${m} (s)</th>`); 
             DIMENSI_LIST.forEach(d => hd+=`<th class="py-3 px-5 bg-emerald-50 border-r">Pre: ${d}</th><th class="py-3 px-5 bg-emerald-50 border-r">Post: ${d}</th><th class="py-3 px-5 bg-emerald-100 border-r">Gain: ${d}</th>`);
+            
+            // Header rincian tiap soal
+            arrDetailJawaban.forEach(kolom => {
+                hd += `<th class="py-3 px-5 bg-sky-50 border-r whitespace-nowrap min-w-[200px] text-xs">${kolom.replace(/_/g, ' ')}</th>`;
+            });
+
             document.getElementById('headMasterData').innerHTML = `<tr>${hd}</tr>`;
             
             const tbody = document.getElementById('tabelMasterData'); tbody.innerHTML='';
             
             Object.values(userRecord).forEach(u => {
-                // Rincian untuk Excel & Web View
                 let rX = { "ID": u.id, "Timestamp": u.timestamp, "Nama": u.nama, "Kategori": u.kategori, "Usia": u.usia, "Gender": u.gender, "Kota": u.kota }; 
                 let tHtml = `<td class="py-3 px-5 font-bold sticky left-0 bg-white z-10 border-r whitespace-nowrap">${u.nama}</td><td class="py-3 px-5 border-r whitespace-nowrap">${u.timestamp}</td><td class="py-3 px-5 border-r">${u.kategori}</td><td class="py-3 px-5 border-r text-center">${u.usia}</td><td class="py-3 px-5 border-r">${u.gender}</td><td class="py-3 px-5 border-r">${u.kota}</td>`;
 
@@ -445,33 +458,29 @@
                 arrKuis.forEach(m => tHtml+=`<td class="py-3 px-5 border-r text-center">${u.kuis[m]||0}</td>`); 
                 tHtml += testHtml; 
                 
-                // --- MASUKKAN DETAIL JAWABAN KHUSUS KE EXCEL (rX) ---
-                let semuaSoalKuis = Object.keys(u.detailJawaban).sort();
-                semuaSoalKuis.forEach(judulKolom => {
-                    rX[judulKolom] = u.detailJawaban[judulKolom];
+                // Menambahkan data nilai tiap soal ke Excel dan HTML Dasbor
+                arrDetailJawaban.forEach(judulKolom => {
+                    let nilaiSoal = u.detailJawaban[judulKolom] !== undefined ? u.detailJawaban[judulKolom] : '';
+                    rX[judulKolom] = nilaiSoal;
+                    tHtml += `<td class="py-3 px-5 border-r text-center bg-sky-50/30 font-medium">${nilaiSoal !== '' ? nilaiSoal : '-'}</td>`;
                 });
-                // ----------------------------------------------------
                 
                 tbody.innerHTML += `<tr class="hover:bg-slate-50 border-b">${tHtml}</tr>`; globalMasterExportData.push(rX);
             });
 
             document.getElementById('g-ngain').innerText = countNGainValid > 0 ? (totalNGainValid / countNGainValid).toFixed(2) : '0.00';
 
-            // 4. Chart Tren Garis Global
             let avgPre = totPre.map((v,i) => cntPre[i] ? (v/cntPre[i]).toFixed(1) : 0);
             let avgPost = totPost.map((v,i) => cntPost[i] ? (v/cntPost[i]).toFixed(1) : 0);
             if(chartInstances.cTrend) chartInstances.cTrend.destroy();
             chartInstances.cTrend = new Chart(document.getElementById('c-trend-global'), { type: 'line', data: { labels: DIMENSI_LIST, datasets: [{label:'Pre-Test', data:avgPre, borderColor:'#f43f5e', fill:false, tension:0.3}, {label:'Post-Test', data:avgPost, borderColor:'#10b981', fill:false, tension:0.3}] }, options:{ maintainAspectRatio:false }});
 
-            // 5. Chart Radar Global
             if(chartInstances.cRadarG) chartInstances.cRadarG.destroy();
             chartInstances.cRadarG = new Chart(document.getElementById('c-radar-global'), { type: 'radar', data: { labels: DIMENSI_LIST, datasets: [{label:'Pre-Test', data:avgPre, borderColor:'#f43f5e', backgroundColor:'rgba(244, 63, 94, 0.2)'}, {label:'Post-Test', data:avgPost, borderColor:'#10b981', backgroundColor:'rgba(16, 185, 129, 0.2)'}] }, options:{ maintainAspectRatio:false } });
 
-            // 6. Chart N-Gain Distribusi (Doughnut)
             if(chartInstances.cNGainPie) chartInstances.cNGainPie.destroy();
             chartInstances.cNGainPie = new Chart(document.getElementById('c-ngain-pie'), { type: 'doughnut', data: { labels: ['Tinggi (≥ 0.7)', 'Sedang', 'Rendah (< 0.3)'], datasets: [{ data: [ngainDist.Tinggi, ngainDist.Sedang, ngainDist.Rendah], backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'] }] }, options: { maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom' } } }});
 
-            // 7. Funnel Retensi
             if(chartInstances.cFunnel) chartInstances.cFunnel.destroy();
             chartInstances.cFunnel = new Chart(document.getElementById('c-funnel-global'), { type: 'bar', data: { labels: ['Pendaftar', 'Mulai Pre-Test', 'Akses Modul', 'Selesai Post-Test'], datasets: [{ label: 'Jumlah User', data: [countDaftar, countPreAktif, countBacaAktif, countPostAktif], backgroundColor: ['#94a3b8', '#f87171', '#fbbf24', '#34d399'], borderRadius: 4 }] }, options: { maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } } });
         }
@@ -581,11 +590,63 @@
             chartInstances.cRadarI = new Chart(document.getElementById('c-radar-individu'), { type: 'radar', data: { labels: DIMENSI_LIST, datasets: [{label:'Skor Pre-Test', data:preData, borderColor:'#94a3b8', backgroundColor:'rgba(148, 163, 184, 0.2)'}, {label:'Skor Post-Test', data:postData, borderColor:'#6366f1', backgroundColor:'rgba(99, 102, 241, 0.2)'}] }, options:{ maintainAspectRatio:false, scales: { r: { suggestedMin: 0, suggestedMax: 100 } } } });
         }
 
+        // ==========================================
+        // EKSPOR KE EXCEL DENGAN PEMISAHAN SHEET
+        // ==========================================
         function exportMasterExcel() { 
             if(!globalMasterExportData.length) return alert("Tidak ada data untuk diekspor!"); 
-            const ws = XLSX.utils.json_to_sheet(globalMasterExportData); 
+            
             const wb = XLSX.utils.book_new(); 
-            XLSX.utils.book_append_sheet(wb, ws, "SPSS_Master_Data"); 
+            
+            let allKeys = Object.keys(globalMasterExportData[0]);
+            
+            // Pisahkan kolom utama vs kolom pertanyaan rincian (_Q)
+            let keysUtama = allKeys.filter(k => !k.includes('_Q'));
+            let keysDetail = allKeys.filter(k => k.includes('_Q'));
+            
+            // 1. Buat Sheet Utama
+            let dataUtama = globalMasterExportData.map(row => {
+                let newRow = {};
+                keysUtama.forEach(k => newRow[k] = row[k]);
+                return newRow;
+            });
+            const wsUtama = XLSX.utils.json_to_sheet(dataUtama);
+            XLSX.utils.book_append_sheet(wb, wsUtama, "Data_Utama");
+            
+            // 2. Kelompokkan Sheet Detail berdasarkan kombinasi Prefix_Dimensi (e.g., Pre_Pengetahuan, Kuis_Sikap)
+            let groupKeys = {};
+            keysDetail.forEach(k => {
+                // Kolom selalu berformat: TIPE_DIMENSI_Q... 
+                // Jika di-split menggunakan "_Q", index ke-0 adalah "TIPE_DIMENSI" (misal: "Pre_Pengetahuan")
+                let prefixSheet = k.split('_Q')[0]; 
+                
+                if (!groupKeys[prefixSheet]) groupKeys[prefixSheet] = [];
+                groupKeys[prefixSheet].push(k);
+            });
+            
+            // 3. Buat Sheet secara Dinamis sesuai dimensinya
+            Object.keys(groupKeys).forEach(prefixSheet => {
+                let dataGrup = globalMasterExportData.map(row => {
+                    let newRow = {};
+                    
+                    // Identitas wajib ada di setiap sheet
+                    newRow['ID'] = row['ID'];
+                    newRow['Nama'] = row['Nama'];
+                    
+                    groupKeys[prefixSheet].forEach(k => {
+                        newRow[k] = row[k];
+                    });
+                    
+                    return newRow;
+                });
+                const wsGrup = XLSX.utils.json_to_sheet(dataGrup);
+                
+                // Aturan Excel: Nama Sheet maksimal 31 karakter
+                let safeSheetName = prefixSheet.substring(0, 31);
+                
+                XLSX.utils.book_append_sheet(wb, wsGrup, safeSheetName);
+            });
+            
             XLSX.writeFile(wb, "KITA_SEBAYA_SPSS_Export.xlsx"); 
         }
     </script>
