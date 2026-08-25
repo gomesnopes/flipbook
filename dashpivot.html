@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekap Kuis per Dimensi (Optimasi Client-Side)</title>
+    <title>Rekap Kuis - Grup Pre & Post Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Tambahkan versi baru agar tidak kena cache browser -->
-    <script src="configdash.js?v=4"></script> 
+    <script src="configdash.js?v=5"></script> 
+    <style>
+        /* Agar tabel tidak berantakan saat discroll */
+        .sticky-col-left { position: sticky; left: 0; z-index: 20; }
+        .sticky-col-right { position: sticky; right: 0; z-index: 20; }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-6 font-sans text-gray-800">
 
@@ -31,7 +35,6 @@
             </button>
         </div>
 
-        <!-- Status Loading -->
         <div id="loading" class="text-center py-12 hidden">
             <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -44,24 +47,20 @@
             Silakan pilih Modul / Buku pada dropdown di atas untuk menampilkan data.
         </div>
 
-        <!-- Navigasi Tab Dimensi -->
         <div id="tabs-nav" class="flex space-x-1 border-b border-gray-200 mb-6 hidden overflow-x-auto"></div>
-
-        <!-- Kontainer Tabel -->
         <div id="tabs-content" class="hidden"></div>
     </div>
 
     <script>
-        let dataDimensi = {}; 
-        let mapProfilUser = {}; // Menyimpan data profil user sementara
+        // Struktur data: { "Pre Test": { subDims: { "Verbal": [soal1, soal2] }, users: { "id": { nama, jawaban, totalSkor } } } }
+        let dataTabs = {}; 
+        let mapProfilUser = {};
 
-        // 1. Ambil daftar buku
+        // 1. Ambil daftar buku (Perbaikan agar tidak gagal muat)
         async function loadDaftarBuku() {
             try {
-                const { data, error } = await window.supabaseClient
-                    .from('buku')
-                    .select('id, judul_buku'); 
-                    
+                // Ambil semua kolom agar kita bisa menebak mana yang judul
+                const { data, error } = await window.supabaseClient.from('buku').select('*'); 
                 if (error) throw error;
 
                 const selectBuku = document.getElementById('filterBuku');
@@ -70,19 +69,20 @@
                 data.forEach(buku => {
                     const opt = document.createElement('option');
                     opt.value = buku.id;
-                    opt.textContent = buku.judul_buku || 'Buku Tanpa Judul';
+                    // Tebak otomatis nama kolom judulnya
+                    const judul = buku.judul_buku || buku.judul || buku.nama || buku.nama_buku || buku.title || ('Buku ' + buku.id);
+                    opt.textContent = judul;
                     selectBuku.appendChild(opt);
                 });
             } catch (err) {
                 console.error("Gagal memuat buku:", err);
-                document.getElementById('filterBuku').innerHTML = '<option value="">Gagal memuat daftar buku</option>';
+                document.getElementById('filterBuku').innerHTML = '<option value="">Gagal memuat daftar buku, periksa koneksi/RLS</option>';
             }
         }
 
-        // 2. Logika Utama Pengambilan dan Pemrosesan Data Mentah
+        // 2. Load Data Kuis
         async function loadDataKuis() {
             const idBuku = document.getElementById('filterBuku').value;
-            
             const tabsNav = document.getElementById('tabs-nav');
             const tabsContent = document.getElementById('tabs-content');
             const loading = document.getElementById('loading');
@@ -98,11 +98,11 @@
             }
 
             loading.classList.remove('hidden');
-            dataDimensi = {}; 
+            dataTabs = {}; 
             mapProfilUser = {};
 
             try {
-                // A. TAHAP 1: Ambil Master Soal (Untuk mengetahui dimensi, pertanyaan, dan bobot nilai)
+                // A. Master Soal
                 teksLoading.innerText = "Mengambil daftar soal...";
                 const { data: masterSoal, error: errKuis } = await window.supabaseClient
                     .from('kuis')
@@ -115,20 +115,34 @@
                     return;
                 }
 
-                // Buat kamus/dictionary soal agar Javascript mudah mencari referensi nilainya
                 const kamusSoal = {};
                 masterSoal.forEach(soal => {
                     kamusSoal[soal.id] = soal;
                     
-                    // Siapkan struktur tab per dimensi
-                    const dim = soal.dimensi || 'Umum';
-                    if (!dataDimensi[dim]) {
-                        dataDimensi[dim] = { pertanyaan: new Set(), users: {} };
+                    // Logika Pemisahan Tab (Pre, Post, Lainnya)
+                    let dimAsli = soal.dimensi || 'Umum';
+                    let namaTab = dimAsli;
+                    let subDimensi = dimAsli;
+
+                    if (dimAsli.toLowerCase().startsWith('pre_')) {
+                        namaTab = 'Pre Test';
+                        subDimensi = dimAsli.substring(4) || 'Lainnya'; // Potong 4 huruf awal
+                    } else if (dimAsli.toLowerCase().startsWith('post_')) {
+                        namaTab = 'Post Test';
+                        subDimensi = dimAsli.substring(5) || 'Lainnya'; // Potong 5 huruf awal
                     }
-                    dataDimensi[dim].pertanyaan.add(soal.pertanyaan);
+
+                    if (!dataTabs[namaTab]) {
+                        dataTabs[namaTab] = { subDims: {}, users: {} };
+                    }
+                    if (!dataTabs[namaTab].subDims[subDimensi]) {
+                        dataTabs[namaTab].subDims[subDimensi] = new Set();
+                    }
+                    
+                    dataTabs[namaTab].subDims[subDimensi].add(soal.pertanyaan);
                 });
 
-                // B. TAHAP 2: Ambil Riwayat Jawaban (Raw JSON)
+                // B. Riwayat Jawaban User
                 teksLoading.innerText = "Mengambil jawaban peserta...";
                 const { data: riwayatData, error: errRiwayat } = await window.supabaseClient
                     .from('riwayat_kuis')
@@ -136,10 +150,9 @@
                     .eq('id_buku', idBuku);
                 if (errRiwayat) throw errRiwayat;
 
-                // C. TAHAP 3: Ambil Profil User (Hanya yang mengerjakan kuis ini saja)
+                // C. Profil User
                 if (riwayatData && riwayatData.length > 0) {
                     teksLoading.innerText = "Menyesuaikan data profil peserta...";
-                    // Kumpulkan ID unik
                     const userIds = [...new Set(riwayatData.map(r => r.id_user))];
                     
                     const { data: profilData, error: errProfil } = await window.supabaseClient
@@ -148,29 +161,29 @@
                         .in('id', userIds);
                     if (errProfil) throw errProfil;
 
-                    // Buat map/kamus profil
-                    profilData.forEach(p => {
-                        mapProfilUser[p.id] = p;
-                    });
+                    profilData.forEach(p => { mapProfilUser[p.id] = p; });
                 }
 
-                // D. TAHAP 4: Ekstraksi Data (Membongkar JSON di Javascript)
+                // D. Gabungkan Data (Pengecekan Nilai)
                 if (riwayatData && riwayatData.length > 0) {
                     riwayatData.forEach(riwayat => {
                         const userProfil = mapProfilUser[riwayat.id_user] || { nama_lengkap: 'User Tidak Diketahui', kota: '-', kategori: '-' };
-                        const JSONJawaban = riwayat.detail_jawaban || {}; // Berisi misal: {"414": "D", "415": "A"}
+                        const JSONJawaban = riwayat.detail_jawaban || {}; 
 
-                        // Looping setiap jawaban di dalam JSON user
                         for (const idSoalString in JSONJawaban) {
                             const pilihanHuruf = JSONJawaban[idSoalString];
-                            const referensiSoal = kamusSoal[idSoalString]; // Ambil data soal asli
+                            const referensiSoal = kamusSoal[idSoalString]; 
 
                             if (referensiSoal) {
-                                const dim = referensiSoal.dimensi || 'Umum';
+                                let dimAsli = referensiSoal.dimensi || 'Umum';
+                                let namaTab = dimAsli;
                                 
-                                // Buat template user jika belum ada di dimensi ini
-                                if (!dataDimensi[dim].users[riwayat.id_user]) {
-                                    dataDimensi[dim].users[riwayat.id_user] = {
+                                if (dimAsli.toLowerCase().startsWith('pre_')) namaTab = 'Pre Test';
+                                else if (dimAsli.toLowerCase().startsWith('post_')) namaTab = 'Post Test';
+
+                                // Siapkan wadah user
+                                if (!dataTabs[namaTab].users[riwayat.id_user]) {
+                                    dataTabs[namaTab].users[riwayat.id_user] = {
                                         nama: userProfil.nama_lengkap,
                                         kota: userProfil.kota || '-',
                                         kategori: userProfil.kategori || '-',
@@ -179,15 +192,13 @@
                                     };
                                 }
 
-                                // Ekstrak nilai berdasarkan opsi jawaban json (contoh: kuis.opsi_jawaban."A".poin)
-                                // Jika tidak ada, poin defaultnya 0
                                 let poin = 0;
                                 if (referensiSoal.opsi_jawaban && referensiSoal.opsi_jawaban[pilihanHuruf]) {
                                     poin = parseInt(referensiSoal.opsi_jawaban[pilihanHuruf].poin) || 0;
                                 }
 
-                                dataDimensi[dim].users[riwayat.id_user].jawaban[referensiSoal.pertanyaan] = poin;
-                                dataDimensi[dim].users[riwayat.id_user].totalSkor += poin;
+                                dataTabs[namaTab].users[riwayat.id_user].jawaban[referensiSoal.pertanyaan] = poin;
+                                dataTabs[namaTab].users[riwayat.id_user].totalSkor += poin;
                             }
                         }
                     });
@@ -215,54 +226,74 @@
 
             let tabPertama = true;
 
-            for (const dimensi in dataDimensi) {
-                const dimData = dataDimensi[dimensi];
-                const listPertanyaan = Array.from(dimData.pertanyaan);
-                const idTab = 'tab-' + dimensi.replace(/[^a-zA-Z0-9]/g, ''); 
+            for (const namaTab in dataTabs) {
+                const tabData = dataTabs[namaTab];
+                const idTab = 'tab-' + namaTab.replace(/[^a-zA-Z0-9]/g, ''); 
 
-                // Buat Tombol Tab
+                // --- TOMBOL TAB ---
                 const btn = document.createElement('button');
                 btn.className = `px-5 py-2.5 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap focus:outline-none ${tabPertama ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`;
-                btn.innerText = dimensi;
+                btn.innerText = namaTab;
                 btn.onclick = () => gantiTab(idTab, btn);
                 tabsNav.appendChild(btn);
 
-                // Buat Tabel
+                // --- TABEL PANEL ---
                 const divPanel = document.createElement('div');
                 divPanel.id = idTab;
                 divPanel.className = `tab-panel overflow-x-auto bg-white border border-gray-200 rounded-lg rounded-tl-none shadow-sm ${tabPertama ? '' : 'hidden'}`;
 
-                let htmlTabel = `
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 whitespace-nowrap">
-                            <tr>
-                                <th class="px-4 py-3 border-b border-r bg-gray-100 sticky left-0 z-10 min-w-[150px]">Nama Lengkap</th>
-                                <th class="px-4 py-3 border-b border-r bg-gray-50">Kota / Kategori</th>`;
+                // --- HEADER TABEL (2 TINGKAT) ---
+                let htmlTabel = `<table class="w-full text-sm text-left"><thead class="text-xs text-gray-700 bg-gray-50 whitespace-nowrap">`;
                 
-                listPertanyaan.forEach((tanya, index) => {
-                    const teksPendek = tanya.length > 25 ? tanya.substring(0, 25) + '...' : tanya;
-                    htmlTabel += `<th class="px-4 py-3 border-b text-center font-semibold" title="${tanya}">Soal ${index + 1}<br><span class="font-normal text-gray-500 capitalize">${teksPendek}</span></th>`;
-                });
+                // Baris Atas Header (Nama, Sub-Dimensi, Total)
+                let headerBaris1 = `<tr>
+                    <th rowspan="2" class="px-4 py-3 border bg-gray-100 sticky-col-left min-w-[180px] uppercase">Nama Lengkap</th>
+                    <th rowspan="2" class="px-4 py-3 border bg-gray-50 uppercase">Kota / Kategori</th>`;
+                
+                // Baris Bawah Header (Daftar Soal)
+                let headerBaris2 = `<tr>`;
 
-                htmlTabel += `<th class="px-4 py-3 border-b border-l bg-blue-50 text-center sticky right-0">Total Skor</th></tr></thead><tbody>`;
+                // Loop setiap Sub-Dimensi untuk Header
+                let semuaSoalTerurut = []; // Untuk memudahkan pengisian baris user nanti
 
-                const users = Object.values(dimData.users);
+                for (const [subDim, setPertanyaan] of Object.entries(tabData.subDims)) {
+                    const arrTanya = Array.from(setPertanyaan);
+                    semuaSoalTerurut = semuaSoalTerurut.concat(arrTanya);
+                    
+                    // Colspan selebar jumlah soal di sub-dimensi ini
+                    headerBaris1 += `<th colspan="${arrTanya.length}" class="px-4 py-2 border text-center font-bold bg-blue-100 text-blue-800 uppercase tracking-wide">${subDim}</th>`;
+
+                    // Print soal-soalnya di baris kedua
+                    arrTanya.forEach((tanya, index) => {
+                        const teksPendek = tanya.length > 25 ? tanya.substring(0, 25) + '...' : tanya;
+                        headerBaris2 += `<th class="px-3 py-2 border text-center font-semibold bg-white" title="${tanya}">Q${index + 1}<br><span class="font-normal text-gray-500 capitalize text-[10px]">${teksPendek}</span></th>`;
+                    });
+                }
+
+                headerBaris1 += `<th rowspan="2" class="px-4 py-3 border bg-blue-50 text-center sticky-col-right uppercase">Total Skor</th></tr>`;
+                headerBaris2 += `</tr>`;
+                
+                htmlTabel += headerBaris1 + headerBaris2 + `</thead><tbody>`;
+
+                // --- ISI DATA USER ---
+                const users = Object.values(tabData.users);
 
                 if (users.length === 0) {
-                    htmlTabel += `<tr><td colspan="${listPertanyaan.length + 3}" class="text-center py-6 text-gray-500 bg-gray-50">Belum ada user yang menjawab kuis di dimensi ini</td></tr>`;
+                    htmlTabel += `<tr><td colspan="${semuaSoalTerurut.length + 3}" class="text-center py-8 text-gray-500 bg-gray-50 italic">Belum ada user yang menjawab kuis di kategori ini</td></tr>`;
                 } else {
                     users.forEach(user => {
                         htmlTabel += `
                             <tr class="border-b hover:bg-blue-50/50 transition-colors">
-                                <td class="px-4 py-3 border-r bg-white font-medium text-gray-900 sticky left-0 z-10">${user.nama}</td>
+                                <td class="px-4 py-3 border-r bg-white font-medium text-gray-900 sticky-col-left">${user.nama}</td>
                                 <td class="px-4 py-3 border-r text-gray-500 text-xs">${user.kota} <br> <span class="text-[10px] bg-gray-200 px-2 py-0.5 rounded">${user.kategori}</span></td>`;
                         
-                        listPertanyaan.forEach(tanya => {
+                        // Isi skor mengikuti urutan soal
+                        semuaSoalTerurut.forEach(tanya => {
                             const skor = user.jawaban[tanya] !== undefined ? user.jawaban[tanya] : '<span class="text-gray-300">-</span>';
-                            htmlTabel += `<td class="px-4 py-3 text-center border-r border-gray-100">${skor}</td>`;
+                            htmlTabel += `<td class="px-3 py-2 text-center border-r border-gray-100">${skor}</td>`;
                         });
 
-                        htmlTabel += `<td class="px-4 py-3 border-l bg-blue-50 text-center font-bold text-blue-700 sticky right-0">${user.totalSkor}</td></tr>`;
+                        htmlTabel += `<td class="px-4 py-3 border-l bg-blue-50 text-center font-bold text-blue-700 sticky-col-right">${user.totalSkor}</td></tr>`;
                     });
                 }
 
@@ -284,21 +315,30 @@
             tombolDiklik.className = 'px-5 py-2.5 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap focus:outline-none bg-blue-600 text-white shadow-md';
         }
 
+        // 3. Download Excel (Penamaan Kolom Disesuaikan)
         function downloadExcel() {
-            if (Object.keys(dataDimensi).length === 0) {
+            if (Object.keys(dataTabs).length === 0) {
                 alert("Data kosong, tidak ada yang bisa didownload.");
                 return;
             }
 
             const workbook = XLSX.utils.book_new();
 
-            for (const dimensi in dataDimensi) {
-                const dimData = dataDimensi[dimensi];
-                const listPertanyaan = Array.from(dimData.pertanyaan);
+            for (const namaTab in dataTabs) {
+                const tabData = dataTabs[namaTab];
                 const barisExcel = [];
-                const users = Object.values(dimData.users);
+                const users = Object.values(tabData.users);
 
                 if (users.length === 0) continue; 
+
+                // Siapkan daftar soal beserta nama sub-dimensinya untuk header Excel
+                let kolomExcel = []; 
+                for (const [subDim, setPertanyaan] of Object.entries(tabData.subDims)) {
+                    Array.from(setPertanyaan).forEach(tanya => {
+                        // Format kolom excel: [Verbal] Soal...
+                        kolomExcel.push({ dimensi: subDim, soalAsli: tanya });
+                    });
+                }
 
                 users.forEach(user => {
                     let row = {
@@ -307,8 +347,13 @@
                         "Kategori": user.kategori
                     };
 
-                    listPertanyaan.forEach(tanya => {
-                        row[tanya] = user.jawaban[tanya] !== undefined ? user.jawaban[tanya] : 0;
+                    kolomExcel.forEach(item => {
+                        // Buat nama kolom Excel yang informatif
+                        let namaKolom = namaTab === 'Pre Test' || namaTab === 'Post Test' 
+                            ? `[${item.dimensi}] ${item.soalAsli}` 
+                            : item.soalAsli;
+                            
+                        row[namaKolom] = user.jawaban[item.soalAsli] !== undefined ? user.jawaban[item.soalAsli] : 0;
                     });
 
                     row["Total Skor"] = user.totalSkor;
@@ -316,7 +361,7 @@
                 });
 
                 const worksheet = XLSX.utils.json_to_sheet(barisExcel);
-                let namaSheet = dimensi.replace(/[\\\/\?\*\[\]\:]/g, '').substring(0, 31);
+                let namaSheet = namaTab.replace(/[\\\/\?\*\[\]\:]/g, '').substring(0, 31);
                 XLSX.utils.book_append_sheet(workbook, worksheet, namaSheet);
             }
             
