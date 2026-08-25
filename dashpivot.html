@@ -54,29 +54,48 @@
         // Objek utama untuk menyimpan data yang sudah dikelompokkan
         let dataDimensi = {}; 
 
-        async function initData() {
+       async function initData() {
             try {
-                // Pastikan variabel client supabase sesuai dengan yang ada di config.js kamu
-                // Jika config.js kamu menggunakan window.supabaseClient, ganti 'supabase' di bawah ini menjadi 'window.supabaseClient'
-             // KODE BARU (YANG BENAR)
-const { data, error } = await window.supabaseClient
-    .from('view_rekap_kuis_lengkap')
-    .select('*')
-    .order('waktu_pengerjaan', { ascending: true });
+                // 1. Tarik Master Soal (Sama seperti sebelumnya)
+                const { data: dataKuis, error: errKuis } = await window.supabaseClient
+                    .from('kuis')
+                    .select('pertanyaan, dimensi');
+                if (errKuis) throw errKuis;
 
-                if (error) throw error;
+                // 2. Tarik Riwayat User dengan Looping (Pagination) menembus batas 1000 baris
+                let dataRiwayat = [];
+                let start = 0;
+                const limit = 1000;
+                let ambilLagi = true;
+
+                while (ambilLagi) {
+                    const { data, error } = await window.supabaseClient
+                        .from('view_rekap_kuis_lengkap')
+                        .select('*')
+                        .order('created_at', { ascending: true })
+                        .range(start, start + limit - 1); // Mengambil per 1000 baris
+                        
+                    if (error) throw error;
+                    
+                    dataRiwayat = dataRiwayat.concat(data); // Gabungkan data baru ke array utama
+                    
+                    if (data.length < limit) {
+                        ambilLagi = false; // Jika data yang ditarik kurang dari 1000, berarti sudah habis
+                    } else {
+                        start += limit; // Geser titik awal untuk tarikan berikutnya
+                    }
+                }
                 
-                prosesDataKeTabel(data);
+                // Lempar ke fungsi pembuat tabel
+                prosesDataKeTabel(dataKuis, dataRiwayat);
             } catch (err) {
                 console.error("Error:", err);
                 document.getElementById('loading').innerHTML = `
                     <div class="bg-red-50 text-red-600 p-4 rounded-lg">
-                        Gagal memuat data: ${err.message}. <br>
-                        Pastikan config.js sudah benar dan koneksi internet stabil.
+                        Gagal memuat data: ${err.message}.
                     </div>`;
             }
         }
-
         function prosesDataKeTabel(rawData) {
             if (!rawData || rawData.length === 0) {
                 document.getElementById('loading').innerHTML = "<p class='text-gray-500'>Tidak ada data kuis ditemukan.</p>";
