@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekap Kuis per Dimensi</title>
+    <title>Rekap Kuis per Dimensi (Optimasi Client-Side)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="configdash.js?v=3"></script> <!-- Tambahkan ?v=3 agar tidak kena cache -->
+    <!-- Tambahkan versi baru agar tidak kena cache browser -->
+    <script src="configdash.js?v=4"></script> 
 </head>
 <body class="bg-gray-100 min-h-screen p-6 font-sans text-gray-800">
 
@@ -17,8 +18,6 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 mb-6 gap-4">
             <div class="w-full md:w-1/2">
                 <h1 class="text-2xl font-bold text-gray-800 mb-2">Rekap Hasil Kuis</h1>
-                
-                <!-- DROPDOWN FILTER BUKU -->
                 <select id="filterBuku" onchange="loadDataKuis()" class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">-- Memuat daftar modul/buku... --</option>
                 </select>
@@ -38,7 +37,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="text-gray-500 font-medium">Mengambil data dari database...</p>
+            <p class="text-gray-500 font-medium" id="teks-loading">Mengambil data...</p>
         </div>
 
         <div id="pesan-awal" class="text-center py-12 text-gray-500">
@@ -54,11 +53,11 @@
 
     <script>
         let dataDimensi = {}; 
+        let mapProfilUser = {}; // Menyimpan data profil user sementara
 
-        // 1. Ambil daftar buku saat halaman pertama kali dibuka
+        // 1. Ambil daftar buku
         async function loadDaftarBuku() {
             try {
-                // Asumsi tabel kamu bernama 'buku'. Jika judul bukunya ada di kolom lain (misal: judul), ganti 'judul_buku' di bawah ini
                 const { data, error } = await window.supabaseClient
                     .from('buku')
                     .select('id, judul_buku'); 
@@ -71,7 +70,7 @@
                 data.forEach(buku => {
                     const opt = document.createElement('option');
                     opt.value = buku.id;
-                    opt.textContent = buku.judul_buku || 'Buku Tanpa Judul'; // Ganti judul_buku dengan nama kolommu jika berbeda
+                    opt.textContent = buku.judul_buku || 'Buku Tanpa Judul';
                     selectBuku.appendChild(opt);
                 });
             } catch (err) {
@@ -80,117 +79,139 @@
             }
         }
 
-        // 2. Tarik data kuis ketika dropdown buku dipilih
+        // 2. Logika Utama Pengambilan dan Pemrosesan Data Mentah
         async function loadDataKuis() {
             const idBuku = document.getElementById('filterBuku').value;
             
-            // Tampilan UI Loading & Reset
-            document.getElementById('pesan-awal').classList.add('hidden');
             const tabsNav = document.getElementById('tabs-nav');
             const tabsContent = document.getElementById('tabs-content');
             const loading = document.getElementById('loading');
+            const teksLoading = document.getElementById('teks-loading');
+            
+            document.getElementById('pesan-awal').classList.add('hidden');
+            tabsNav.classList.add('hidden');
+            tabsContent.classList.add('hidden');
             
             if (!idBuku) {
-                tabsNav.classList.add('hidden');
-                tabsContent.classList.add('hidden');
                 document.getElementById('pesan-awal').classList.remove('hidden');
                 return;
             }
 
-            tabsNav.innerHTML = '';
-            tabsContent.innerHTML = '';
-            tabsNav.classList.add('hidden');
-            tabsContent.classList.add('hidden');
             loading.classList.remove('hidden');
-
-            dataDimensi = {}; // RESET PENTING! Mencegah bug undefined
+            dataDimensi = {}; 
+            mapProfilUser = {};
 
             try {
-                // A. Tarik Master Soal KHUSUS UNTUK BUKU INI
-                const { data: dataKuis, error: errKuis } = await window.supabaseClient
+                // A. TAHAP 1: Ambil Master Soal (Untuk mengetahui dimensi, pertanyaan, dan bobot nilai)
+                teksLoading.innerText = "Mengambil daftar soal...";
+                const { data: masterSoal, error: errKuis } = await window.supabaseClient
                     .from('kuis')
-                    .select('pertanyaan, dimensi')
+                    .select('id, pertanyaan, dimensi, opsi_jawaban')
                     .eq('id_buku', idBuku);
                 if (errKuis) throw errKuis;
 
-                // B. Tarik Jawaban User KHUSUS UNTUK BUKU INI (Dengan Pagination Looping)
-                let dataRiwayat = [];
-                let start = 0;
-                const limit = 1000;
-                let ambilLagi = true;
-
-                while (ambilLagi) {
-                    const { data, error } = await window.supabaseClient
-                        .from('view_rekap_kuis_lengkap')
-                        .select('*')
-                        .eq('id_buku', idBuku)
-                        .order('waktu_pengerjaan', { ascending: true })
-                        .range(start, start + limit - 1);
-                        
-                    if (error) throw error;
-                    
-                    dataRiwayat = dataRiwayat.concat(data);
-                    
-                    if (data.length < limit) {
-                        ambilLagi = false;
-                    } else {
-                        start += limit;
-                    }
+                if (!masterSoal || masterSoal.length === 0) {
+                    loading.innerHTML = "<p class='text-gray-500 py-10'>Belum ada soal/pertanyaan yang dibuat untuk buku ini.</p>";
+                    return;
                 }
 
-                prosesDataKeTabel(dataKuis, dataRiwayat);
+                // Buat kamus/dictionary soal agar Javascript mudah mencari referensi nilainya
+                const kamusSoal = {};
+                masterSoal.forEach(soal => {
+                    kamusSoal[soal.id] = soal;
+                    
+                    // Siapkan struktur tab per dimensi
+                    const dim = soal.dimensi || 'Umum';
+                    if (!dataDimensi[dim]) {
+                        dataDimensi[dim] = { pertanyaan: new Set(), users: {} };
+                    }
+                    dataDimensi[dim].pertanyaan.add(soal.pertanyaan);
+                });
+
+                // B. TAHAP 2: Ambil Riwayat Jawaban (Raw JSON)
+                teksLoading.innerText = "Mengambil jawaban peserta...";
+                const { data: riwayatData, error: errRiwayat } = await window.supabaseClient
+                    .from('riwayat_kuis')
+                    .select('id_user, detail_jawaban')
+                    .eq('id_buku', idBuku);
+                if (errRiwayat) throw errRiwayat;
+
+                // C. TAHAP 3: Ambil Profil User (Hanya yang mengerjakan kuis ini saja)
+                if (riwayatData && riwayatData.length > 0) {
+                    teksLoading.innerText = "Menyesuaikan data profil peserta...";
+                    // Kumpulkan ID unik
+                    const userIds = [...new Set(riwayatData.map(r => r.id_user))];
+                    
+                    const { data: profilData, error: errProfil } = await window.supabaseClient
+                        .from('profiles')
+                        .select('id, nama_lengkap, kota, kategori')
+                        .in('id', userIds);
+                    if (errProfil) throw errProfil;
+
+                    // Buat map/kamus profil
+                    profilData.forEach(p => {
+                        mapProfilUser[p.id] = p;
+                    });
+                }
+
+                // D. TAHAP 4: Ekstraksi Data (Membongkar JSON di Javascript)
+                if (riwayatData && riwayatData.length > 0) {
+                    riwayatData.forEach(riwayat => {
+                        const userProfil = mapProfilUser[riwayat.id_user] || { nama_lengkap: 'User Tidak Diketahui', kota: '-', kategori: '-' };
+                        const JSONJawaban = riwayat.detail_jawaban || {}; // Berisi misal: {"414": "D", "415": "A"}
+
+                        // Looping setiap jawaban di dalam JSON user
+                        for (const idSoalString in JSONJawaban) {
+                            const pilihanHuruf = JSONJawaban[idSoalString];
+                            const referensiSoal = kamusSoal[idSoalString]; // Ambil data soal asli
+
+                            if (referensiSoal) {
+                                const dim = referensiSoal.dimensi || 'Umum';
+                                
+                                // Buat template user jika belum ada di dimensi ini
+                                if (!dataDimensi[dim].users[riwayat.id_user]) {
+                                    dataDimensi[dim].users[riwayat.id_user] = {
+                                        nama: userProfil.nama_lengkap,
+                                        kota: userProfil.kota || '-',
+                                        kategori: userProfil.kategori || '-',
+                                        jawaban: {}, 
+                                        totalSkor: 0
+                                    };
+                                }
+
+                                // Ekstrak nilai berdasarkan opsi jawaban json (contoh: kuis.opsi_jawaban."A".poin)
+                                // Jika tidak ada, poin defaultnya 0
+                                let poin = 0;
+                                if (referensiSoal.opsi_jawaban && referensiSoal.opsi_jawaban[pilihanHuruf]) {
+                                    poin = parseInt(referensiSoal.opsi_jawaban[pilihanHuruf].poin) || 0;
+                                }
+
+                                dataDimensi[dim].users[riwayat.id_user].jawaban[referensiSoal.pertanyaan] = poin;
+                                dataDimensi[dim].users[riwayat.id_user].totalSkor += poin;
+                            }
+                        }
+                    });
+                }
+
+                renderUI();
+
             } catch (err) {
                 console.error("Error:", err);
                 loading.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-lg">Gagal memuat data: ${err.message}</div>`;
             }
         }
 
-        function prosesDataKeTabel(dataKuis, dataRiwayat) {
+        function renderUI() {
             const loading = document.getElementById('loading');
-
-            if (!dataKuis || dataKuis.length === 0) {
-                loading.innerHTML = "<p class='text-gray-500 py-10'>Belum ada soal/pertanyaan yang dibuat untuk buku ini.</p>";
-                return;
-            }
-
-            // A. Bangun cetakan kolom (Dimensi -> Pertanyaan)
-            dataKuis.forEach(soal => {
-                const dim = soal.dimensi || 'Umum';
-                if (!dataDimensi[dim]) {
-                    dataDimensi[dim] = { pertanyaan: new Set(), users: {} };
-                }
-                dataDimensi[dim].pertanyaan.add(soal.pertanyaan);
-            });
-
-            // B. Masukkan nilai skor (User)
-            if (dataRiwayat && dataRiwayat.length > 0) {
-                dataRiwayat.forEach(row => {
-                    const dim = row.dimensi || 'Umum';
-                    
-                    // Pastikan dimensi user ada di cetakan master soal
-                    if (dataDimensi[dim]) {
-                        if (!dataDimensi[dim].users[row.id_user]) {
-                            dataDimensi[dim].users[row.id_user] = {
-                                nama: row.nama_lengkap,
-                                kota: row.kota || '-',
-                                kategori: row.kategori || '-',
-                                jawaban: {}, 
-                                totalSkor: 0
-                            };
-                        }
-                        dataDimensi[dim].users[row.id_user].jawaban[row.pertanyaan] = row.skor;
-                        dataDimensi[dim].users[row.id_user].totalSkor += row.skor;
-                    }
-                });
-            }
-
-            // C. Render UI
-            loading.classList.add('hidden');
             const tabsNav = document.getElementById('tabs-nav');
             const tabsContent = document.getElementById('tabs-content');
             
+            loading.classList.add('hidden');
             tabsNav.classList.remove('hidden');
             tabsContent.classList.remove('hidden');
+
+            tabsNav.innerHTML = '';
+            tabsContent.innerHTML = '';
 
             let tabPertama = true;
 
@@ -227,7 +248,6 @@
 
                 const users = Object.values(dimData.users);
 
-                // Jika belum ada yang menjawab
                 if (users.length === 0) {
                     htmlTabel += `<tr><td colspan="${listPertanyaan.length + 3}" class="text-center py-6 text-gray-500 bg-gray-50">Belum ada user yang menjawab kuis di dimensi ini</td></tr>`;
                 } else {
@@ -278,7 +298,7 @@
                 const barisExcel = [];
                 const users = Object.values(dimData.users);
 
-                if (users.length === 0) continue; // Jangan buat sheet jika tidak ada user
+                if (users.length === 0) continue; 
 
                 users.forEach(user => {
                     let row = {
@@ -300,14 +320,12 @@
                 XLSX.utils.book_append_sheet(workbook, worksheet, namaSheet);
             }
             
-            // Ambil nama modul untuk judul file
             const selectBuku = document.getElementById('filterBuku');
             const judulBuku = selectBuku.options[selectBuku.selectedIndex].text.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 20);
             
             XLSX.writeFile(workbook, `Rekap_Kuis_${judulBuku}.xlsx`);
         }
 
-        // Jalankan fetch judul buku saat web dimuat
         window.onload = loadDaftarBuku;
     </script>
 </body>
