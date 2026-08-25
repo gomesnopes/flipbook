@@ -42,9 +42,7 @@
         async function fetchData() {
             try {
                 // Mengambil seluruh data dari View yang sudah dibuat
-                const { data, error } = await supabase
-                    .from('view_rekap_kuis_lengkap')
-                    .select('*');
+            const { data, error } = await supabaseClient.from('view_rekap_kuis_lengkap').select('*');
 
                 if (error) throw error;
                 
