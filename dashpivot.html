@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap Hasil Kuis</title>
+    <!-- Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS untuk Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Panggil file konfigurasi Supabase milikmu -->
+    <!-- Pastikan di dalam config.js sudah mendefinisikan const supabase = supabase.createClient(...) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+</head>
+<body class="bg-gray-50 p-8 font-sans text-gray-800">
+
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <div class="flex justify-between items-center border-b pb-4 mb-4">
+            <h1 class="text-2xl font-bold text-gray-700">Laporan Hasil Kuis per Dimensi</h1>
+            <button onclick="downloadExcel()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded shadow">
+                Download Excel
+            </button>
+        </div>
+
+        <div id="loading" class="text-center py-10 text-gray-500">
+            Sedang mengambil data dari database...
+        </div>
+
+        <!-- Container untuk Tab Navigasi -->
+        <div id="tabs-nav" class="flex space-x-2 border-b border-gray-200 mb-4 hidden"></div>
+
+        <!-- Container untuk Isi Tabel -->
+        <div id="tabs-content" class="hidden overflow-x-auto"></div>
+    </div>
+
+    <script>
+        // Variabel global untuk menyimpan data yang sudah diproses
+        let processedData = {}; 
+
+        async function fetchData() {
+            try {
+                // Mengambil seluruh data dari View yang sudah dibuat
+                const { data, error } = await supabase
+                    .from('view_rekap_kuis_lengkap')
+                    .select('*');
+
+                if (error) throw error;
+                
+                processAndRenderData(data);
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                document.getElementById('loading').innerHTML = `<span class="text-red-500">Gagal mengambil data: ${err.message}</span>`;
+            }
+        }
+
+        function processAndRenderData(rawData) {
+            // 1. Pivot & Kelompokkan Data
+            rawData.forEach(row => {
+                const dim = row.dimensi || 'Tanpa Dimensi';
+                
+                // Inisialisasi jika dimensi belum ada
+                if (!processedData[dim]) {
+                    processedData[dim] = {
+                        questions: new Set(),
+                        users: {}
+                    };
+                }
+                
+                // Tambahkan pertanyaan ke daftar kolom (Set mencegah duplikasi)
+                processedData[dim].questions.add(row.pertanyaan);
+
+                // Buat profil user jika belum ada di dimensi ini
+                if (!processedData[dim].users[row.id_user]) {
+                    processedData[dim].users[row.id_user] = {
+                        nama: row.nama_lengkap,
+                        kota: row.kota || '-',
+                        kategori: row.kategori || '-',
+                        skor_per_soal: {},
+                        total_skor: 0
+                    };
+                }
+
+                // Masukkan nilai skor untuk pertanyaan tersebut
+                processedData[dim].users[row.id_user].skor_per_soal[row.pertanyaan] = row.skor;
+                processedData[dim].users[row.id_user].total_skor += row.skor;
+            });
+
+            // 2. Render UI
+            document.getElementById('loading').classList.add('hidden');
+            const tabsNav = document.getElementById('tabs-nav');
+            const tabsContent = document.getElementById('tabs-content');
+            
+            tabsNav.classList.remove('hidden');
+            tabsContent.classList.remove('hidden');
+
+            let isFirstTab = true;
+
+            for (const dimensi in processedData) {
+                const dimData = processedData[dimensi];
+                const questionsArray = Array.from(dimData.questions);
+                const safeDimName = dimensi.replace(/\s+/g, '-');
+
+                // Render Tab Button
+                const tabBtn = document.createElement('button');
+                tabBtn.className = `px-4 py-2 font-medium text-sm rounded-t-lg focus:outline-none ${isFirstTab ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`;
+                tabBtn.innerText = dimensi;
+                tabBtn.onclick = () => switchTab(safeDimName, tabBtn);
+                tabsNav.appendChild(tabBtn);
+
+                // Render Table Container
+                const tableContainer = document.createElement('div');
+                tableContainer.id = `tab-${safeDimName}`;
+                tableContainer.className = `tab-panel ${isFirstTab ? '' : 'hidden'}`;
+
+                // Bangun Struktur Tabel HTML
+                let tableHTML = `
+                    <table class="min-w-full bg-white border border-gray-200">
+                        <thead class="bg-gray-100 whitespace-nowrap">
+                            <tr>
+                                <th class="border px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Nama Lengkap</th>
+                                <th class="border px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Kota</th>
+                                <th class="border px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Kategori</th>`;
+                
+                // Header Kolom Pertanyaan
+                questionsArray.forEach(q => {
+                    tableHTML += `<th class="border px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase" title="${q}">Soal: ${q.substring(0, 20)}...</th>`;
+                });
+
+                tableHTML += `<th class="border px-4 py-2 text-center text-xs font-semibold text-gray-600 uppercase bg-blue-50">Total Skor</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">`;
+
+                // Isi Baris (Users)
+                Object.values(dimData.users).forEach(user => {
+                    tableHTML += `<tr>
+                        <td class="border px-4 py-2 font-medium">${user.nama}</td>
+                        <td class="border px-4 py-2">${user.kota}</td>
+                        <td class="border px-4 py-2">${user.kategori}</td>`;
+                    
+                    // Skor per pertanyaan (0 jika tidak ada)
+                    questionsArray.forEach(q => {
+                        const skor = user.skor_per_soal[q] !== undefined ? user.skor_per_soal[q] : '-';
+                        tableHTML += `<td class="border px-4 py-2 text-center">${skor}</td>`;
+                    });
+
+                    tableHTML += `<td class="border px-4 py-2 text-center font-bold bg-blue-50">${user.total_skor}</td></tr>`;
+                });
+
+                tableHTML += `</tbody></table>`;
+                tableContainer.innerHTML = tableHTML;
+                tabsContent.appendChild(tableContainer);
+
+                isFirstTab = false;
+            }
+        }
+
+        // Fungsi Ganti Tab
+        function switchTab(tabId, clickedBtn) {
+            // Sembunyikan semua konten
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+            // Tampilkan konten yang dipilih
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            // Reset gaya semua tombol
+            document.querySelectorAll('#tabs-nav button').forEach(btn => {
+                btn.className = 'px-4 py-2 font-medium text-sm rounded-t-lg focus:outline-none text-gray-500 hover:text-gray-700 hover:bg-gray-100';
+            });
+            // Terapkan gaya ke tombol aktif
+            clickedBtn.className = 'px-4 py-2 font-medium text-sm rounded-t-lg focus:outline-none bg-blue-100 text-blue-700 border-b-2 border-blue-500';
+        }
+
+        // Fungsi Download ke Excel via SheetJS
+        function downloadExcel() {
+            if (Object.keys(processedData).length === 0) {
+                alert("Data belum tersedia atau sedang dimuat.");
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            for (const dimensi in processedData) {
+                const dimData = processedData[dimensi];
+                const questionsArray = Array.from(dimData.questions);
+                
+                // Siapkan array data datar untuk SheetJS
+                const exportData = [];
+
+                Object.values(dimData.users).forEach(user => {
+                    let row = {
+                        "Nama Lengkap": user.nama,
+                        "Kota": user.kota,
+                        "Kategori": user.kategori
+                    };
+
+                    questionsArray.forEach(q => {
+                        row[q] = user.skor_per_soal[q] !== undefined ? user.skor_per_soal[q] : 0;
+                    });
+
+                    row["Total Skor"] = user.total_skor;
+                    exportData.push(row);
+                });
+
+                // Buat worksheet dari array objek
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                
+                // Bersihkan nama dimensi untuk nama sheet (Excel maksimal 31 karakter dan tidak boleh ada karakter tertentu)
+                let sheetName = dimensi.replace(/[\\\/\?\*\[\]]/g, '').substring(0, 30);
+                
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            }
+
+            XLSX.writeFile(wb, "Rekap_Nilai_Kuis.xlsx");
+        }
+
+        // Jalankan fetch saat halaman dimuat
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
