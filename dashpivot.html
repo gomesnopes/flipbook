@@ -58,10 +58,11 @@
             try {
                 // Pastikan variabel client supabase sesuai dengan yang ada di config.js kamu
                 // Jika config.js kamu menggunakan window.supabaseClient, ganti 'supabase' di bawah ini menjadi 'window.supabaseClient'
-                const { data, error } = await supabase
-                    .from('view_rekap_kuis_lengkap')
-                    .select('*')
-                    .order('created_at', { ascending: true });
+             // KODE BARU (YANG BENAR)
+const { data, error } = await window.supabaseClient
+    .from('view_rekap_kuis_lengkap')
+    .select('*')
+    .order('created_at', { ascending: true });
 
                 if (error) throw error;
                 
