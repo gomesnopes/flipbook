@@ -72,7 +72,7 @@
                     const { data, error } = await window.supabaseClient
                         .from('view_rekap_kuis_lengkap')
                         .select('*')
-                        .order('created_at', { ascending: true })
+                        .order('waktu_pengerjaan', { ascending: true })
                         .range(start, start + limit - 1); // Mengambil per 1000 baris
                         
                     if (error) throw error;
