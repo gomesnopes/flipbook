@@ -62,7 +62,7 @@
 const { data, error } = await window.supabaseClient
     .from('view_rekap_kuis_lengkap')
     .select('*')
-    .order('created_at', { ascending: true });
+    .order('waktu_pengerjaan', { ascending: true });
 
                 if (error) throw error;
                 
