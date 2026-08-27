@@ -73,10 +73,11 @@
         let currentPage = 1;
         const rowsPerPage = 10; 
 
-        // 1. Ambil dan Render Tab Buku
+       // 1. Ambil dan Render Tab Buku
         async function loadDaftarBuku() {
             try {
-                const { data, error } = await window.supabaseClient.from('buku').select('*').order('created_at', { ascending: false }); 
+                // PERBAIKAN: ascending: true agar diurutkan dari yang paling pertama dibuat (Minggu 1, Minggu 2, dst -> Kiri ke Kanan)
+                const { data, error } = await window.supabaseClient.from('buku').select('*').order('created_at', { ascending: true }); 
                 if (error) throw error;
 
                 const bookTabsContainer = document.getElementById('book-tabs');
@@ -89,6 +90,12 @@
 
                 data.forEach(buku => {
                     const judul = buku.judul_buku || buku.judul || ('Buku ' + buku.id);
+                    
+                    // PERBAIKAN: Sembunyikan "Pengaturan Slide Intro Aplikasi"
+                    if (judul.toLowerCase().includes('pengaturan slide intro aplikasi')) {
+                        return; // Lewati data ini, jangan buatkan tombol
+                    }
+
                     const btn = document.createElement('button');
                     btn.className = 'book-tab-btn px-4 py-2 text-sm font-medium border border-gray-300 rounded-full whitespace-nowrap bg-white text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none';
                     btn.innerText = judul;
